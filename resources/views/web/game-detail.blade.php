@@ -95,33 +95,41 @@
 @endpush
 
 @section('content')
-<div x-data="{
-    activeImage: null,
-    activeImageIndex: 0,
-    galleryImages: @json($game->screenshots->map(fn($s) => $s->image_webp_url ?: $s->image_url)->values()->all()),
-    copiedHash: '',
-    copyText(text, label) {
-        navigator.clipboard.writeText(text);
-        this.copiedHash = label;
-        setTimeout(() => this.copiedHash = '', 2200);
-        window.dispatchEvent(new CustomEvent('toast-notify', { detail: { message: label + ' copiado al portapapeles' } }));
-    },
-    openGallery(idx) {
-        if (!this.galleryImages || !this.galleryImages.length) return;
-        this.activeImageIndex = idx;
-        this.activeImage = this.galleryImages[idx] || null;
-    },
-    nextImage() {
-        if (!this.galleryImages || !this.galleryImages.length) return;
-        this.activeImageIndex = (this.activeImageIndex + 1) % this.galleryImages.length;
-        this.activeImage = this.galleryImages[this.activeImageIndex];
-    },
-    prevImage() {
-        if (!this.galleryImages || !this.galleryImages.length) return;
-        this.activeImageIndex = (this.activeImageIndex - 1 + this.galleryImages.length) % this.galleryImages.length;
-        this.activeImage = this.galleryImages[this.activeImageIndex];
-    }
-}" class="space-y-8 py-4">
+<script>
+function gameDetailComponent() {
+    return {
+        activeImage: null,
+        activeImageIndex: 0,
+        galleryImages: @json($game->screenshots->map(fn($s) => $s->image_webp_url ?: $s->image_url)->values()->all()),
+        copiedHash: '',
+        copyText(text, label) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text);
+            }
+            this.copiedHash = label;
+            setTimeout(() => { this.copiedHash = ''; }, 2200);
+            window.dispatchEvent(new CustomEvent('toast-notify', { detail: { message: label + ' copiado al portapapeles' } }));
+        },
+        openGallery(idx) {
+            if (!this.galleryImages || !this.galleryImages.length) return;
+            this.activeImageIndex = idx;
+            this.activeImage = this.galleryImages[idx] || null;
+        },
+        nextImage() {
+            if (!this.galleryImages || !this.galleryImages.length) return;
+            this.activeImageIndex = (this.activeImageIndex + 1) % this.galleryImages.length;
+            this.activeImage = this.galleryImages[this.activeImageIndex];
+        },
+        prevImage() {
+            if (!this.galleryImages || !this.galleryImages.length) return;
+            this.activeImageIndex = (this.activeImageIndex - 1 + this.galleryImages.length) % this.galleryImages.length;
+            this.activeImage = this.galleryImages[this.activeImageIndex];
+        }
+    };
+}
+</script>
+
+<div x-data="gameDetailComponent()" class="space-y-8 py-4">
 
     <!-- Breadcrumb Nav -->
     <div class="{{ \App\Models\Setting::get('container_max_width', 'max-w-[1200px]') }} mx-auto px-4 lg:px-6">
