@@ -583,9 +583,19 @@
 
                 <!-- Categories / Genres Selector -->
                 <div class="bg-[#11141A] border border-[#232936] rounded-2xl p-5 space-y-3">
-                    <h3 class="text-xs font-bold text-white font-sans uppercase tracking-wider border-b border-[#232936] pb-2">
-                        Categorías & Géneros
+                    <h3 class="text-xs font-bold text-white font-sans uppercase tracking-wider flex items-center justify-between border-b border-[#232936] pb-2">
+                        <span>Categorías & Géneros</span>
+                        <span class="text-[10px] text-gray-500 font-mono">{{ $categories->count() }} disponibles</span>
                     </h3>
+                    <div class="grid grid-cols-2 gap-1.5 max-h-48 overflow-y-auto pr-1">
+                        @foreach($categories as $category)
+                        <label class="flex items-center gap-2 p-2 rounded-lg bg-[#0A0C0F] border border-[#232936] text-xs font-mono text-gray-300 cursor-pointer hover:border-blue-500/40">
+                            <input type="checkbox" name="category_ids[]" value="{{ $category->id }}" {{ in_array($category->id, old('category_ids', [])) ? 'checked' : '' }} class="rounded bg-[#11141A] border-[#232936] text-blue-600">
+                            <span class="truncate">{{ $category->name }}</span>
+                        </label>
+                        @endforeach
+                    </div>
+                </div>
                 <!-- Franchises Box -->
                 @if(isset($franchises) && $franchises->isNotEmpty())
                 <div class="bg-[#11141A] border border-[#232936] rounded-2xl p-5 space-y-3">
