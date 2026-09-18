@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /login
+Disallow: /register
+Disallow: /download/*/track
+Disallow: /search/live
+Disallow: /favorites/
+
+Sitemap: https://pichoroms.com/sitemap.xml

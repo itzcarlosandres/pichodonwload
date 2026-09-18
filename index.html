@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ROMHUB — Biblioteca Premium de Videojuegos & Preservación Digital</title>
+  
+  <!-- Industrial Typography: Bricolage Grotesque, Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            heading: ['"Bricolage Grotesque"', '"Plus Jakarta Sans"', 'sans-serif'],
+            sans: ['"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            app: {
+              base: '#0A0C0F',       // Pure dark obsidian slate (Steam/Linear)
+              surface: '#11141A',    // Card / Section background
+              surfaceElevated: '#171B22', // Hover state / Modals
+              surfaceActive: '#1F242E',   // Active state
+              border: '#232936',     // 1px crisp borders
+              borderSubtle: 'rgba(255, 255, 255, 0.06)',
+              primary: '#3B82F6',    // Industrial tech blue
+              primaryHover: '#2563EB',
+              accent: '#10B981',     // Verified green
+              warning: '#F59E0B',
+              danger: '#EF4444',
+              text: '#E5E7EB',
+              textMuted: '#9CA3AF',
+              textDim: '#6B7280',
+            }
+          },
+          boxShadow: {
+            'elevation-1': '0 1px 3px 0 rgba(0, 0, 0, 0.5)',
+            'elevation-2': '0 4px 14px 0 rgba(0, 0, 0, 0.65)',
+            'elevation-3': '0 16px 36px 0 rgba(0, 0, 0, 0.85)',
+            'subtle-glow': '0 0 25px -5px rgba(59, 130, 246, 0.3)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #0A0C0F;
+      color: #E5E7EB;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0A0C0F;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #232936;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #374151;
+    }
+
+    .catalog-card {
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .catalog-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 14px 28px -4px rgba(0, 0, 0, 0.85);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .aspect-cover {
+      aspect-ratio: 3 / 4.1;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-blue-600 selection:text-white">
+
+  <!-- ========================================================================= -->
+  <!-- TOP PROTOTYPE SWITCHER (PERMITE NAVEGAR ENTRE TODAS LAS VISTAS) -->
+  <!-- ========================================================================= -->
+  <aside class="sticky top-0 z-50 bg-app-base border-b border-app-border/80 px-4 py-2 flex flex-wrap items-center justify-between text-xs text-app-textMuted shadow-elevation-2">
+    <div class="flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+      <span class="font-mono uppercase tracking-wider font-bold text-gray-200 text-[11px]">ROMHUB PROTOTYPE</span>
+      <span class="text-gray-600">|</span>
+      <span class="hidden sm:inline text-gray-400 text-[11px]">Haz clic en cualquier pestaña para ver el diseño correspondiente:</span>
+    </div>
+
+    <nav class="flex items-center gap-1.5 overflow-x-auto py-0.5">
+      <button onclick="switchView('home')" id="tab-home" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold transition-colors flex items-center gap-1.5 shadow-sm">
+        <i data-lucide="home" class="w-3.5 h-3.5"></i> <span>1. Web / Inicio</span>
+      </button>
+      <button onclick="switchView('game')" id="tab-game" class="px-3 py-1.5 rounded-lg hover:bg-app-surfaceElevated text-gray-400 hover:text-white font-medium transition-colors flex items-center gap-1.5">
+        <i data-lucide="gamepad-2" class="w-3.5 h-3.5"></i> <span>2. Ficha de Juego</span>
+      </button>
+      <button onclick="switchView('consoles')" id="tab-consoles" class="px-3 py-1.5 rounded-lg hover:bg-app-surfaceElevated text-gray-400 hover:text-white font-medium transition-colors flex items-center gap-1.5">
+        <i data-lucide="tv" class="w-3.5 h-3.5"></i> <span>3. 20 Consolas</span>
+      </button>
+      <button onclick="switchView('search')" id="tab-search" class="px-3 py-1.5 rounded-lg hover:bg-app-surfaceElevated text-gray-400 hover:text-white font-medium transition-colors flex items-center gap-1.5">
+        <i data-lucide="search" class="w-3.5 h-3.5"></i> <span>4. Buscador</span>
+      </button>
+      <button onclick="switchView('profile')" id="tab-profile" class="px-3 py-1.5 rounded-lg hover:bg-app-surfaceElevated text-gray-400 hover:text-white font-medium transition-colors flex items-center gap-1.5">
+        <i data-lucide="user" class="w-3.5 h-3.5"></i> <span>5. Mi Perfil</span>
+      </button>
+      <button onclick="switchView('admin')" id="tab-admin" class="px-3 py-1.5 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 font-semibold transition-colors flex items-center gap-1.5">
+        <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> <span>6. Panel Admin</span>
+      </button>
+    </nav>
+  </aside>
+
+  <!-- ========================================================================= -->
+  <!-- MAIN WEB HEADER (STEAM / PLAYSTATION STORE COMMERCIAL AESTHETIC) -->
+  <!-- ========================================================================= -->
+  <header class="border-b border-app-border bg-app-surface/95 backdrop-blur-md sticky top-[45px] z-40">
+    <div class="max-w-[1500px] mx-auto px-4 lg:px-6 h-16 flex items-center justify-between gap-6">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-8">
+        <a href="#" onclick="switchView('home')" class="flex items-center gap-3 group">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-blue-500 flex items-center justify-center text-white font-black text-sm shadow-subtle-glow">
+            <i data-lucide="disc" class="w-5 h-5 text-white"></i>
+          </div>
+          <div>
+            <div class="font-extrabold tracking-tight text-white text-lg leading-tight font-sans">ROM<span class="text-blue-500">HUB</span></div>
+            <div class="text-[9px] font-mono tracking-widest text-gray-500 uppercase -mt-0.5">Preservation Vault</div>
+          </div>
+        </a>
+
+        <!-- Desktop Navigation -->
+        <nav class="hidden lg:flex items-center gap-1 text-[13px] font-medium text-gray-300">
+          <button onclick="switchView('home')" class="px-3 py-1.5 rounded-md hover:bg-app-surfaceElevated hover:text-white transition-colors">
+            Explorar Tienda
+          </button>
+          <button onclick="switchView('consoles')" class="px-3 py-1.5 rounded-md hover:bg-app-surfaceElevated hover:text-white transition-colors flex items-center gap-1.5">
+            Consolas <span class="bg-app-base text-blue-400 text-[10px] px-1.5 py-0.2 rounded border border-app-border font-mono">20</span>
+          </button>
+          <button onclick="switchView('search')" class="px-3 py-1.5 rounded-md hover:bg-app-surfaceElevated hover:text-white transition-colors">
+            Géneros & Tags
+          </button>
+          <button onclick="switchView('search')" class="px-3 py-1.5 rounded-md hover:bg-app-surfaceElevated hover:text-white transition-colors flex items-center gap-1 text-emerald-400">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Top 100
+          </button>
+        </nav>
+      </div>
+
+      <!-- Live Search Box -->
+      <div class="flex-1 max-w-md hidden md:block relative">
+        <div class="relative flex items-center">
+          <i data-lucide="search" class="w-4 h-4 text-gray-500 absolute left-3 pointer-events-none"></i>
+          <input 
+            type="text" 
+            id="global-search"
+            oninput="handleQuickSearch(this.value)"
+            placeholder="Buscar por juego, consola, serial o desarrollador... (ej. Zelda, PS2)" 
+            class="w-full bg-app-base border border-app-border rounded-lg pl-9 pr-14 py-2 text-xs text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500 font-sans"
+          >
+          <kbd class="absolute right-2.5 px-1.5 py-0.5 text-[10px] font-mono text-gray-500 bg-app-surfaceElevated rounded border border-app-border">Ctrl+K</kbd>
+        </div>
+
+        <!-- Dropdown Instant Search -->
+        <div id="quick-search-dropdown" class="hidden absolute left-0 right-0 top-11 bg-app-surface border border-app-border rounded-lg shadow-elevation-3 p-1.5 z-50 divide-y divide-app-border/50">
+          <div class="px-2 py-1 text-[10px] font-mono font-semibold text-gray-500 uppercase tracking-wider">Resultados en Tiempo Real</div>
+          <div class="py-1 space-y-0.5">
+            <div onclick="switchView('game')" class="flex items-center gap-3 px-3 py-2 hover:bg-app-surfaceElevated rounded-md cursor-pointer transition-colors">
+              <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=100&q=80" class="w-8 h-10 object-cover rounded" alt="Zelda">
+              <div class="flex-1 min-w-0">
+                <p class="text-xs font-bold text-white truncate">The Legend of Zelda: Breath of the Wild</p>
+                <p class="text-[10px] font-mono text-gray-400">Nintendo Switch • NSP • 13.4 GB</p>
+              </div>
+              <span class="text-xs font-mono text-amber-400 font-bold">★ 4.9</span>
+            </div>
+            <div onclick="switchView('game')" class="flex items-center gap-3 px-3 py-2 hover:bg-app-surfaceElevated rounded-md cursor-pointer transition-colors">
+              <img src="https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=100&q=80" class="w-8 h-10 object-cover rounded" alt="GOW">
+              <div class="flex-1 min-w-0">
+                <p class="text-xs font-bold text-white truncate">God of War II (Special DVD Edition)</p>
+                <p class="text-[10px] font-mono text-gray-400">PlayStation 2 • ISO • 7.9 GB</p>
+              </div>
+              <span class="text-xs font-mono text-amber-400 font-bold">★ 4.8</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- User Profile & Action Bar -->
+      <div class="flex items-center gap-3">
+        <!-- Favorites Counter Badge -->
+        <button onclick="switchView('profile')" class="p-2 rounded-lg bg-app-base hover:bg-app-surfaceElevated border border-app-border text-gray-300 hover:text-white transition-colors relative">
+          <i data-lucide="bookmark" class="w-4 h-4"></i>
+          <span class="absolute -top-1 -right-1 w-4 h-4 bg-blue-600 text-[10px] font-bold text-white rounded-full flex items-center justify-center font-mono">14</span>
+        </button>
+
+        <!-- User Profile Pill -->
+        <div onclick="switchView('profile')" class="flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-lg bg-app-surface hover:bg-app-surfaceElevated border border-app-border cursor-pointer transition-colors">
+          <div class="w-6 h-6 rounded bg-blue-600 text-white flex items-center justify-center font-bold text-xs font-mono">
+            AL
+          </div>
+          <div class="text-left hidden sm:block leading-tight">
+            <p class="text-[12px] font-semibold text-gray-200">AlexArchive</p>
+            <p class="text-[10px] text-emerald-400 font-mono">Nivel 14 • Pro</p>
+          </div>
+        </div>
+
+        <!-- Admin Quick Access -->
+        <button onclick="switchView('admin')" class="px-3 py-1.5 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 text-xs font-semibold flex items-center gap-1 transition-colors">
+          <i data-lucide="shield" class="w-3.5 h-3.5"></i> <span class="hidden md:inline">Admin</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- VIEW 1: HOME (THE FULL COMMERCIAL WEB STOREFRONT & PRESERVATION VAULT) -->
+  <!-- ========================================================================= -->
+  <main id="view-home" class="view-content flex-1 max-w-[1500px] w-full mx-auto px-4 lg:px-6 py-6 space-y-12">
+    
+    <!-- Hero Spotlight Section (Steam Deck / Epic Store style) -->
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      
+      <!-- Big Hero Showcase (8 cols) -->
+      <div class="lg:col-span-8 bg-app-surface rounded-2xl border border-app-border overflow-hidden flex flex-col justify-between relative min-h-[460px] shadow-elevation-2">
+        <div class="absolute inset-0 z-0">
+          <img 
+            src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1400&q=80" 
+            class="w-full h-full object-cover object-center"
+            alt="Hero Spotlight"
+          >
+          <div class="absolute inset-0 bg-gradient-to-t from-app-surface via-app-surface/75 to-transparent"></div>
+          <div class="absolute inset-0 bg-gradient-to-r from-app-surface via-app-surface/60 to-transparent"></div>
+        </div>
+
+        <div class="relative z-10 p-6 sm:p-8 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-1 rounded bg-blue-600 text-white text-[11px] font-bold font-mono tracking-wider uppercase">Juego Destacado</span>
+            <span class="px-2.5 py-1 rounded bg-black/60 border border-white/10 text-gray-300 text-[11px] font-mono">PlayStation 2 • SCUS-97472</span>
+          </div>
+          <span class="px-2.5 py-1 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-500/30 text-[11px] font-mono flex items-center gap-1">
+            <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> Verificado 60 FPS
+          </span>
+        </div>
+
+        <div class="relative z-10 p-6 sm:p-8 space-y-4 max-w-2xl">
+          <h1 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
+            Shadow of the Colossus
+          </h1>
+          <p class="text-sm text-gray-300 line-clamp-2 leading-relaxed">
+            Preservado en formato CHD sin pérdida con texturas mejoradas y compatibilidad nativa con emulador PCSX2 / AetherSX2. Incluye banda sonora original y manual escaneado en alta resolución.
+          </p>
+          
+          <div class="flex flex-wrap items-center gap-4 text-xs text-gray-300 font-mono py-1">
+            <div class="flex items-center gap-1 text-amber-400">
+              <span>★ 4.95 / 5.0</span>
+              <span class="text-gray-400 font-sans text-[11px]">(3,820 votos)</span>
+            </div>
+            <span>•</span>
+            <div>Tamaño: <strong class="text-white">3.41 GB</strong></div>
+            <span>•</span>
+            <div>Región: <strong class="text-white">NTSC-U</strong></div>
+            <span>•</span>
+            <div>Desarrollador: <strong class="text-white">Team Ico / Sony</strong></div>
+          </div>
+
+          <div class="flex items-center gap-3 pt-2">
+            <button onclick="switchView('game')" class="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-[13px] flex items-center gap-2 transition-colors shadow-subtle-glow">
+              <i data-lucide="download" class="w-4 h-4"></i>
+              <span>Descargar & Ficha Técnica</span>
+            </button>
+            <button onclick="toggleFavorite(this)" class="px-4 py-2.5 rounded-lg bg-app-surfaceElevated hover:bg-app-border border border-app-border text-gray-200 text-[13px] font-medium flex items-center gap-2 transition-colors">
+              <i data-lucide="bookmark" class="w-4 h-4 text-gray-400"></i>
+              <span>Guardar</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Spotlight Side Rail: 3 Highlighted Games (4 cols) -->
+      <div class="lg:col-span-4 flex flex-col gap-3">
+        <div class="text-[12px] font-mono uppercase tracking-wider text-gray-400 font-semibold px-1 flex justify-between items-center">
+          <span>Colección Destacada</span>
+          <span class="text-blue-400 text-[11px]">Actualizado hoy</span>
+        </div>
+
+        <!-- Rail Item 1 -->
+        <div onclick="switchView('game')" class="flex-1 bg-app-surface hover:bg-app-surfaceElevated border border-app-border rounded-xl p-3 flex gap-3.5 cursor-pointer transition-colors group">
+          <div class="w-20 h-full rounded-lg bg-gray-900 shrink-0 overflow-hidden border border-white/5 aspect-[3/4]">
+            <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=300&q=80" class="w-full h-full object-cover group-hover:scale-105 transition-transform" alt="Zelda">
+          </div>
+          <div class="flex-1 flex flex-col justify-between min-w-0 py-0.5">
+            <div>
+              <span class="text-[10px] font-mono text-red-400 font-semibold uppercase">Nintendo Switch</span>
+              <h4 class="text-[13px] font-bold text-white truncate group-hover:text-blue-400 transition-colors">Zelda: Breath of the Wild</h4>
+              <p class="text-[11px] text-gray-400 line-clamp-1">NSP + Update 1.6.0 + DLCs</p>
+            </div>
+            <div class="flex items-center justify-between text-[11px] font-mono text-gray-400">
+              <span>13.4 GB</span>
+              <span class="text-amber-400 font-bold">★ 4.9</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rail Item 2 -->
+        <div onclick="switchView('game')" class="flex-1 bg-app-surface hover:bg-app-surfaceElevated border border-app-border rounded-xl p-3 flex gap-3.5 cursor-pointer transition-colors group">
+          <div class="w-20 h-full rounded-lg bg-gray-900 shrink-0 overflow-hidden border border-white/5 aspect-[3/4]">
+            <img src="https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=300&q=80" class="w-full h-full object-cover group-hover:scale-105 transition-transform" alt="GOW">
+          </div>
+          <div class="flex-1 flex flex-col justify-between min-w-0 py-0.5">
+            <div>
+              <span class="text-[10px] font-mono text-blue-400 font-semibold uppercase">PlayStation 2</span>
+              <h4 class="text-[13px] font-bold text-white truncate group-hover:text-blue-400 transition-colors">God of War II</h4>
+              <p class="text-[11px] text-gray-400 line-clamp-1">ISO • Multi-5 Español</p>
+            </div>
+            <div class="flex items-center justify-between text-[11px] font-mono text-gray-400">
+              <span>7.9 GB</span>
+              <span class="text-amber-400 font-bold">★ 4.8</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rail Item 3 -->
+        <div onclick="switchView('game')" class="flex-1 bg-app-surface hover:bg-app-surfaceElevated border border-app-border rounded-xl p-3 flex gap-3.5 cursor-pointer transition-colors group">
+          <div class="w-20 h-full rounded-lg bg-gray-900 shrink-0 overflow-hidden border border-white/5 aspect-[3/4]">
+            <img src="https://images.unsplash.com/photo-1563089145-599997674d42?w=300&q=80" class="w-full h-full object-cover group-hover:scale-105 transition-transform" alt="Smash">
+          </div>
+          <div class="flex-1 flex flex-col justify-between min-w-0 py-0.5">
+            <div>
+              <span class="text-[10px] font-mono text-purple-400 font-semibold uppercase">GameCube</span>
+              <h4 class="text-[13px] font-bold text-white truncate group-hover:text-blue-400 transition-colors">Super Smash Bros. Melee</h4>
+              <p class="text-[11px] text-gray-400 line-clamp-1">ISO 1.02 Tournament Clean</p>
+            </div>
+            <div class="flex items-center justify-between text-[11px] font-mono text-gray-400">
+              <span>1.35 GB</span>
+              <span class="text-amber-400 font-bold">★ 4.9</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Platform Quick Matrix (20 Consoles Directory Quick Access) -->
+    <section class="space-y-3">
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-mono uppercase tracking-wider text-gray-400 font-semibold flex items-center gap-2">
+          <i data-lucide="cpu" class="w-4 h-4 text-blue-500"></i>
+          Directorio de Plataformas (20 Sistemas)
+        </h2>
+        <button onclick="switchView('consoles')" class="text-xs text-blue-400 hover:underline flex items-center gap-1 font-medium">
+          Ver las 20 consolas <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-10 gap-2 text-xs">
+        <button onclick="switchView('consoles')" class="p-3 rounded-xl bg-app-surface hover:bg-app-surfaceElevated border border-app-border flex flex-col items-center gap-1 text-center transition-colors">
+          <span class="font-mono font-bold text-blue-400 text-xs">PS2</span>
+          <span class="text-[10px] text-gray-400">2,450 ROMs</span>
+        </button>
+        <button onclick="switchView('consoles')" class="p-3 rounded-xl bg-app-surface hover:bg-app-surfaceElevated border border-app-border flex flex-col items-center gap-1 text-center transition-colors">
+          <span class="font-mono font-bold text-red-400 text-xs">Switch</span>
+          <span class="text-[10px] text-gray-400">980 ROMs</span>
+        </button>
+        <button onclick="switchView('consoles')" class="p-3 rounded-xl bg-app-surface hover:bg-app-surfaceElevated border border-app-border flex flex-col items-center gap-1 text-center transition-colors">
+          <span class="font-mono font-bold text-purple-400 text-xs">GCN</span>
+          <span class="text-[10px] text-gray-400">650 ROMs</span>
+        </button>
+        <button onclick="switchView('consoles')" class="p-3 rounded-xl bg-app-surface hover:bg-app-surfaceElevated border border-app-border flex flex-col items-center gap-1 text-center transition-colors">
+          <span class="font-mono font-bold text-emerald-400 text-xs">X360</span>
+          <span class="text-[10px] text-gray-400">820 ROMs</span>
+        </button>
+        <button onclick="switchView('consoles')" class="p-3 rounded-xl bg-app-surface hover:bg-app-surfaceElevated border border-app-border flex flex-col items-center gap-1 text-center transition-colors">
+          <span class="font-mono font-bold text-indigo-400 text-xs">GBA</span>
+          <span class="text-[10px] text-gray-400">1,890 ROMs</span>
+        </button>
+        <button onclick="switchView('consoles')" class="p-3 rounded-xl bg-app-surface hover:bg-app-surfaceElevated border border-app-border flex flex-col items-center gap-1 text-center transition-colors">
+          <span class="font-mono font-bold text-blue-400 text-xs">PS3</span>
+          <span class="text-[10px] text-gray-400">1,150 ROMs</span>
+        </button>
+        <button onclick="switchView('consoles')" class="p-3 rounded-xl bg-app-surface hover:bg-app-surfaceElevated border border-app-border flex flex-col items-center gap-1 text-center transition-colors">
+          <span class="font-mono font-bold text-orange-400 text-xs">DC</span>
+          <span class="text-[10px] text-gray-400">420 ROMs</span>
+        </button>
+        <button onclick="switchView('consoles')" class="p-3 rounded-xl bg-app-surface hover:bg-app-surfaceElevated border border-app-border flex flex-col items-center gap-1 text-center transition-colors">
+          <span class="font-mono font-bold text-red-400 text-xs">SNES</span>
+          <span class="text-[10px] text-gray-400">1,750 ROMs</span>
+        </button>
+        <button onclick="switchView('consoles')" class="p-3 rounded-xl bg-app-surface hover:bg-app-surfaceElevated border border-app-border flex flex-col items-center gap-1 text-center transition-colors">
+          <span class="font-mono font-bold text-blue-400 text-xs">PSP</span>
+          <span class="text-[10px] text-gray-400">980 ROMs</span>
+        </button>
+        <button onclick="switchView('consoles')" class="p-3 rounded-xl bg-app-surface hover:bg-app-surfaceElevated border border-app-border flex flex-col items-center gap-1 text-center transition-colors">
+          <span class="font-mono font-bold text-gray-300 text-xs">Ver +11</span>
+          <span class="text-[10px] text-gray-500">NES, Wii...</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Main Catalog Section (Clean Modern Steam/PS Store Card Grid) -->
+    <section class="space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-app-border pb-3">
+        <div class="flex items-center gap-4">
+          <h2 class="text-base font-bold text-white">Catálogo de Preservación</h2>
+          <div class="flex items-center bg-app-surface p-0.5 rounded-lg border border-app-border text-xs">
+            <button class="px-3 py-1 rounded bg-blue-600 text-white font-medium">Más Descargados</button>
+            <button class="px-3 py-1 rounded text-gray-400 hover:text-white">Mejor Rating</button>
+            <button class="px-3 py-1 rounded text-gray-400 hover:text-white">Añadidos Recientes</button>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 text-xs font-mono text-gray-400">
+          <span>Mostrando 6 títulos destacados</span>
+        </div>
+      </div>
+
+      <!-- High-Fidelity Clean Card Grid -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        
+        <!-- Game Card 1 -->
+        <div onclick="switchView('game')" class="catalog-card bg-app-surface rounded-xl border border-app-border overflow-hidden flex flex-col group cursor-pointer">
+          <div class="relative aspect-cover bg-app-base overflow-hidden">
+            <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=500&q=80" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="Zelda">
+            <div class="absolute top-2 left-2 flex flex-col gap-1">
+              <span class="px-1.5 py-0.5 rounded bg-red-600 text-[9px] font-bold text-white font-mono uppercase">Switch</span>
+              <span class="px-1.5 py-0.5 rounded bg-black/70 text-[9px] font-mono text-emerald-400 border border-emerald-500/20">USA</span>
+            </div>
+            <button onclick="event.stopPropagation(); toggleFavorite(this);" class="absolute top-2 right-2 p-1.5 rounded bg-black/60 hover:bg-rose-600 text-white transition-colors">
+              <i data-lucide="bookmark" class="w-3.5 h-3.5"></i>
+            </button>
+            <div class="absolute bottom-2 left-2 right-2 flex justify-between items-center text-[10px] font-mono text-gray-300 bg-black/80 px-2 py-1 rounded">
+              <span>13.4 GB</span>
+              <span class="text-amber-400 font-bold">★ 4.9</span>
+            </div>
+          </div>
+          <div class="p-3 flex-1 flex flex-col justify-between gap-2">
+            <div>
+              <p class="text-[10px] font-mono text-gray-500 uppercase">Aventura / RPG</p>
+              <h3 class="text-xs font-bold text-white group-hover:text-blue-400 transition-colors line-clamp-1">The Legend of Zelda: BOTW</h3>
+            </div>
+            <div class="pt-2 border-t border-app-border flex justify-between items-center text-[11px] text-gray-400">
+              <span class="font-mono text-[10px]">142.5k dls</span>
+              <span class="text-blue-400 font-medium">Ver ficha →</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Game Card 2 -->
+        <div onclick="switchView('game')" class="catalog-card bg-app-surface rounded-xl border border-app-border overflow-hidden flex flex-col group cursor-pointer">
+          <div class="relative aspect-cover bg-app-base overflow-hidden">
+            <img src="https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=500&q=80" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="GOW">
+            <div class="absolute top-2 left-2 flex flex-col gap-1">
+              <span class="px-1.5 py-0.5 rounded bg-blue-600 text-[9px] font-bold text-white font-mono uppercase">PS2</span>
+              <span class="px-1.5 py-0.5 rounded bg-black/70 text-[9px] font-mono text-blue-300 border border-blue-500/20">EUR</span>
+            </div>
+            <button onclick="event.stopPropagation(); toggleFavorite(this);" class="absolute top-2 right-2 p-1.5 rounded bg-black/60 hover:bg-rose-600 text-white transition-colors">
+              <i data-lucide="bookmark" class="w-3.5 h-3.5"></i>
+            </button>
+            <div class="absolute bottom-2 left-2 right-2 flex justify-between items-center text-[10px] font-mono text-gray-300 bg-black/80 px-2 py-1 rounded">
+              <span>7.9 GB</span>
+              <span class="text-amber-400 font-bold">★ 4.8</span>
+            </div>
+          </div>
+          <div class="p-3 flex-1 flex flex-col justify-between gap-2">
+            <div>
+              <p class="text-[10px] font-mono text-gray-500 uppercase">Hack & Slash</p>
+              <h3 class="text-xs font-bold text-white group-hover:text-blue-400 transition-colors line-clamp-1">God of War II</h3>
+            </div>
+            <div class="pt-2 border-t border-app-border flex justify-between items-center text-[11px] text-gray-400">
+              <span class="font-mono text-[10px]">98.2k dls</span>
+              <span class="text-blue-400 font-medium">Ver ficha →</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Game Card 3 -->
+        <div onclick="switchView('game')" class="catalog-card bg-app-surface rounded-xl border border-app-border overflow-hidden flex flex-col group cursor-pointer">
+          <div class="relative aspect-cover bg-app-base overflow-hidden">
+            <img src="https://images.unsplash.com/photo-1563089145-599997674d42?w=500&q=80" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="Smash">
+            <div class="absolute top-2 left-2 flex flex-col gap-1">
+              <span class="px-1.5 py-0.5 rounded bg-purple-600 text-[9px] font-bold text-white font-mono uppercase">GCN</span>
+              <span class="px-1.5 py-0.5 rounded bg-black/70 text-[9px] font-mono text-purple-300 border border-purple-500/20">USA</span>
+            </div>
+            <button onclick="event.stopPropagation(); toggleFavorite(this);" class="absolute top-2 right-2 p-1.5 rounded bg-black/60 hover:bg-rose-600 text-white transition-colors">
+              <i data-lucide="bookmark" class="w-3.5 h-3.5"></i>
+            </button>
+            <div class="absolute bottom-2 left-2 right-2 flex justify-between items-center text-[10px] font-mono text-gray-300 bg-black/80 px-2 py-1 rounded">
+              <span>1.35 GB</span>
+              <span class="text-amber-400 font-bold">★ 4.9</span>
+            </div>
+          </div>
+          <div class="p-3 flex-1 flex flex-col justify-between gap-2">
+            <div>
+              <p class="text-[10px] font-mono text-gray-500 uppercase">Lucha / Versus</p>
+              <h3 class="text-xs font-bold text-white group-hover:text-blue-400 transition-colors line-clamp-1">Super Smash Bros. Melee</h3>
+            </div>
+            <div class="pt-2 border-t border-app-border flex justify-between items-center text-[11px] text-gray-400">
+              <span class="font-mono text-[10px]">210.4k dls</span>
+              <span class="text-blue-400 font-medium">Ver ficha →</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Game Card 4 -->
+        <div onclick="switchView('game')" class="catalog-card bg-app-surface rounded-xl border border-app-border overflow-hidden flex flex-col group cursor-pointer">
+          <div class="relative aspect-cover bg-app-base overflow-hidden">
+            <img src="https://images.unsplash.com/photo-1511512578047-dfb367046420?w=500&q=80" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="Halo">
+            <div class="absolute top-2 left-2 flex flex-col gap-1">
+              <span class="px-1.5 py-0.5 rounded bg-emerald-600 text-[9px] font-bold text-white font-mono uppercase">X360</span>
+              <span class="px-1.5 py-0.5 rounded bg-black/70 text-[9px] font-mono text-emerald-300 border border-emerald-500/20">Global</span>
+            </div>
+            <button onclick="event.stopPropagation(); toggleFavorite(this);" class="absolute top-2 right-2 p-1.5 rounded bg-black/60 hover:bg-rose-600 text-white transition-colors">
+              <i data-lucide="bookmark" class="w-3.5 h-3.5"></i>
+            </button>
+            <div class="absolute bottom-2 left-2 right-2 flex justify-between items-center text-[10px] font-mono text-gray-300 bg-black/80 px-2 py-1 rounded">
+              <span>7.3 GB</span>
+              <span class="text-amber-400 font-bold">★ 4.85</span>
+            </div>
+          </div>
+          <div class="p-3 flex-1 flex flex-col justify-between gap-2">
+            <div>
+              <p class="text-[10px] font-mono text-gray-500 uppercase">FPS / Sci-Fi</p>
+              <h3 class="text-xs font-bold text-white group-hover:text-blue-400 transition-colors line-clamp-1">Halo 3: Finish The Fight</h3>
+            </div>
+            <div class="pt-2 border-t border-app-border flex justify-between items-center text-[11px] text-gray-400">
+              <span class="font-mono text-[10px]">89.1k dls</span>
+              <span class="text-blue-400 font-medium">Ver ficha →</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Game Card 5 -->
+        <div onclick="switchView('game')" class="catalog-card bg-app-surface rounded-xl border border-app-border overflow-hidden flex flex-col group cursor-pointer">
+          <div class="relative aspect-cover bg-app-base overflow-hidden">
+            <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=500&q=80" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="Pokemon">
+            <div class="absolute top-2 left-2 flex flex-col gap-1">
+              <span class="px-1.5 py-0.5 rounded bg-indigo-600 text-[9px] font-bold text-white font-mono uppercase">GBA</span>
+              <span class="px-1.5 py-0.5 rounded bg-black/70 text-[9px] font-mono text-indigo-300 border border-indigo-500/20">ESP</span>
+            </div>
+            <button onclick="event.stopPropagation(); toggleFavorite(this);" class="absolute top-2 right-2 p-1.5 rounded bg-black/60 hover:bg-rose-600 text-white transition-colors">
+              <i data-lucide="bookmark" class="w-3.5 h-3.5"></i>
+            </button>
+            <div class="absolute bottom-2 left-2 right-2 flex justify-between items-center text-[10px] font-mono text-gray-300 bg-black/80 px-2 py-1 rounded">
+              <span>16 MB</span>
+              <span class="text-amber-400 font-bold">★ 4.95</span>
+            </div>
+          </div>
+          <div class="p-3 flex-1 flex flex-col justify-between gap-2">
+            <div>
+              <p class="text-[10px] font-mono text-gray-500 uppercase">JRPG / Rol</p>
+              <h3 class="text-xs font-bold text-white group-hover:text-blue-400 transition-colors line-clamp-1">Pokémon Esmeralda (v1.1)</h3>
+            </div>
+            <div class="pt-2 border-t border-app-border flex justify-between items-center text-[11px] text-gray-400">
+              <span class="font-mono text-[10px]">320.1k dls</span>
+              <span class="text-blue-400 font-medium">Ver ficha →</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Game Card 6 -->
+        <div onclick="switchView('game')" class="catalog-card bg-app-surface rounded-xl border border-app-border overflow-hidden flex flex-col group cursor-pointer">
+          <div class="relative aspect-cover bg-app-base overflow-hidden">
+            <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=500&q=80" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="Sonic">
+            <div class="absolute top-2 left-2 flex flex-col gap-1">
+              <span class="px-1.5 py-0.5 rounded bg-orange-600 text-[9px] font-bold text-white font-mono uppercase">DC</span>
+              <span class="px-1.5 py-0.5 rounded bg-black/70 text-[9px] font-mono text-orange-300 border border-orange-500/20">USA</span>
+            </div>
+            <button onclick="event.stopPropagation(); toggleFavorite(this);" class="absolute top-2 right-2 p-1.5 rounded bg-black/60 hover:bg-rose-600 text-white transition-colors">
+              <i data-lucide="bookmark" class="w-3.5 h-3.5"></i>
+            </button>
+            <div class="absolute bottom-2 left-2 right-2 flex justify-between items-center text-[10px] font-mono text-gray-300 bg-black/80 px-2 py-1 rounded">
+              <span>1.1 GB</span>
+              <span class="text-amber-400 font-bold">★ 4.7</span>
+            </div>
+          </div>
+          <div class="p-3 flex-1 flex flex-col justify-between gap-2">
+            <div>
+              <p class="text-[10px] font-mono text-gray-500 uppercase">Plataformas 3D</p>
+              <h3 class="text-xs font-bold text-white group-hover:text-blue-400 transition-colors line-clamp-1">Sonic Adventure 2</h3>
+            </div>
+            <div class="pt-2 border-t border-app-border flex justify-between items-center text-[11px] text-gray-400">
+              <span class="font-mono text-[10px]">64.2k dls</span>
+              <span class="text-blue-400 font-medium">Ver ficha →</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- VIEW 2: GAME DETAIL (TECHNICAL ARCHIVE VIEW) -->
+  <!-- ========================================================================= -->
+  <main id="view-game" class="view-content hidden flex-1 max-w-[1500px] w-full mx-auto px-4 lg:px-6 py-6 space-y-6">
+    
+    <!-- Breadcrumb -->
+    <div class="flex items-center gap-2 text-xs font-mono text-gray-400">
+      <a href="#" onclick="switchView('home')" class="hover:text-white">DATABASE</a>
+      <span class="text-gray-600">/</span>
+      <a href="#" onclick="switchView('consoles')" class="hover:text-white">NINTENDO SWITCH</a>
+      <span class="text-gray-600">/</span>
+      <span class="text-blue-400 font-semibold">THE LEGEND OF ZELDA: BREATH OF THE WILD</span>
+    </div>
+
+    <!-- Presentation Header -->
+    <div class="bg-app-surface rounded-2xl border border-app-border overflow-hidden relative p-6 lg:p-8 flex flex-col md:flex-row gap-6 items-start md:items-end justify-between shadow-elevation-2">
+      <div class="flex flex-col sm:flex-row gap-6 items-start">
+        <div class="w-36 lg:w-44 aspect-cover rounded-xl bg-gray-900 border border-app-border overflow-hidden shrink-0 shadow-elevation-2">
+          <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&q=80" class="w-full h-full object-cover" alt="Cover">
+        </div>
+
+        <div class="space-y-3">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="px-2 py-0.5 rounded bg-red-600 text-white font-mono text-[11px] font-bold">Nintendo Switch</span>
+            <span class="px-2 py-0.5 rounded bg-app-surfaceElevated border border-app-border text-gray-300 font-mono text-[11px]">Title ID: 01007EF00011E000</span>
+            <span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-500/30 font-mono text-[11px]">No-Intro Verified</span>
+          </div>
+
+          <h1 class="text-2xl lg:text-3xl font-extrabold text-white tracking-tight">
+            The Legend of Zelda: Breath of the Wild
+          </h1>
+
+          <div class="flex flex-wrap items-center gap-4 text-xs font-mono text-gray-300">
+            <span class="text-amber-400 font-bold">★ 4.90 / 5.0 (4,120 votos)</span>
+            <span>•</span>
+            <span>Desarrollador: <strong class="text-white font-sans">Nintendo EPD</strong></span>
+            <span>•</span>
+            <span>Lanzamiento: <strong class="text-white">03/03/2017</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2 w-full md:w-auto shrink-0">
+        <button onclick="openDownloadModal()" class="px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-subtle-glow transition-colors">
+          <i data-lucide="download" class="w-4 h-4"></i>
+          <span>Descargar Archivo (13.42 GB)</span>
+        </button>
+        <div class="flex items-center gap-2">
+          <button onclick="toggleFavorite(this)" class="flex-1 px-4 py-2 rounded-lg bg-app-surfaceElevated hover:bg-app-border border border-app-border text-xs text-gray-300 font-medium flex items-center justify-center gap-1.5 transition-colors">
+            <i data-lucide="bookmark" class="w-3.5 h-3.5"></i> Guardar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Specs & Screenshots -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div class="lg:col-span-8 space-y-6">
+        <!-- Gallery -->
+        <div class="bg-app-surface rounded-xl border border-app-border p-5 space-y-3">
+          <h3 class="text-xs font-mono font-semibold uppercase text-gray-400">Capturas HD</h3>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            <img onclick="openImageModal(this.src)" src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80" class="rounded-lg aspect-video object-cover cursor-pointer hover:opacity-90 border border-app-border" alt="Shot 1">
+            <img onclick="openImageModal(this.src)" src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&q=80" class="rounded-lg aspect-video object-cover cursor-pointer hover:opacity-90 border border-app-border" alt="Shot 2">
+            <img onclick="openImageModal(this.src)" src="https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=800&q=80" class="rounded-lg aspect-video object-cover cursor-pointer hover:opacity-90 border border-app-border" alt="Shot 3">
+            <img onclick="openImageModal(this.src)" src="https://images.unsplash.com/photo-1511512578047-dfb367046420?w=800&q=80" class="rounded-lg aspect-video object-cover cursor-pointer hover:opacity-90 border border-app-border" alt="Shot 4">
+          </div>
+        </div>
+
+        <div class="bg-app-surface rounded-xl border border-app-border p-6 space-y-3">
+          <h3 class="text-sm font-mono font-semibold uppercase text-gray-400">Descripción del Título</h3>
+          <p class="text-sm text-gray-300 leading-relaxed">
+            Entra en un mundo de descubrimientos, exploración y aventura en The Legend of Zelda: Breath of the Wild, una entrega que rompe esquemas de la aclamada serie de Nintendo. Viaja por los vastos campos, atraviesa bosques y alcanza picos nevados.
+          </p>
+        </div>
+      </div>
+
+      <div class="lg:col-span-4 space-y-6">
+        <div class="bg-app-surface rounded-xl border border-app-border p-5 space-y-3">
+          <h3 class="text-xs font-mono font-semibold uppercase text-gray-400 border-b border-app-border pb-2">Ficha de Integridad</h3>
+          <div class="space-y-2.5 text-xs font-mono divide-y divide-app-border/40">
+            <div class="flex justify-between pt-1.5"><span class="text-gray-500">Plataforma:</span> <span class="text-gray-200">Nintendo Switch</span></div>
+            <div class="flex justify-between pt-1.5"><span class="text-gray-500">Formato:</span> <span class="text-gray-200">NSP / Base + Update</span></div>
+            <div class="flex justify-between pt-1.5"><span class="text-gray-500">Región:</span> <span class="text-emerald-400">Global / Region Free</span></div>
+            <div class="flex justify-between pt-1.5"><span class="text-gray-500">Idiomas:</span> <span class="text-gray-200">Español, Inglés, JP</span></div>
+            <div class="flex justify-between pt-1.5"><span class="text-gray-500">Tamaño:</span> <span class="text-gray-200">13.42 GB</span></div>
+            <div class="flex justify-between pt-1.5"><span class="text-gray-500">CRC32:</span> <span class="text-blue-400">A8F290BD</span></div>
+            <div class="flex justify-between pt-1.5"><span class="text-gray-500">Emulador Óptimo:</span> <span class="text-emerald-400">Ryujinx / Yuzu (60 FPS)</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- VIEW 3: 20 CONSOLES DIRECTORY -->
+  <!-- ========================================================================= -->
+  <main id="view-consoles" class="view-content hidden flex-1 max-w-[1500px] w-full mx-auto px-4 lg:px-6 py-6 space-y-6">
+    <div class="bg-app-surface rounded-xl border border-app-border p-6 space-y-3">
+      <div class="flex items-center gap-2 font-mono text-xs text-blue-400 font-semibold uppercase">
+        <i data-lucide="archive" class="w-4 h-4"></i> Directorio Completo de 20 Consolas
+      </div>
+      <h1 class="text-2xl font-bold text-white">Hub de Consolas Archivadas</h1>
+      <p class="text-xs text-gray-400 max-w-2xl">
+        Bases de datos completas clasificadas por fabricante con sus herramientas de emulación oficiales.
+      </p>
+
+      <div class="flex flex-wrap gap-1.5 pt-2 text-xs font-mono">
+        <button onclick="filterConsoles('all')" id="btn-cons-all" class="px-3 py-1.5 rounded bg-blue-600 text-white font-medium">Todas (20)</button>
+        <button onclick="filterConsoles('sony')" id="btn-cons-sony" class="px-3 py-1.5 rounded bg-app-surfaceElevated hover:bg-app-border text-gray-300 font-medium">Sony (5)</button>
+        <button onclick="filterConsoles('nintendo')" id="btn-cons-nintendo" class="px-3 py-1.5 rounded bg-app-surfaceElevated hover:bg-app-border text-gray-300 font-medium">Nintendo (11)</button>
+        <button onclick="filterConsoles('xbox')" id="btn-cons-xbox" class="px-3 py-1.5 rounded bg-app-surfaceElevated hover:bg-app-border text-gray-300 font-medium">Xbox (2)</button>
+        <button onclick="filterConsoles('sega')" id="btn-cons-sega" class="px-3 py-1.5 rounded bg-app-surfaceElevated hover:bg-app-border text-gray-300 font-medium">Sega (2)</button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div data-brand="sony" onclick="switchView('search')" class="console-card bg-app-surface hover:bg-app-surfaceElevated border border-app-border p-4 rounded-xl cursor-pointer transition-colors space-y-2">
+        <div class="flex justify-between items-center text-xs font-mono"><span class="text-blue-400 font-bold">PS1 • 1994</span><span class="text-gray-500">1,820 Títulos</span></div>
+        <h3 class="text-sm font-bold text-white">PlayStation</h3>
+      </div>
+      <div data-brand="sony" onclick="switchView('search')" class="console-card bg-app-surface hover:bg-app-surfaceElevated border border-app-border p-4 rounded-xl cursor-pointer transition-colors space-y-2">
+        <div class="flex justify-between items-center text-xs font-mono"><span class="text-blue-400 font-bold">PS2 • 2000</span><span class="text-gray-500">2,450 Títulos</span></div>
+        <h3 class="text-sm font-bold text-white">PlayStation 2</h3>
+      </div>
+      <div data-brand="sony" onclick="switchView('search')" class="console-card bg-app-surface hover:bg-app-surfaceElevated border border-app-border p-4 rounded-xl cursor-pointer transition-colors space-y-2">
+        <div class="flex justify-between items-center text-xs font-mono"><span class="text-blue-400 font-bold">PS3 • 2006</span><span class="text-gray-500">1,150 Títulos</span></div>
+        <h3 class="text-sm font-bold text-white">PlayStation 3</h3>
+      </div>
+      <div data-brand="sony" onclick="switchView('search')" class="console-card bg-app-surface hover:bg-app-surfaceElevated border border-app-border p-4 rounded-xl cursor-pointer transition-colors space-y-2">
+        <div class="flex justify-between items-center text-xs font-mono"><span class="text-blue-400 font-bold">PSP • 2004</span><span class="text-gray-500">980 Títulos</span></div>
+        <h3 class="text-sm font-bold text-white">PlayStation Portable</h3>
+      </div>
+      <div data-brand="sony" onclick="switchView('search')" class="console-card bg-app-surface hover:bg-app-surfaceElevated border border-app-border p-4 rounded-xl cursor-pointer transition-colors space-y-2">
+        <div class="flex justify-between items-center text-xs font-mono"><span class="text-blue-400 font-bold">PSV • 2011</span><span class="text-gray-500">720 Títulos</span></div>
+        <h3 class="text-sm font-bold text-white">PlayStation Vita</h3>
+      </div>
+      <div data-brand="nintendo" onclick="switchView('search')" class="console-card bg-app-surface hover:bg-app-surfaceElevated border border-app-border p-4 rounded-xl cursor-pointer transition-colors space-y-2">
+        <div class="flex justify-between items-center text-xs font-mono"><span class="text-red-400 font-bold">NES • 1983</span><span class="text-gray-500">1,200 Títulos</span></div>
+        <h3 class="text-sm font-bold text-white">NES</h3>
+      </div>
+      <div data-brand="nintendo" onclick="switchView('search')" class="console-card bg-app-surface hover:bg-app-surfaceElevated border border-app-border p-4 rounded-xl cursor-pointer transition-colors space-y-2">
+        <div class="flex justify-between items-center text-xs font-mono"><span class="text-red-400 font-bold">SNES • 1990</span><span class="text-gray-500">1,750 Títulos</span></div>
+        <h3 class="text-sm font-bold text-white">Super Nintendo</h3>
+      </div>
+      <div data-brand="nintendo" onclick="switchView('search')" class="console-card bg-app-surface hover:bg-app-surfaceElevated border border-app-border p-4 rounded-xl cursor-pointer transition-colors space-y-2">
+        <div class="flex justify-between items-center text-xs font-mono"><span class="text-red-400 font-bold">N64 • 1996</span><span class="text-gray-500">388 Títulos</span></div>
+        <h3 class="text-sm font-bold text-white">Nintendo 64</h3>
+      </div>
+      <div data-brand="nintendo" onclick="switchView('search')" class="console-card bg-app-surface hover:bg-app-surfaceElevated border border-app-border p-4 rounded-xl cursor-pointer transition-colors space-y-2">
+        <div class="flex justify-between items-center text-xs font-mono"><span class="text-purple-400 font-bold">GCN • 2001</span><span class="text-gray-500">650 Títulos</span></div>
+        <h3 class="text-sm font-bold text-white">GameCube</h3>
+      </div>
+      <div data-brand="nintendo" onclick="switchView('search')" class="console-card bg-app-surface hover:bg-app-surfaceElevated border border-app-border p-4 rounded-xl cursor-pointer transition-colors space-y-2">
+        <div class="flex justify-between items-center text-xs font-mono"><span class="text-red-400 font-bold">WII • 2006</span><span class="text-gray-500">1,540 Títulos</span></div>
+        <h3 class="text-sm font-bold text-white">Nintendo Wii</h3>
+      </div>
+      <div data-brand="nintendo" onclick="switchView('search')" class="console-card bg-app-surface hover:bg-app-surfaceElevated border border-app-border p-4 rounded-xl cursor-pointer transition-colors space-y-2">
+        <div class="flex justify-between items-center text-xs font-mono"><span class="text-red-400 font-bold">WIIU • 2012</span><span class="text-gray-500">480 Títulos</span></div>
+        <h3 class="text-sm font-bold text-white">Nintendo Wii U</h3>
+      </div>
+      <div data-brand="nintendo" onclick="switchView('search')" class="console-card bg-app-surface hover:bg-app-surfaceElevated border border-app-border p-4 rounded-xl cursor-pointer transition-colors space-y-2">
+        <div class="flex justify-between items-center text-xs font-mono"><span class="text-red-400 font-bold">NSW • 2017</span><span class="text-gray-500">980 Títulos</span></div>
+        <h3 class="text-sm font-bold text-white">Nintendo Switch</h3>
+      </div>
+      <div data-brand="nintendo" onclick="switchView('search')" class="console-card bg-app-surface hover:bg-app-surfaceElevated border border-app-border p-4 rounded-xl cursor-pointer transition-colors space-y-2">
+        <div class="flex justify-between items-center text-xs font-mono"><span class="text-red-400 font-bold">GB • 1989</span><span class="text-gray-500">1,600 Títulos</span></div>
+        <h3 class="text-sm font-bold text-white">Game Boy / Color</h3>
+      </div>
+      <div data-brand="nintendo" onclick="switchView('search')" class="console-card bg-app-surface hover:bg-app-surfaceElevated border border-app-border p-4 rounded-xl cursor-pointer transition-colors space-y-2">
+        <div class="flex justify-between items-center text-xs font-mono"><span class="text-indigo-400 font-bold">GBA • 2001</span><span class="text-gray-500">1,890 Títulos</span></div>
+        <h3 class="text-sm font-bold text-white">Game Boy Advance</h3>
+      </div>
+      <div data-brand="nintendo" onclick="switchView('search')" class="console-card bg-app-surface hover:bg-app-surfaceElevated border border-app-border p-4 rounded-xl cursor-pointer transition-colors space-y-2">
+        <div class="flex justify-between items-center text-xs font-mono"><span class="text-red-400 font-bold">NDS • 2004</span><span class="text-gray-500">2,100 Títulos</span></div>
+        <h3 class="text-sm font-bold text-white">Nintendo DS</h3>
+      </div>
+      <div data-brand="nintendo" onclick="switchView('search')" class="console-card bg-app-surface hover:bg-app-surfaceElevated border border-app-border p-4 rounded-xl cursor-pointer transition-colors space-y-2">
+        <div class="flex justify-between items-center text-xs font-mono"><span class="text-red-400 font-bold">3DS • 2011</span><span class="text-gray-500">1,350 Títulos</span></div>
+        <h3 class="text-sm font-bold text-white">Nintendo 3DS</h3>
+      </div>
+      <div data-brand="sega" onclick="switchView('search')" class="console-card bg-app-surface hover:bg-app-surfaceElevated border border-app-border p-4 rounded-xl cursor-pointer transition-colors space-y-2">
+        <div class="flex justify-between items-center text-xs font-mono"><span class="text-sky-400 font-bold">GEN • 1988</span><span class="text-gray-500">920 Títulos</span></div>
+        <h3 class="text-sm font-bold text-white">Sega Genesis</h3>
+      </div>
+      <div data-brand="sega" onclick="switchView('search')" class="console-card bg-app-surface hover:bg-app-surfaceElevated border border-app-border p-4 rounded-xl cursor-pointer transition-colors space-y-2">
+        <div class="flex justify-between items-center text-xs font-mono"><span class="text-orange-400 font-bold">DC • 1998</span><span class="text-gray-500">420 Títulos</span></div>
+        <h3 class="text-sm font-bold text-white">Sega Dreamcast</h3>
+      </div>
+      <div data-brand="xbox" onclick="switchView('search')" class="console-card bg-app-surface hover:bg-app-surfaceElevated border border-app-border p-4 rounded-xl cursor-pointer transition-colors space-y-2">
+        <div class="flex justify-between items-center text-xs font-mono"><span class="text-emerald-400 font-bold">XBOX • 2001</span><span class="text-gray-500">860 Títulos</span></div>
+        <h3 class="text-sm font-bold text-white">Xbox Clásica</h3>
+      </div>
+      <div data-brand="xbox" onclick="switchView('search')" class="console-card bg-app-surface hover:bg-app-surfaceElevated border border-app-border p-4 rounded-xl cursor-pointer transition-colors space-y-2">
+        <div class="flex justify-between items-center text-xs font-mono"><span class="text-emerald-400 font-bold">X360 • 2005</span><span class="text-gray-500">820 Títulos</span></div>
+        <h3 class="text-sm font-bold text-white">Xbox 360</h3>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- VIEW 4: SEARCH & FACETED EXPLORER -->
+  <!-- ========================================================================= -->
+  <main id="view-search" class="view-content hidden flex-1 max-w-[1500px] w-full mx-auto px-4 lg:px-6 py-6 space-y-6">
+    <div class="flex justify-between items-center border-b border-app-border pb-3">
+      <div>
+        <h1 class="text-lg font-bold text-white">Motor de Búsqueda y Filtro de Facetas</h1>
+        <p class="text-xs text-gray-400">Filtrado en tiempo real con índices optimizados en PostgreSQL</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div class="lg:col-span-3 bg-app-surface rounded-xl border border-app-border p-4 space-y-4 h-fit text-xs font-mono">
+        <div class="flex justify-between items-center text-gray-400 border-b border-app-border pb-2">
+          <span class="font-bold uppercase">Filtros</span>
+          <button onclick="showToast('Filtros restablecidos')" class="text-blue-400 hover:underline">Reset</button>
+        </div>
+        <div class="space-y-1.5 font-sans">
+          <label class="font-semibold text-gray-300 text-xs">Plataforma</label>
+          <select class="w-full bg-app-base border border-app-border rounded p-2 text-xs text-white">
+            <option>Todas las consolas (20)</option>
+            <option>PlayStation 2</option>
+            <option>Nintendo Switch</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="lg:col-span-9 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <div onclick="switchView('game')" class="catalog-card bg-app-surface rounded-xl border border-app-border overflow-hidden cursor-pointer">
+          <div class="aspect-cover bg-gray-900 overflow-hidden">
+            <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80" class="w-full h-full object-cover" alt="Zelda">
+          </div>
+          <div class="p-3">
+            <p class="text-[10px] font-mono text-red-400">SWITCH • 13.4 GB</p>
+            <h4 class="text-xs font-bold text-white truncate">Zelda: BOTW</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- VIEW 5: USER PROFILE & ACHIEVEMENTS -->
+  <!-- ========================================================================= -->
+  <main id="view-profile" class="view-content hidden flex-1 max-w-[1500px] w-full mx-auto px-4 lg:px-6 py-6 space-y-6">
+    <div class="bg-app-surface rounded-xl border border-app-border p-6 flex flex-col sm:flex-row items-center gap-6">
+      <div class="w-20 h-20 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-2xl font-mono shrink-0">
+        AL
+      </div>
+      <div class="flex-1 space-y-2 text-center sm:text-left">
+        <h1 class="text-xl font-bold text-white">AlexArchive_99</h1>
+        <p class="text-xs font-mono text-gray-400">Miembro Preservador • Registrado en 2024 • 14 Títulos Guardados</p>
+        
+        <div class="space-y-1 max-w-md">
+          <div class="flex justify-between text-[11px] font-mono text-gray-400">
+            <span>Nivel 14: Maestro Archivista</span>
+            <span class="text-emerald-400">7,450 / 10,000 XP</span>
+          </div>
+          <div class="w-full h-1.5 rounded bg-app-base overflow-hidden">
+            <div class="h-full bg-blue-600 rounded" style="width: 74.5%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- VIEW 6: COMPLETE ADMIN PANEL (DASHBOARD & ALL MODULES) -->
+  <!-- ========================================================================= -->
+  <main id="view-admin" class="view-content hidden flex-1 max-w-[1600px] w-full mx-auto px-4 lg:px-6 py-6 flex flex-col lg:flex-row gap-6">
+    
+    <!-- Admin Sidebar -->
+    <aside class="w-full lg:w-64 bg-app-surface rounded-xl border border-app-border p-3 flex flex-col justify-between shrink-0 space-y-4">
+      <div class="space-y-3">
+        <div class="px-3 py-2 border-b border-app-border/60">
+          <div class="text-[10px] font-mono uppercase tracking-wider text-gray-500">Módulo Administrativo</div>
+          <div class="text-sm font-bold text-white font-sans mt-0.5">ROMHUB Management</div>
+        </div>
+
+        <nav class="space-y-1 text-xs font-medium">
+          <button onclick="switchAdminTab('dashboard')" id="adm-tab-dashboard" class="admin-nav-item w-full px-3 py-2 rounded-lg bg-blue-600/20 text-blue-400 font-semibold flex items-center justify-between transition-colors">
+            <span class="flex items-center gap-2.5"><i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard</span>
+            <span class="text-[10px] font-mono bg-blue-500/20 px-1.5 py-0.2 rounded text-blue-300">Live</span>
+          </button>
+          <button onclick="switchAdminTab('games')" id="adm-tab-games" class="admin-nav-item w-full px-3 py-2 rounded-lg hover:bg-app-surfaceElevated text-gray-400 hover:text-gray-200 flex items-center justify-between transition-colors">
+            <span class="flex items-center gap-2.5"><i data-lucide="gamepad-2" class="w-4 h-4"></i> Catálogo Juegos</span>
+            <span class="text-[10px] font-mono text-gray-500">12,480</span>
+          </button>
+          <button onclick="switchAdminTab('consoles')" id="adm-tab-consoles" class="admin-nav-item w-full px-3 py-2 rounded-lg hover:bg-app-surfaceElevated text-gray-400 hover:text-gray-200 flex items-center justify-between transition-colors">
+            <span class="flex items-center gap-2.5"><i data-lucide="tv" class="w-4 h-4"></i> 20 Consolas</span>
+            <span class="text-[10px] font-mono text-gray-500">20</span>
+          </button>
+          <button onclick="switchAdminTab('genres')" id="adm-tab-genres" class="admin-nav-item w-full px-3 py-2 rounded-lg hover:bg-app-surfaceElevated text-gray-400 hover:text-gray-200 flex items-center justify-between transition-colors">
+            <span class="flex items-center gap-2.5"><i data-lucide="tag" class="w-4 h-4"></i> Géneros</span>
+            <span class="text-[10px] font-mono text-gray-500">24</span>
+          </button>
+          <button onclick="switchAdminTab('banners')" id="adm-tab-banners" class="admin-nav-item w-full px-3 py-2 rounded-lg hover:bg-app-surfaceElevated text-gray-400 hover:text-gray-200 flex items-center justify-between transition-colors">
+            <span class="flex items-center gap-2.5"><i data-lucide="image" class="w-4 h-4"></i> Banners Hero</span>
+            <span class="text-[10px] font-mono text-gray-500">5</span>
+          </button>
+          <button onclick="switchAdminTab('users')" id="adm-tab-users" class="admin-nav-item w-full px-3 py-2 rounded-lg hover:bg-app-surfaceElevated text-gray-400 hover:text-gray-200 flex items-center justify-between transition-colors">
+            <span class="flex items-center gap-2.5"><i data-lucide="users" class="w-4 h-4"></i> Usuarios</span>
+            <span class="text-[10px] font-mono text-gray-500">48.2k</span>
+          </button>
+          <button onclick="switchAdminTab('settings')" id="adm-tab-settings" class="admin-nav-item w-full px-3 py-2 rounded-lg hover:bg-app-surfaceElevated text-gray-400 hover:text-gray-200 flex items-center justify-between transition-colors">
+            <span class="flex items-center gap-2.5"><i data-lucide="settings" class="w-4 h-4"></i> Config S3/R2</span>
+            <span class="text-[10px] font-mono text-emerald-400">OK</span>
+          </button>
+        </nav>
+      </div>
+
+      <div class="p-3 bg-app-base rounded-lg border border-app-border space-y-2 text-[11px] font-mono">
+        <div class="flex justify-between text-gray-400">
+          <span>R2 Storage:</span>
+          <span class="text-white font-bold">18.42 TB</span>
+        </div>
+        <div class="w-full h-1.5 rounded bg-gray-800 overflow-hidden">
+          <div class="h-full bg-blue-500" style="width: 36.8%;"></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Admin Content Views -->
+    <section class="flex-1 space-y-6 min-w-0">
+      
+      <!-- Admin Tab: Dashboard -->
+      <div id="admin-sec-dashboard" class="admin-sec space-y-6">
+        <div class="flex justify-between items-center bg-app-surface p-5 rounded-xl border border-app-border">
+          <div>
+            <h2 class="text-lg font-bold text-white">Dashboard de Rendimiento & Telemetría</h2>
+            <p class="text-xs text-gray-400 font-mono">Métricas de PostgreSQL y Cloudflare R2.</p>
+          </div>
+          <button onclick="openNewGameModal()" class="px-4 py-2 rounded bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center gap-1.5">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Nuevo Videojuego
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 font-mono text-xs">
+          <div class="bg-app-surface p-4 rounded-xl border border-app-border space-y-1">
+            <span class="text-gray-400">Catálogo DB</span>
+            <p class="text-2xl font-bold text-white font-sans">12,480</p>
+            <p class="text-[10px] text-emerald-400">↑ +28 esta semana</p>
+          </div>
+          <div class="bg-app-surface p-4 rounded-xl border border-app-border space-y-1">
+            <span class="text-gray-400">Descargas</span>
+            <p class="text-2xl font-bold text-white font-sans">1,482,900</p>
+            <p class="text-[10px] text-emerald-400">↑ +14.2k hoy</p>
+          </div>
+          <div class="bg-app-surface p-4 rounded-xl border border-app-border space-y-1">
+            <span class="text-gray-400">Tráfico CDN</span>
+            <p class="text-2xl font-bold text-white font-sans">84.2 TB</p>
+            <p class="text-[10px] text-gray-400">98.4% Hit ratio</p>
+          </div>
+          <div class="bg-app-surface p-4 rounded-xl border border-app-border space-y-1">
+            <span class="text-gray-400">Usuarios</span>
+            <p class="text-2xl font-bold text-white font-sans">48,290</p>
+            <p class="text-[10px] text-emerald-400">↑ +120 registrados hoy</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin Tab: Games -->
+      <div id="admin-sec-games" class="admin-sec hidden space-y-4">
+        <div class="bg-app-surface p-4 rounded-xl border border-app-border flex justify-between items-center">
+          <h3 class="text-sm font-bold text-white">Catálogo de Juegos (CRUD)</h3>
+          <button onclick="openNewGameModal()" class="px-4 py-1.5 rounded bg-blue-600 text-white text-xs font-semibold">+ Nuevo Videojuego</button>
+        </div>
+
+        <div class="bg-app-surface rounded-xl border border-app-border overflow-hidden">
+          <table class="w-full text-left text-xs font-mono text-gray-300 divide-y divide-app-border">
+            <thead class="bg-app-base text-gray-400 uppercase text-[10px]">
+              <tr>
+                <th class="py-3 px-4">Juego</th>
+                <th class="py-3 px-4">Consola</th>
+                <th class="py-3 px-4">Tamaño</th>
+                <th class="py-3 px-4">Estado</th>
+                <th class="py-3 px-4 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-app-border">
+              <tr>
+                <td class="py-3 px-4 font-sans font-bold text-white">The Legend of Zelda: BOTW</td>
+                <td class="py-3 px-4 text-red-400">Switch</td>
+                <td class="py-3 px-4">13.4 GB</td>
+                <td class="py-3 px-4"><span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 text-[10px]">PUBLICADO</span></td>
+                <td class="py-3 px-4 text-right space-x-2">
+                  <button onclick="openNewGameModal()" class="text-blue-400 hover:underline">Editar</button>
+                  <button onclick="showToast('Juego eliminado')" class="text-rose-400 hover:underline">Eliminar</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Admin Tab: Consoles -->
+      <div id="admin-sec-consoles" class="admin-sec hidden space-y-4">
+        <div class="bg-app-surface p-4 rounded-xl border border-app-border flex justify-between items-center">
+          <h3 class="text-sm font-bold text-white">20 Consolas & Plataformas</h3>
+        </div>
+      </div>
+
+      <!-- Admin Tab: Genres -->
+      <div id="admin-sec-genres" class="admin-sec hidden space-y-4">
+        <div class="bg-app-surface p-4 rounded-xl border border-app-border flex justify-between items-center">
+          <h3 class="text-sm font-bold text-white">Géneros & Categorías</h3>
+        </div>
+      </div>
+
+      <!-- Admin Tab: Banners -->
+      <div id="admin-sec-banners" class="admin-sec hidden space-y-4">
+        <div class="bg-app-surface p-4 rounded-xl border border-app-border flex justify-between items-center">
+          <h3 class="text-sm font-bold text-white">Banners del Hero</h3>
+        </div>
+      </div>
+
+      <!-- Admin Tab: Users -->
+      <div id="admin-sec-users" class="admin-sec hidden space-y-4">
+        <div class="bg-app-surface p-4 rounded-xl border border-app-border flex justify-between items-center">
+          <h3 class="text-sm font-bold text-white">Usuarios & Permisos</h3>
+        </div>
+      </div>
+
+      <!-- Admin Tab: Settings -->
+      <div id="admin-sec-settings" class="admin-sec hidden space-y-4">
+        <div class="bg-app-surface p-4 rounded-xl border border-app-border flex justify-between items-center">
+          <h3 class="text-sm font-bold text-white">Configuración S3 / R2</h3>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- Modals -->
+  <div id="download-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-app-surface max-w-md w-full rounded-xl p-6 border border-app-border space-y-4 shadow-elevation-3">
+      <div class="flex justify-between items-center border-b border-app-border pb-3">
+        <h3 class="text-sm font-bold text-white">Descarga Segura ROMHUB</h3>
+        <button onclick="closeDownloadModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <div class="p-3 bg-app-base rounded border border-app-border text-xs font-mono space-y-1">
+        <div class="flex justify-between"><span class="text-gray-500">Archivo:</span> <span class="text-white">zelda_botw_switch.nsp</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">Tamaño:</span> <span class="text-emerald-400">13.42 GB</span></div>
+      </div>
+      <button onclick="showToast('Iniciando descarga segura...'); closeDownloadModal();" class="w-full py-2.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center justify-center gap-2">
+        <i data-lucide="download" class="w-4 h-4"></i> Iniciar Descarga Directa
+      </button>
+    </div>
+  </div>
+
+  <div id="new-game-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-app-surface max-w-lg w-full rounded-xl p-6 border border-app-border space-y-4 shadow-elevation-3">
+      <div class="flex justify-between items-center border-b border-app-border pb-3">
+        <h3 class="text-sm font-bold text-white">Editor de Título</h3>
+        <button onclick="closeNewGameModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="text-gray-300 font-semibold block mb-1">Nombre del Juego</label>
+          <input type="text" value="Super Mario 64" class="w-full bg-app-base border border-app-border rounded p-2 text-white">
+        </div>
+        <div class="border border-dashed border-app-border rounded p-6 text-center text-gray-400">
+          <i data-lucide="upload" class="w-6 h-6 mx-auto mb-1 text-gray-500"></i>
+          <p>Arrastra la carátula aquí</p>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeNewGameModal()" class="px-3 py-1.5 rounded bg-app-surfaceElevated text-gray-300 text-xs">Cancelar</button>
+        <button onclick="showToast('Juego guardado'); closeNewGameModal();" class="px-4 py-1.5 rounded bg-blue-600 text-white text-xs font-semibold">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="image-modal" class="fixed inset-0 z-50 bg-black/95 hidden items-center justify-center p-4" onclick="closeImageModal()">
+    <img id="lightbox-img" src="" class="max-w-4xl max-h-[85vh] object-contain rounded border border-app-border" alt="Full Shot">
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-4 right-4 z-50 transform translate-y-20 opacity-0 transition-all duration-200 bg-app-surfaceElevated px-4 py-2.5 rounded-lg border border-app-border shadow-elevation-2 flex items-center gap-2 text-xs text-white">
+    <i data-lucide="check" class="w-4 h-4 text-emerald-400"></i>
+    <span id="toast-text">Acción completada</span>
+  </div>
+
+  <!-- Footer -->
+  <footer class="border-t border-app-border bg-app-base mt-16 py-8 px-4 lg:px-6 text-xs text-gray-500 font-mono">
+    <div class="max-w-[1500px] mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+      <div>
+        <strong class="text-white font-sans">ROMHUB DIGITAL ARCHIVE</strong>
+        <p class="text-[11px] text-gray-600">Preservación digital conforme a estándares No-Intro & Redump.</p>
+      </div>
+      <p class="text-[11px] text-gray-600">© 2026 ROMHUB Inc.</p>
+    </div>
+  </footer>
+
+  <script>
+    lucide.createIcons();
+
+    function switchView(viewName) {
+      document.querySelectorAll('.view-content').forEach(v => v.classList.add('hidden'));
+      document.querySelectorAll('[id^="tab-"]').forEach(b => {
+        b.classList.remove('bg-blue-600', 'text-white');
+        b.classList.add('text-gray-400');
+      });
+
+      const target = document.getElementById('view-' + viewName);
+      if (target) target.classList.remove('hidden');
+
+      const btn = document.getElementById('tab-' + viewName);
+      if (btn && viewName !== 'admin') {
+        btn.classList.add('bg-blue-600', 'text-white');
+        btn.classList.remove('text-gray-400');
+      }
+
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      lucide.createIcons();
+    }
+
+    function switchAdminTab(tabName) {
+      document.querySelectorAll('.admin-sec').forEach(s => s.classList.add('hidden'));
+      document.querySelectorAll('.admin-nav-item').forEach(b => {
+        b.classList.remove('bg-blue-600/20', 'text-blue-400', 'font-semibold');
+        b.classList.add('text-gray-400');
+      });
+
+      const targetSec = document.getElementById('admin-sec-' + tabName);
+      if (targetSec) targetSec.classList.remove('hidden');
+
+      const targetNav = document.getElementById('adm-tab-' + tabName);
+      if (targetNav) {
+        targetNav.classList.add('bg-blue-600/20', 'text-blue-400', 'font-semibold');
+        targetNav.classList.remove('text-gray-400');
+      }
+
+      lucide.createIcons();
+    }
+
+    function handleQuickSearch(val) {
+      const dropdown = document.getElementById('quick-search-dropdown');
+      if (val.trim().length > 1) dropdown.classList.remove('hidden');
+      else dropdown.classList.add('hidden');
+    }
+
+    document.addEventListener('click', function(e) {
+      const searchBox = document.getElementById('global-search');
+      const dropdown = document.getElementById('quick-search-dropdown');
+      if (searchBox && dropdown && !searchBox.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.add('hidden');
+      }
+    });
+
+    function filterConsoles(brand) {
+      const cards = document.querySelectorAll('.console-card');
+      cards.forEach(c => {
+        if (brand === 'all' || c.getAttribute('data-brand') === brand) c.style.display = 'block';
+        else c.style.display = 'none';
+      });
+
+      ['all', 'sony', 'nintendo', 'xbox', 'sega'].forEach(b => {
+        const btn = document.getElementById('btn-cons-' + b);
+        if (btn) {
+          if (b === brand) {
+            btn.classList.add('bg-blue-600', 'text-white');
+            btn.classList.remove('bg-app-surfaceElevated', 'text-gray-300');
+          } else {
+            btn.classList.remove('bg-blue-600', 'text-white');
+            btn.classList.add('bg-app-surfaceElevated', 'text-gray-300');
+          }
+        }
+      });
+    }
+
+    function toggleFavorite(btn) {
+      showToast('Biblioteca actualizada');
+    }
+
+    function openDownloadModal() {
+      const m = document.getElementById('download-modal');
+      m.classList.remove('hidden'); m.classList.add('flex');
+    }
+    function closeDownloadModal() {
+      const m = document.getElementById('download-modal');
+      m.classList.add('hidden'); m.classList.remove('flex');
+    }
+
+    function openNewGameModal() {
+      const m = document.getElementById('new-game-modal');
+      m.classList.remove('hidden'); m.classList.add('flex');
+    }
+    function closeNewGameModal() {
+      const m = document.getElementById('new-game-modal');
+      m.classList.add('hidden'); m.classList.remove('flex');
+    }
+
+    function openImageModal(src) {
+      const m = document.getElementById('image-modal');
+      document.getElementById('lightbox-img').src = src;
+      m.classList.remove('hidden'); m.classList.add('flex');
+    }
+    function closeImageModal() {
+      const m = document.getElementById('image-modal');
+      m.classList.add('hidden'); m.classList.remove('flex');
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      document.getElementById('toast-text').innerText = msg;
+      t.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => { t.classList.add('translate-y-20', 'opacity-0'); }, 2500);
+    }
+  </script>
+</body>
+</html>
