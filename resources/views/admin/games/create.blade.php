@@ -279,7 +279,7 @@
                                     <label class="cursor-pointer px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/30 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 w-fit">
                                         <i data-lucide="file-up" class="w-3.5 h-3.5"></i> 
                                         <span x-text="uploadedRomInfo ? 'Cambiar Archivo' : 'Seleccionar Archivo'"></span>
-                                        <input type="file" id="romFileInput" name="rom_file" @change="handleRomSelect($event)" class="hidden">
+                                        <input type="file" id="romFileInput" @change="handleRomSelect($event)" class="hidden">
                                     </label>
                                 </div>
 
