@@ -873,22 +873,7 @@ function gameDetailComponent() {
                 </div>
                 @endif
 
-                <!-- SIDEBAR WIDGET 3: CATEGORÍAS & GÉNEROS -->
-                @if($game->categories->isNotEmpty())
-                <div class="bg-white rounded-2xl border-2 border-[#1E1E1E] p-5 space-y-3 shadow-sm">
-                    <h3 class="text-xs font-mono font-bold uppercase text-[#18181B] tracking-wider border-b border-[#E5E0D8] pb-2 flex items-center gap-2">
-                        <i data-lucide="tag" class="w-4 h-4 text-[#CE2D2D]"></i>
-                        Categorías & Géneros
-                    </h3>
-                    <div class="flex flex-wrap gap-1.5">
-                        @foreach($game->categories as $cat)
-                        <a href="{{ route('search', ['category' => $cat->slug]) }}" class="px-3 py-1 rounded-xl bg-[#FAF7F2] hover:bg-[#FDF2F2] border border-[#DDD6CB] hover:border-[#CE2D2D] text-xs font-mono font-bold text-[#18181B] hover:text-[#CE2D2D] transition-colors shadow-sm">
-                            {{ $cat->name }}
-                        </a>
-                        @endforeach
-                    </div>
-                </div>
-                @endif
+
 
                 <!-- SIDEBAR WIDGET 3: TÍTULOS RELACIONADOS -->
                 @if(isset($relatedGames) && $relatedGames->isNotEmpty())
