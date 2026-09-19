@@ -101,10 +101,15 @@
         <div class="lg:col-span-2 bg-[#11141A] border border-[#232936] rounded-2xl p-5 space-y-4">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#232936] pb-3">
                 <div>
-                    <h2 class="text-sm font-bold text-white font-sans flex items-center gap-2">
-                        <i data-lucide="activity" class="w-4 h-4 text-blue-400"></i> Tendencia de Descargas & Ancho de Banda
-                    </h2>
-                    <p class="text-[11px] text-gray-400 font-mono mt-0.5">Historial de transferencias simuladas y pico de tráfico en los últimos 7 días</p>
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-sm font-bold text-white font-sans flex items-center gap-2">
+                            <i data-lucide="activity" class="w-4 h-4 text-blue-400"></i> Tendencia de Descargas & Ancho de Banda
+                        </h2>
+                        <span class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px] font-mono flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span> {{ (int) $totalDownloads }} descargas acumuladas
+                        </span>
+                    </div>
+                    <p class="text-[11px] text-gray-400 font-mono mt-0.5">Historial en tiempo real de transferencias (Comenzará a trazar el tráfico con las primeras descargas)</p>
                 </div>
                 <div class="flex items-center gap-2 text-[10px] font-mono">
                     <span class="px-2 py-1 rounded bg-[#0A0C0F] border border-[#232936] text-blue-400 font-semibold flex items-center gap-1.5">
@@ -357,7 +362,7 @@
                     datasets: [
                         {
                             label: 'Descargas',
-                            data: [120, 190, 150, 280, 240, 310, 420],
+                            data: [0, 0, 0, 0, 0, 0, {{ (int) $totalDownloads }}],
                             borderColor: '#3B82F6',
                             backgroundColor: gradientBlue,
                             borderWidth: 2.5,
@@ -369,7 +374,7 @@
                         },
                         {
                             label: 'Visitas Únicas',
-                            data: [350, 420, 390, 560, 510, 680, 890],
+                            data: [0, 0, 0, 0, 0, 0, 0],
                             borderColor: '#10B981',
                             backgroundColor: gradientEmerald,
                             borderWidth: 2,
@@ -410,8 +415,15 @@
                             ticks: { color: '#6B7280', font: { family: 'JetBrains Mono', size: 10 } }
                         },
                         y: {
+                            beginAtZero: true,
+                            min: 0,
+                            suggestedMax: 10,
                             grid: { color: 'rgba(35, 41, 54, 0.6)', drawBorder: false },
-                            ticks: { color: '#6B7280', font: { family: 'JetBrains Mono', size: 10 } }
+                            ticks: { 
+                                color: '#6B7280', 
+                                font: { family: 'JetBrains Mono', size: 10 },
+                                precision: 0
+                            }
                         }
                     }
                 }

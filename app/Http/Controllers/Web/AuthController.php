@@ -27,11 +27,19 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
-            if (Auth::user()->isAdmin()) {
+            // Solo permitir acceso si el usuario es Administrador o Moderador
+            if (Auth::user()->isAdmin() || Auth::user()->role === 'MODERATOR') {
                 return redirect()->intended(route('admin.dashboard'));
             }
 
-            return redirect()->intended(route('home'));
+            // Si es usuario regular, desconectar
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return back()->withErrors([
+                'email' => 'El acceso para usuarios públicos se encuentra temporalmente deshabilitado. Este portal es de uso exclusivo para administración.',
+            ])->onlyInput('email');
         }
 
         return back()->withErrors([
@@ -39,31 +47,14 @@ class AuthController extends Controller
         ])->onlyInput('email');
     }
 
-    public function showRegister(): View
+    public function showRegister(): RedirectResponse
     {
-        return view('web.auth.register');
+        return redirect()->route('login')->with('info', 'El registro de usuarios públicos se encuentra temporalmente deshabilitado.');
     }
 
     public function register(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'username' => 'required|string|max:50|unique:users,username',
-            'email' => 'required|email|max:255|unique:users,email',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
-
-        $user = User::create([
-            'name' => $validated['name'],
-            'username' => $validated['username'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'role' => 'USER',
-        ]);
-
-        Auth::login($user);
-
-        return redirect()->route('home')->with('success', '¡Bienvenido a ROMHUB! Tu cuenta ha sido creada exitosamente.');
+        return redirect()->route('login')->with('error', 'El registro de nuevos usuarios se encuentra temporalmente cerrado.');
     }
 
     public function logout(Request $request): RedirectResponse

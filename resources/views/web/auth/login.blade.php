@@ -1,6 +1,6 @@
 @extends('layouts.web')
 
-@section('title', 'Iniciar Sesión — ' . \App\Models\Setting::get('site_name', 'ROMHUB'))
+@section('title', 'Acceso Administrativo — ' . \App\Models\Setting::get('site_name', 'PICHO Roms'))
 
 @section('content')
 <main class="min-h-[80vh] flex items-center justify-center px-4 py-12">
@@ -9,11 +9,26 @@
         <!-- Header -->
         <div class="text-center space-y-2">
             <div class="w-12 h-12 rounded-2xl bg-[#CE2D2D] flex items-center justify-center text-white mx-auto shadow-md">
-                <i data-lucide="disc" class="w-7 h-7"></i>
+                <i data-lucide="shield-check" class="w-7 h-7"></i>
             </div>
-            <h1 class="text-2xl font-black text-[#18181B] tracking-tight font-sans">Acceso a la Bóveda</h1>
-            <p class="text-xs text-gray-500 font-sans">Inicia sesión con tus credenciales</p>
+            <span class="inline-block px-2.5 py-0.5 rounded-full bg-red-100 text-[#CE2D2D] font-mono text-[10px] font-bold tracking-wider uppercase">Portal Administrativo</span>
+            <h1 class="text-2xl font-black text-[#18181B] tracking-tight font-sans">Acceso al Panel</h1>
+            <p class="text-xs text-gray-500 font-sans">Ingresa tus credenciales de administrador</p>
         </div>
+
+        @if(session('info'))
+        <div class="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-800 font-sans font-medium flex items-center gap-2">
+            <i data-lucide="info" class="w-4 h-4 shrink-0 text-blue-600"></i>
+            <span>{{ session('info') }}</span>
+        </div>
+        @endif
+
+        @if(session('error'))
+        <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 font-sans font-medium flex items-center gap-2">
+            <i data-lucide="alert-circle" class="w-4 h-4 shrink-0 text-red-600"></i>
+            <span>{{ session('error') }}</span>
+        </div>
+        @endif
 
         @if(isset($errors) && $errors->any())
         <div class="p-3 bg-red-50 border border-red-300 rounded-xl text-xs text-red-800 space-y-1 font-sans font-bold">
@@ -34,7 +49,7 @@
                     value="{{ old('email') }}" 
                     required 
                     autofocus
-                    placeholder="tu@correo.com"
+                    placeholder="admin@correo.com"
                     class="w-full bg-[#FAF7F2] border border-[#DDD6CB] focus:border-[#CE2D2D] rounded-xl p-3 text-sm text-[#18181B] font-medium focus:outline-none font-sans"
                 >
             </div>
@@ -59,13 +74,14 @@
                 </label>
             </div>
 
-            <button type="submit" class="w-full py-3.5 rounded-xl bg-[#CE2D2D] hover:bg-[#B71C1C] text-white font-bold text-xs uppercase tracking-wide transition-colors shadow-sm cursor-pointer">
-                Ingresar al Sistema
+            <button type="submit" class="w-full py-3.5 rounded-xl bg-[#CE2D2D] hover:bg-[#B71C1C] text-white font-bold text-xs uppercase tracking-wide transition-colors shadow-sm cursor-pointer flex items-center justify-center gap-2">
+                <i data-lucide="lock" class="w-4 h-4"></i> Ingresar al Panel
             </button>
         </form>
 
-        <div class="pt-4 border-t border-[#E5E0D8] text-center text-xs font-mono text-gray-500 space-y-2">
-            <p>¿No tienes una cuenta? <a href="{{ route('register') }}" class="text-[#CE2D2D] font-bold hover:underline">Regístrate gratis</a></p>
+        <div class="pt-4 border-t border-[#E5E0D8] text-center text-[11px] font-mono text-gray-500 flex items-center justify-center gap-1.5">
+            <i data-lucide="shield" class="w-3.5 h-3.5 text-gray-400"></i>
+            <span>Acceso exclusivo para personal autorizado</span>
         </div>
 
     </div>
