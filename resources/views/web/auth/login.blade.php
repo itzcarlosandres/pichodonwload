@@ -34,7 +34,7 @@
                     value="{{ old('email') }}" 
                     required 
                     autofocus
-                    placeholder="admin@romhub.io"
+                    placeholder="tu@correo.com"
                     class="w-full bg-[#FAF7F2] border border-[#DDD6CB] focus:border-[#CE2D2D] rounded-xl p-3 text-sm text-[#18181B] font-medium focus:outline-none font-sans"
                 >
             </div>
@@ -66,11 +66,6 @@
 
         <div class="pt-4 border-t border-[#E5E0D8] text-center text-xs font-mono text-gray-500 space-y-2">
             <p>¿No tienes una cuenta? <a href="{{ route('register') }}" class="text-[#CE2D2D] font-bold hover:underline">Regístrate gratis</a></p>
-            <div class="p-2.5 bg-[#FAF7F2] rounded-lg border border-[#DDD6CB] text-[10px] text-gray-600 text-left">
-                <span class="text-[#CE2D2D] font-bold block mb-0.5">Credenciales demo:</span>
-                Admin: admin@romhub.io / AdminPass123!<br>
-                User: alex_retro@gmail.com / UserPass123!
-            </div>
         </div>
 
     </div>

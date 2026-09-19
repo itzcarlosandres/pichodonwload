@@ -62,13 +62,14 @@
                     <span>R2 Bucket: <strong class="text-gray-200">{{ \App\Models\Setting::get('r2_bucket', 'romhub-production-vault') }}</strong></span>
                 </div>
 
-                <div class="flex items-center gap-2 pl-2 pr-3 py-1 rounded bg-[#171B22] border border-[#232936]">
-                    <div class="w-5 h-5 rounded bg-blue-600 text-white flex items-center justify-center font-bold text-[10px]">
+                <a href="{{ route('admin.profile') }}" class="flex items-center gap-2 pl-2 pr-3 py-1 rounded bg-[#171B22] hover:bg-[#232936] border border-[#232936] transition-colors group" title="Editar mi cuenta y contraseña">
+                    <div class="w-5 h-5 rounded bg-blue-600 text-white flex items-center justify-center font-bold text-[10px] group-hover:scale-105 transition-transform">
                         {{ substr(auth()->user()->name ?? 'AD', 0, 2) }}
                     </div>
-                    <span class="text-gray-200 font-sans text-xs font-semibold">{{ auth()->user()->email ?? 'admin@romhub.io' }}</span>
+                    <span class="text-gray-200 group-hover:text-white font-sans text-xs font-semibold">{{ auth()->user()->email ?? 'admin@romhub.io' }}</span>
                     <span class="px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-400 text-[10px] font-mono">ADMIN</span>
-                </div>
+                    <i data-lucide="shield-check" class="w-3.5 h-3.5 text-gray-500 group-hover:text-blue-400 ml-0.5"></i>
+                </a>
             </div>
 
         </div>
@@ -229,6 +230,15 @@
                                 <i data-lucide="settings" class="w-4 h-4"></i> Configuración Global
                             </span>
                             <span class="text-[10px] font-mono text-purple-400 bg-purple-950/40 border border-purple-500/30 px-1.5 py-0.5 rounded font-bold">Gemini IA</span>
+                        </a>
+
+                        <!-- Mi Cuenta & Seguridad -->
+                        <a href="{{ route('admin.profile') }}" 
+                           class="w-full px-3 py-2.5 rounded-xl flex items-center justify-between transition-all {{ request()->routeIs('admin.profile*') ? 'bg-blue-600/15 text-blue-400 border border-blue-500/30 font-semibold shadow-sm shadow-blue-500/10' : 'text-gray-400 hover:bg-[#171B22] hover:text-white border border-transparent' }}">
+                            <span class="flex items-center gap-2.5">
+                                <i data-lucide="shield-check" class="w-4 h-4"></i> Mi Cuenta & Seguridad
+                            </span>
+                            <span class="text-[10px] font-mono text-blue-400 bg-blue-950/40 border border-blue-500/30 px-1.5 py-0.5 rounded font-bold">Admin</span>
                         </a>
                     </div>
 

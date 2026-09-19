@@ -50,4 +50,43 @@ class AdminUserController extends Controller
         $status = $user->is_active ? 'activada' : 'suspendida';
         return redirect()->route('admin.users.index')->with('success', "Cuenta de '{$user->name}' {$status}.");
     }
+
+    public function profile(): View
+    {
+        $user = auth()->user();
+        return view('admin.profile.index', compact('user'));
+    }
+
+    public function updateProfile(Request $request): RedirectResponse
+    {
+        $user = auth()->user();
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:users,username,' . $user->id,
+            'email' => 'required|email|max:255|unique:users,email,' . $user->id,
+            'current_password' => 'nullable|required_with:password|string',
+            'password' => 'nullable|string|min:6|confirmed',
+        ], [
+            'email.unique' => 'El correo electrónico ya está en uso por otro usuario.',
+            'username.unique' => 'El nombre de usuario ya está en uso.',
+            'password.min' => 'La nueva contraseña debe tener al menos 6 caracteres.',
+            'password.confirmed' => 'La confirmación de la contraseña no coincide.',
+            'current_password.required_with' => 'Debes ingresar tu contraseña actual para establecer una nueva.',
+        ]);
+
+        if ($request->filled('password')) {
+            if ($request->filled('current_password') && !\Illuminate\Support\Facades\Hash::check($request->current_password, $user->password)) {
+                return back()->withErrors(['current_password' => 'La contraseña actual no es correcta.'])->withInput();
+            }
+            $user->password = \Illuminate\Support\Facades\Hash::make($request->password);
+        }
+
+        $user->name = $validated['name'];
+        $user->username = $validated['username'];
+        $user->email = $validated['email'];
+        $user->save();
+
+        return redirect()->route('admin.profile')->with('success', '¡Tus credenciales y datos de administrador fueron actualizados correctamente!');
+    }
 }

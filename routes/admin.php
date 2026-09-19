@@ -67,3 +67,8 @@ Route::post('settings', [AdminSettingController::class, 'update'])->name('settin
 Route::post('settings/test-storage', [AdminSettingController::class, 'testStorage'])->name('settings.testStorage');
 Route::post('settings/test-gemini', [AdminSettingController::class, 'testGemini'])->name('settings.testGemini');
 
+// Admin Profile / Credenciales (Correo y Contraseña)
+Route::get('profile', [AdminUserController::class, 'profile'])->name('profile');
+Route::put('profile', [AdminUserController::class, 'updateProfile'])->name('profile.update');
+
+
