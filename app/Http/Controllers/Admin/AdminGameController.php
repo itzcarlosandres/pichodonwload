@@ -101,7 +101,7 @@ class AdminGameController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:games,slug',
+            'slug' => 'nullable|string|max:255',
             'console_id' => 'required|exists:consoles,id',
             'cover_image' => 'nullable|image|max:20480',
             'banner_image' => 'nullable|image|max:20480',
@@ -134,9 +134,8 @@ class AdminGameController extends Controller
             Game::where('is_spotlight', true)->update(['is_spotlight' => false]);
         }
 
-        if (empty($validated['slug'])) {
-            $validated['slug'] = Str::slug($validated['title']);
-        }
+        $rawSlug = !empty($validated['slug']) ? $validated['slug'] : $validated['title'];
+        $validated['slug'] = $this->generateUniqueSlug($rawSlug);
 
         // Direct ROM File Upload to Cloudflare R2 / Local Vault
         if ($request->hasFile('rom_file')) {
@@ -367,5 +366,22 @@ class AdminGameController extends Controller
         $newGame->badges()->sync($game->badges->pluck('id'));
 
         return redirect()->route('admin.games.index')->with('success', "Juego duplicado como borrador: {$newGame->title}");
+    }
+
+    /**
+     * Genera un slug garantizado único en la tabla games (ej: mario-bros-2, mario-bros-3)
+     */
+    protected function generateUniqueSlug(string $title, ?int $ignoreId = null): string
+    {
+        $baseSlug = Str::slug($title) ?: 'game-' . Str::random(6);
+        $slug = $baseSlug;
+        $counter = 2;
+
+        while (Game::where('slug', $slug)->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId))->exists()) {
+            $slug = "{$baseSlug}-{$counter}";
+            $counter++;
+        }
+
+        return $slug;
     }
 }
