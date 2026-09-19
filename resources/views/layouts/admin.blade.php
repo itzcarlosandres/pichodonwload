@@ -62,7 +62,7 @@
                     <span>R2 Bucket: <strong class="text-gray-200">{{ \App\Models\Setting::get('r2_bucket', 'romhub-production-vault') }}</strong></span>
                 </div>
 
-                <a href="{{ route('admin.profile') }}" class="flex items-center gap-2 pl-2 pr-3 py-1 rounded bg-[#171B22] hover:bg-[#232936] border border-[#232936] transition-colors group" title="Editar mi cuenta y contraseña">
+                <a href="{{ Route::has('admin.profile') ? route('admin.profile') : url('/admin/profile') }}" class="flex items-center gap-2 pl-2 pr-3 py-1 rounded bg-[#171B22] hover:bg-[#232936] border border-[#232936] transition-colors group" title="Editar mi cuenta y contraseña">
                     <div class="w-5 h-5 rounded bg-blue-600 text-white flex items-center justify-center font-bold text-[10px] group-hover:scale-105 transition-transform">
                         {{ substr(auth()->user()->name ?? 'AD', 0, 2) }}
                     </div>
@@ -233,8 +233,8 @@
                         </a>
 
                         <!-- Mi Cuenta & Seguridad -->
-                        <a href="{{ route('admin.profile') }}" 
-                           class="w-full px-3 py-2.5 rounded-xl flex items-center justify-between transition-all {{ request()->routeIs('admin.profile*') ? 'bg-blue-600/15 text-blue-400 border border-blue-500/30 font-semibold shadow-sm shadow-blue-500/10' : 'text-gray-400 hover:bg-[#171B22] hover:text-white border border-transparent' }}">
+                        <a href="{{ Route::has('admin.profile') ? route('admin.profile') : url('/admin/profile') }}" 
+                           class="w-full px-3 py-2.5 rounded-xl flex items-center justify-between transition-all {{ request()->is('admin/profile*') ? 'bg-blue-600/15 text-blue-400 border border-blue-500/30 font-semibold shadow-sm shadow-blue-500/10' : 'text-gray-400 hover:bg-[#171B22] hover:text-white border border-transparent' }}">
                             <span class="flex items-center gap-2.5">
                                 <i data-lucide="shield-check" class="w-4 h-4"></i> Mi Cuenta & Seguridad
                             </span>

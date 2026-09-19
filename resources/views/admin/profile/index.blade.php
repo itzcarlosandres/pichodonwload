@@ -44,7 +44,7 @@
     </div>
     @endif
 
-    <form action="{{ route('admin.profile.update') }}" method="POST" class="space-y-6">
+    <form action="{{ Route::has('admin.profile.update') ? route('admin.profile.update') : url('/admin/profile') }}" method="POST" class="space-y-6">
         @csrf
         @method('PUT')
 
