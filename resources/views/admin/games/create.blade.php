@@ -811,85 +811,100 @@ function gameCreateForm() {
             this.uploadingRom = true;
             this.romUploadProgress = 0;
             this.romUploadStatus = 'uploading';
-            this.romUploadStatusMessage = 'Iniciando subida a Cloudflare R2...';
-            this.romUploadErrorMessage = '';
-            this.romUploadedBytesFormatted = '0 MB';
-            this.romTotalBytesFormatted = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
-            this.romUploadSpeedFormatted = '';
+            this.romUploadStatusMessage = 'Obteniendo enlace seguro de Cloudflare R2...';
 
-            let formData = new FormData();
-            formData.append('rom_file', file);
             let consoleSel = document.getElementById('consoleSelect');
-            if (consoleSel) formData.append('console_id', consoleSel.value);
+            let consoleId = consoleSel ? consoleSel.value : null;
 
-            let xhr = new XMLHttpRequest();
-            this.activeRomXhr = xhr;
-            let startTime = Date.now();
-
-            xhr.upload.onprogress = (e) => {
-                if (e.lengthComputable) {
-                    let percent = Math.round((e.loaded / e.total) * 100);
-                    this.romUploadProgress = percent;
-                    this.romUploadedBytesFormatted = (e.loaded / (1024 * 1024)).toFixed(1) + ' MB';
-                    this.romTotalBytesFormatted = (e.total / (1024 * 1024)).toFixed(1) + ' MB';
-                    
-                    let elapsedSec = (Date.now() - startTime) / 1000;
-                    if (elapsedSec > 0.5) {
-                        let bytesPerSec = e.loaded / elapsedSec;
-                        let mbPerSec = (bytesPerSec / (1024 * 1024)).toFixed(1);
-                        this.romUploadSpeedFormatted = mbPerSec + ' MB/s';
-                    }
-
-                    if (percent >= 100) {
-                        this.romUploadStatusMessage = 'Procesando archivo y generando URL segura en R2...';
-                    } else {
-                        this.romUploadStatusMessage = 'Subiendo a Cloudflare R2 (' + percent + '%)...';
-                    }
+            // Paso 1: Pedir URL prefirmada al backend (100% ligero, solo metadatos)
+            fetch('{{ route('admin.games.prepareRomUpload') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    filename: file.name,
+                    file_size: file.size,
+                    content_type: file.type || 'application/octet-stream',
+                    console_id: consoleId
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success || !data.presigned_url) {
+                    throw new Error(data.message || 'No se pudo generar la URL de subida segura.');
                 }
-            };
 
-            xhr.onload = () => {
-                this.uploadingRom = false;
-                this.activeRomXhr = null;
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    try {
-                        let d = JSON.parse(xhr.responseText);
-                        if (d.success && d.url) {
-                            this.downloadUrl = d.url;
-                            if (d.file_size) this.fileSize = d.file_size;
-                            if (d.file_format) this.fileFormat = d.file_format;
-                            this.romUploadStatus = 'success';
-                            this.romUploadStatusMessage = '¡Completado!';
-                            window.dispatchEvent(new CustomEvent('toast-notify', { 
-                                detail: { message: '🚀 ¡Archivo subido exitosamente a ' + (d.provider || 'R2') + '!' } 
-                            }));
-                        } else {
-                            this.romUploadStatus = 'error';
-                            this.romUploadErrorMessage = d.message || 'Error al procesar en servidor';
+                // Paso 2: Subida DIRECTA a Cloudflare R2 usando PUT (sin límite de 100 MB ni límites de VPS)
+                this.romUploadStatusMessage = 'Subiendo directamente a Cloudflare R2 (0%)...';
+                let xhr = new XMLHttpRequest();
+                this.activeRomXhr = xhr;
+                let startTime = Date.now();
+
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        let percent = Math.round((e.loaded / e.total) * 100);
+                        this.romUploadProgress = percent;
+                        this.romUploadedBytesFormatted = (e.loaded / (1024 * 1024)).toFixed(1) + ' MB';
+                        this.romTotalBytesFormatted = (e.total / (1024 * 1024)).toFixed(1) + ' MB';
+                        
+                        let elapsedSec = (Date.now() - startTime) / 1000;
+                        if (elapsedSec > 0.5) {
+                            let bytesPerSec = e.loaded / elapsedSec;
+                            let mbPerSec = (bytesPerSec / (1024 * 1024)).toFixed(1);
+                            this.romUploadSpeedFormatted = mbPerSec + ' MB/s';
                         }
-                    } catch (err) {
-                        this.romUploadStatus = 'error';
-                        this.romUploadErrorMessage = 'Respuesta no válida del servidor';
-                    }
-                } else {
-                    this.romUploadStatus = 'error';
-                    this.romUploadErrorMessage = 'Error HTTP ' + xhr.status + ': ' + xhr.statusText;
-                }
-                this.$nextTick(() => { if (window.lucide) { lucide.createIcons(); } });
-            };
 
-            xhr.onerror = () => {
+                        if (percent >= 100) {
+                            this.romUploadStatusMessage = 'Verificando archivo en Cloudflare R2...';
+                        } else {
+                            this.romUploadStatusMessage = 'Subiendo directamente a Cloudflare R2 (' + percent + '%)...';
+                        }
+                    }
+                };
+
+                xhr.onload = () => {
+                    this.uploadingRom = false;
+                    this.activeRomXhr = null;
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        this.downloadUrl = data.download_url;
+                        if (data.file_size) this.fileSize = data.file_size;
+                        if (data.file_format) this.fileFormat = data.file_format;
+                        this.romUploadStatus = 'success';
+                        this.romUploadStatusMessage = '¡Completado!';
+                        window.dispatchEvent(new CustomEvent('toast-notify', { 
+                            detail: { message: '🚀 ¡Archivo de ' + data.file_size + ' subido con éxito a Cloudflare R2!' } 
+                        }));
+                    } else {
+                        this.romUploadStatus = 'error';
+                        this.romUploadErrorMessage = 'Error HTTP ' + xhr.status + ' al subir a R2: ' + (xhr.statusText || 'Acceso no permitido');
+                    }
+                    this.$nextTick(() => { if (window.lucide) { lucide.createIcons(); } });
+                };
+
+                xhr.onerror = () => {
+                    this.uploadingRom = false;
+                    this.activeRomXhr = null;
+                    this.romUploadStatus = 'error';
+                    this.romUploadErrorMessage = 'Error de red o conexión interrumpida al subir a Cloudflare R2.';
+                    this.$nextTick(() => { if (window.lucide) { lucide.createIcons(); } });
+                };
+
+                xhr.open('PUT', data.presigned_url, true);
+                if (data.content_type) {
+                    xhr.setRequestHeader('Content-Type', data.content_type);
+                }
+                xhr.send(file);
+            })
+            .catch(err => {
                 this.uploadingRom = false;
                 this.activeRomXhr = null;
                 this.romUploadStatus = 'error';
-                this.romUploadErrorMessage = 'Error de red o conexión interrumpida con el servidor';
+                this.romUploadErrorMessage = err.message || 'Error al iniciar la subida directa.';
                 this.$nextTick(() => { if (window.lucide) { lucide.createIcons(); } });
-            };
-
-            xhr.open('POST', '{{ route('admin.games.uploadRom') }}', true);
-            xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
-            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-            xhr.send(formData);
+            });
         },
 
         cancelRomUpload() {

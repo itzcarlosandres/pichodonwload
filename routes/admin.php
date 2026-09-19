@@ -25,6 +25,7 @@ Route::post('/ai/specs', [AdminAiController::class, 'autocompleteSpecs'])->name(
 Route::post('/ai/franchise', [AdminAiController::class, 'generateFranchise'])->name('ai.franchise');
 
 // Games CRUD
+Route::post('games/prepare-rom-upload', [AdminGameController::class, 'prepareRomUpload'])->name('games.prepareRomUpload');
 Route::post('games/upload-rom', [AdminGameController::class, 'uploadRom'])->name('games.uploadRom');
 Route::resource('games', AdminGameController::class);
 Route::post('games/{game}/duplicate', [AdminGameController::class, 'duplicate'])->name('games.duplicate');

@@ -40,6 +40,26 @@ class AdminGameController extends Controller
         return response()->json($res);
     }
 
+    public function prepareRomUpload(Request $request): JsonResponse
+    {
+        $request->validate([
+            'filename' => 'required|string|max:255',
+            'file_size' => 'required|integer|min:1',
+            'content_type' => 'nullable|string|max:100',
+            'console_id' => 'nullable|exists:consoles,id',
+        ]);
+
+        $consoleSlug = $request->filled('console_id') ? Console::find($request->input('console_id'))?->slug : 'roms';
+        $res = $this->storageService->getPresignedUploadUrl(
+            $request->input('filename'),
+            (int) $request->input('file_size'),
+            $request->input('content_type'),
+            "roms/{$consoleSlug}"
+        );
+
+        return response()->json($res);
+    }
+
     public function index(Request $request): View
     {
         $query = Game::with(['console', 'categories', 'badges']);
