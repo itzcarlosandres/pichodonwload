@@ -15,10 +15,10 @@ class StorageService
      */
     public function testConnection(): array
     {
-        $endpoint = Setting::get('r2_endpoint');
-        $bucket = Setting::get('r2_bucket');
-        $accessKey = Setting::get('r2_access_key');
-        $secretKey = Setting::get('r2_secret_key');
+        $endpoint = Setting::get('r2_endpoint') ?: config('filesystems.disks.s3.endpoint');
+        $bucket = Setting::get('r2_bucket') ?: config('filesystems.disks.s3.bucket');
+        $accessKey = Setting::get('r2_access_key_id') ?: Setting::get('r2_access_key') ?: config('filesystems.disks.s3.key');
+        $secretKey = Setting::get('r2_secret_access_key') ?: Setting::get('r2_secret_key') ?: config('filesystems.disks.s3.secret');
 
         if (empty($endpoint) || empty($accessKey) || empty($secretKey) || empty($bucket)) {
             return [
@@ -32,9 +32,12 @@ class StorageService
 
             $s3Client = new S3Client([
                 'version' => 'latest',
-                'region'  => 'auto',
+                'region'  => Setting::get('r2_region') ?: config('filesystems.disks.s3.region') ?: 'auto',
                 'endpoint' => $endpoint,
-                'use_path_style_endpoint' => true,
+                'use_path_style_endpoint' => false,
+                'http' => [
+                    'verify' => config('filesystems.disks.s3.http.verify', true),
+                ],
                 'credentials' => [
                     'key'    => $accessKey,
                     'secret' => $secretKey,
@@ -77,20 +80,23 @@ class StorageService
         $safeName = Str::slug(pathinfo($originalName, PATHINFO_FILENAME)) . '-' . Str::random(8) . '.' . strtolower($extension);
         $key = ($subfolder ? trim($subfolder, '/') . '/' : '') . $safeName;
 
-        $endpoint = Setting::get('r2_endpoint');
-        $bucket = Setting::get('r2_bucket');
-        $accessKey = Setting::get('r2_access_key');
-        $secretKey = Setting::get('r2_secret_key');
-        $publicDomain = Setting::get('r2_public_domain');
+        $endpoint = Setting::get('r2_endpoint') ?: config('filesystems.disks.s3.endpoint');
+        $bucket = Setting::get('r2_bucket') ?: config('filesystems.disks.s3.bucket');
+        $accessKey = Setting::get('r2_access_key_id') ?: Setting::get('r2_access_key') ?: config('filesystems.disks.s3.key');
+        $secretKey = Setting::get('r2_secret_access_key') ?: Setting::get('r2_secret_key') ?: config('filesystems.disks.s3.secret');
+        $publicDomain = Setting::get('r2_public_url') ?: Setting::get('r2_public_domain') ?: config('filesystems.disks.s3.url');
 
         // Si Cloudflare R2 está configurado, subir al bucket R2
         if (!empty($endpoint) && !empty($accessKey) && !empty($secretKey) && !empty($bucket)) {
             try {
                 $s3Client = new S3Client([
                     'version' => 'latest',
-                    'region'  => 'auto',
+                    'region'  => Setting::get('r2_region') ?: config('filesystems.disks.s3.region') ?: 'auto',
                     'endpoint' => $endpoint,
-                    'use_path_style_endpoint' => true,
+                    'use_path_style_endpoint' => false,
+                    'http' => [
+                        'verify' => config('filesystems.disks.s3.http.verify', true),
+                    ],
                     'credentials' => [
                         'key'    => $accessKey,
                         'secret' => $secretKey,
