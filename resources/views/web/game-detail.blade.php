@@ -160,6 +160,7 @@ function gameDetailComponent() {
             <div class="relative shrink-0 group">
                 <div class="w-28 h-28 sm:w-32 sm:h-32 rounded-3xl bg-white border-2 border-[#1E1E1E] p-1.5 shadow-md overflow-hidden aspect-square">
                     <img src="{{ $game->cover_thumb_url ?: ($game->cover_url ?: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80') }}" 
+                         onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80';"
                          class="w-full h-full object-cover rounded-2xl" 
                          alt="{{ $game->title }}">
                 </div>

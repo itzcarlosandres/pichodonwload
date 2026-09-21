@@ -135,7 +135,7 @@
                            class="flex items-center gap-3.5 p-3 hover:bg-[#FAF7F2] transition-colors group">
                             <!-- Cover thumb -->
                             <div class="w-11 h-14 bg-[#EDE7DE] rounded-lg border border-[#DDD6CB] overflow-hidden shrink-0 flex items-center justify-center">
-                                <img :src="item.cover_url" :alt="item.title" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+                                <img :src="item.cover_url" :alt="item.title" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80';" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
                             </div>
 
                             <!-- Info -->
@@ -289,6 +289,7 @@
                             <img src="{{ $game->cover_thumb_url ?: $game->cover_url }}" 
                                  alt="{{ $game->title }}" 
                                  loading="lazy"
+                                 onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80';"
                                  class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300">
                         </a>
                         

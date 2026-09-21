@@ -51,6 +51,7 @@
             <div class="w-36 sm:w-52 shrink-0 aspect-[3/4] rounded-2xl overflow-hidden shadow-md border-2 border-[#1E1E1E] bg-[#FAF7F2] relative group mx-auto md:mx-0">
                 <img src="{{ $game->cover_url ?: asset('images/default-cover.webp') }}" 
                      alt="{{ $game->title }}" 
+                     onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80';"
                      class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent flex items-end p-3">
                     <span class="text-[10px] font-mono uppercase tracking-wider text-white font-bold bg-[#18181B]/90 px-2.5 py-1 rounded-lg border border-white/20">
@@ -319,6 +320,7 @@
                     <div class="aspect-[3/4] w-full rounded-xl overflow-hidden bg-[#FAF7F2] border border-[#DDD6CB] relative">
                         <img src="{{ $rel->cover_thumb_url ?: $rel->cover_url }}" 
                              alt="{{ $rel->title }}" 
+                             onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80';"
                              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                     </div>
                     <div>

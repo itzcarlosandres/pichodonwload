@@ -172,7 +172,7 @@
                             <a :href="item.url" 
                                class="flex items-center gap-3.5 p-3 hover:bg-[#FAF7F2] transition-colors group">
                                 <div class="w-10 h-13 bg-[#EDE7DE] rounded-lg border border-[#DDD6CB] overflow-hidden shrink-0 flex items-center justify-center">
-                                    <img :src="item.cover_url" :alt="item.title" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+                                    <img :src="item.cover_url" :alt="item.title" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80';" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-2 mb-0.5">
@@ -384,6 +384,7 @@
                             <img src="{{ $game->cover_thumb_url ?: $game->cover_url }}" 
                                  alt="{{ $game->title }}" 
                                  loading="lazy"
+                                 onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80';"
                                  class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300">
                         </a>
                         
@@ -446,6 +447,7 @@
                         <a href="{{ route('game.show', $game->slug) }}" class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-[#FAF7F2] overflow-hidden border border-[#E5E0D8] shrink-0 block aspect-square group-hover:scale-105 transition-transform">
                             <img src="{{ $game->cover_thumb_url ?: $game->cover_url }}" 
                                  alt="{{ $game->title }}" 
+                                 onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80';"
                                  class="w-full h-full object-cover">
                         </a>
 

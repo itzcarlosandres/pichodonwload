@@ -76,6 +76,7 @@
                             <div class="flex items-center gap-3">
                                 <img src="{{ $game->cover_thumb_url ?: $game->cover_url }}" 
                                      alt="" 
+                                     onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=200&q=80';"
                                      class="w-10 h-13 object-cover rounded bg-gray-900 border border-[#232936] shrink-0">
                                 <div class="min-w-0 max-w-xs">
                                     <a href="{{ route('game.show', $game->slug) }}" target="_blank" class="font-bold text-white hover:text-blue-400 transition-colors truncate block">

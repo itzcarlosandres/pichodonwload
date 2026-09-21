@@ -230,6 +230,7 @@
                         <!-- Game Cover -->
                         <img src="{{ $game->cover_thumb_url ?: ($game->cover_url ?: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=200&fit=crop') }}" 
                              alt="{{ $game->title }}" 
+                             onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=200&fit=crop';"
                              class="w-10 h-14 object-cover rounded-lg bg-[#0A0C0F] border border-[#232936] shrink-0">
 
                         <!-- Game Info -->
@@ -289,7 +290,7 @@
                 @foreach($recentGames as $game)
                 <div class="py-3 flex items-center justify-between gap-3 first:pt-0 last:pb-0">
                     <div class="flex items-center gap-3 min-w-0">
-                        <img src="{{ $game->cover_thumb_url ?: ($game->cover_url ?: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=200&fit=crop') }}" class="w-9 h-12 object-cover rounded bg-gray-900 border border-[#232936] shrink-0">
+                        <img src="{{ $game->cover_thumb_url ?: ($game->cover_url ?: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=200&fit=crop') }}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=200&fit=crop';" class="w-9 h-12 object-cover rounded bg-gray-900 border border-[#232936] shrink-0">
                         <div class="min-w-0">
                             <p class="text-xs font-bold text-white truncate font-sans">{{ $game->title }}</p>
                             <p class="text-[10px] font-mono text-gray-400">{{ $game->console->name }} • {{ $game->formatted_size }}</p>

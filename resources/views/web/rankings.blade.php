@@ -102,7 +102,7 @@
 
             <div class="space-y-4 pt-2">
                 <div class="aspect-[3/4] rounded-2xl overflow-hidden bg-[#FAF7F2] dark:bg-[#202025] border border-[#DDD6CB] dark:border-[#27272A] relative">
-                    <img src="{{ $silver->cover_url ?: asset('images/default-cover.webp') }}" alt="{{ $silver->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                    <img src="{{ $silver->cover_url ?: asset('images/default-cover.webp') }}" alt="{{ $silver->title }}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80';" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                     <div class="absolute top-2 right-2 px-2 py-0.5 rounded-lg bg-black/80 backdrop-blur text-white text-[10px] font-mono font-bold">
                         {{ $silver->console->short_name ?: $silver->console->name }}
                     </div>
@@ -137,7 +137,7 @@
 
             <div class="space-y-4 pt-3">
                 <div class="aspect-[3/4] rounded-2xl overflow-hidden bg-[#FAF7F2] dark:bg-[#202025] border-2 border-[#EAB308]/40 relative shadow-inner">
-                    <img src="{{ $gold->cover_url ?: asset('images/default-cover.webp') }}" alt="{{ $gold->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                    <img src="{{ $gold->cover_url ?: asset('images/default-cover.webp') }}" alt="{{ $gold->title }}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80';" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                     <div class="absolute top-2 right-2 px-2.5 py-1 rounded-lg bg-[#CE2D2D] text-white text-[10px] font-mono font-black shadow-sm">
                         {{ $gold->console->short_name ?: $gold->console->name }}
                     </div>
@@ -176,7 +176,7 @@
 
             <div class="space-y-4 pt-2">
                 <div class="aspect-[3/4] rounded-2xl overflow-hidden bg-[#FAF7F2] dark:bg-[#202025] border border-[#DDD6CB] dark:border-[#27272A] relative">
-                    <img src="{{ $bronze->cover_url ?: asset('images/default-cover.webp') }}" alt="{{ $bronze->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                    <img src="{{ $bronze->cover_url ?: asset('images/default-cover.webp') }}" alt="{{ $bronze->title }}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80';" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                     <div class="absolute top-2 right-2 px-2 py-0.5 rounded-lg bg-black/80 backdrop-blur text-white text-[10px] font-mono font-bold">
                         {{ $bronze->console->short_name ?: $bronze->console->name }}
                     </div>
@@ -228,6 +228,7 @@
                     <!-- Cover Thumb -->
                     <img src="{{ $game->cover_thumb_url ?: $game->cover_url }}" 
                          alt="{{ $game->title }}" 
+                         onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80';"
                          class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl object-cover bg-[#FAF7F2] dark:bg-[#202025] border border-[#DDD6CB] dark:border-[#27272A] shrink-0 aspect-square">
 
                     <!-- Title & Info -->
