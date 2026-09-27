@@ -11,6 +11,13 @@
             <h1 class="text-2xl font-black text-white tracking-tight font-sans">Configuración Global del Sistema</h1>
             <p class="text-xs text-gray-400 font-mono mt-0.5">Identidad de marca, logo, favicon, SEO, IA Google Gemini y almacenamiento Cloudflare R2</p>
         </div>
+        <form action="{{ route('admin.settings.clearCache') }}" method="POST" onsubmit="return confirm('¿Deseas refrescar y limpiar toda la caché del sistema (vistas, configuración y ajustes)?')">
+            @csrf
+            <button type="submit" class="px-4 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-mono font-bold flex items-center gap-2 transition-all cursor-pointer shadow-sm">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                <span>🧹 Limpiar Toda la Caché</span>
+            </button>
+        </form>
     </div>
 
     <!-- Navigation Tabs in Requested Order -->

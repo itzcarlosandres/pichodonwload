@@ -78,6 +78,7 @@ Route::get('settings', [AdminSettingController::class, 'index'])->name('settings
 Route::post('settings', [AdminSettingController::class, 'update'])->name('settings.update');
 Route::post('settings/test-storage', [AdminSettingController::class, 'testStorage'])->name('settings.testStorage');
 Route::post('settings/test-gemini', [AdminSettingController::class, 'testGemini'])->name('settings.testGemini');
+Route::post('settings/clear-cache', [AdminSettingController::class, 'clearCache'])->name('settings.clearCache');
 
 // Admin Profile / Credenciales (Correo y Contraseña)
 Route::get('profile', [AdminUserController::class, 'profile'])->name('profile');

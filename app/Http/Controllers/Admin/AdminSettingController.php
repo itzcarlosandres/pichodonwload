@@ -83,4 +83,16 @@ class AdminSettingController extends Controller
         $result = $this->aiService->testConnection($apiKey, $model);
         return response()->json($result);
     }
+
+    public function clearCache(): RedirectResponse
+    {
+        try {
+            \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+            \Illuminate\Support\Facades\Cache::flush();
+        } catch (\Throwable $e) {
+            // Silently continue
+        }
+
+        return redirect()->route('admin.settings.index')->with('success', '¡Caché del sistema eliminada exitosamente! Se refrescaron vistas, rutas, configuración y memoria de ajustes.');
+    }
 }

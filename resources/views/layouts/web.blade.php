@@ -12,11 +12,23 @@
     <link rel="canonical" href="{{ url()->current() }}">
 
     <!-- Google Search Console & Bing Webmaster Verification -->
-    @if($gVerification = \App\Models\Setting::get('google_site_verification'))
-    <meta name="google-site-verification" content="{{ $gVerification }}">
+    @php
+        $gRaw = \App\Models\Setting::get('google_site_verification');
+        $gToken = $gRaw;
+        if ($gRaw && preg_match('/content=[\'"]([^\'"]+)[\'"]/i', $gRaw, $gm)) {
+            $gToken = $gm[1];
+        }
+        $bRaw = \App\Models\Setting::get('bing_site_verification');
+        $bToken = $bRaw;
+        if ($bRaw && preg_match('/content=[\'"]([^\'"]+)[\'"]/i', $bRaw, $bm)) {
+            $bToken = $bm[1];
+        }
+    @endphp
+    @if(!empty($gToken))
+    <meta name="google-site-verification" content="{{ trim(strip_tags($gToken)) }}">
     @endif
-    @if($bVerification = \App\Models\Setting::get('bing_site_verification'))
-    <meta name="msvalidate.01" content="{{ $bVerification }}">
+    @if(!empty($bToken))
+    <meta name="msvalidate.01" content="{{ trim(strip_tags($bToken)) }}">
     @endif
     
     <!-- PWA & Mobile Web App Capabilities -->
