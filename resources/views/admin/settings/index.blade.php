@@ -145,10 +145,19 @@
                 </div>
 
                 <!-- 2. Logo Letra & Textos de Marca -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono text-xs pt-2">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 font-mono text-xs pt-2">
                     <div>
-                        <label class="block text-gray-400 mb-1">Nombre Global (Base de Datos)</label>
-                        <input type="text" name="site_name" value="{{ $settings['site_name'] ?? 'ROMHUB' }}" class="w-full bg-[#0A0C0F] border border-[#232936] rounded-lg p-2.5 text-white">
+                        <label class="block text-gray-400 mb-1">Nombre Global de la Plataforma</label>
+                        <input type="text" name="site_name" value="{{ $settings['site_name'] ?? 'PichoDownload' }}" class="w-full bg-[#0A0C0F] border border-[#232936] rounded-lg p-2.5 text-white" placeholder="PichoDownload">
+                    </div>
+
+                    <div>
+                        <label class="block text-purple-400 font-bold mb-1 flex items-center gap-1">
+                            <i data-lucide="globe" class="w-3.5 h-3.5"></i>
+                            <span>Dominio Web (Producción)</span>
+                        </label>
+                        <input type="text" name="site_domain" value="{{ $settings['site_domain'] ?? '' }}" class="w-full bg-[#0A0C0F] border border-[#232936] rounded-lg p-2.5 text-purple-300 font-mono" placeholder="ej. pichodownload.com (o auto)">
+                        <p class="text-[10px] text-gray-500 mt-1">Si lo dejas vacío, detecta automáticamente el dominio en vivo.</p>
                     </div>
 
                     <div>
@@ -161,7 +170,7 @@
                         <input type="text" name="site_logo_suffix" x-model="logoSuffix" class="w-full bg-[#0A0C0F] border border-[#232936] rounded-lg p-2.5 text-blue-400 font-bold" placeholder="HUB">
                     </div>
 
-                    <div class="sm:col-span-3">
+                    <div class="sm:col-span-2 lg:col-span-4">
                         <label class="block text-gray-400 mb-1">Eslogan / Subtexto Inferior</label>
                         <input type="text" name="site_tagline" x-model="tagline" class="w-full bg-[#0A0C0F] border border-[#232936] rounded-lg p-2.5 text-white font-sans" placeholder="Preservation Vault">
                     </div>

@@ -20,8 +20,9 @@ class AdminAiController extends Controller
     {
         $title = $request->input('title', 'Videojuego');
         $console = $request->input('console', 'Consola');
+        $context = $request->only(['release_year', 'region', 'languages', 'genre', 'publisher', 'developer']);
 
-        $result = $this->aiService->generateSeo($title, $console);
+        $result = $this->aiService->generateSeo($title, $console, $context);
 
         return response()->json($result);
     }
@@ -30,8 +31,9 @@ class AdminAiController extends Controller
     {
         $title = $request->input('title', 'Videojuego');
         $console = $request->input('console', 'Consola');
+        $context = $request->only(['release_year', 'region', 'languages', 'genre', 'publisher', 'developer']);
 
-        $result = $this->aiService->generateRichDescription($title, $console);
+        $result = $this->aiService->generateRichDescription($title, $console, $context);
 
         return response()->json($result);
     }

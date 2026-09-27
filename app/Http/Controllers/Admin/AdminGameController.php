@@ -104,6 +104,7 @@ class AdminGameController extends Controller
             'slug' => 'nullable|string|max:255',
             'console_id' => 'required|exists:consoles,id',
             'cover_image' => 'nullable|image|max:20480',
+            'cover_image_url' => 'nullable|string|max:2000',
             'banner_image' => 'nullable|image|max:20480',
             'rom_file' => 'nullable|file',
             'description' => 'nullable|string',
@@ -172,6 +173,8 @@ class AdminGameController extends Controller
             $coverData = $this->imageService->processCover($request->file('cover_image'));
             $validated['cover_url'] = $coverData['url'];
             $validated['cover_thumb_url'] = $coverData['thumb_url'];
+        } elseif ($request->filled('cover_image_url')) {
+            $validated['cover_url'] = $request->input('cover_image_url');
         }
 
         // Process Banner Image to WebP
@@ -182,15 +185,26 @@ class AdminGameController extends Controller
 
         $game = Game::create($validated);
 
-        // Process Screenshot Files to WebP
+        // Process Screenshot Files to WebP or imported URLs
+        $order = 1;
         if ($request->hasFile('screenshot_files')) {
-            $order = 1;
             foreach ($request->file('screenshot_files') as $file) {
                 if ($file && $file->isValid()) {
                     $ssData = $this->imageService->processScreenshot($file);
                     $game->screenshots()->create([
                         'image_url' => $ssData['url'],
                         'image_webp_url' => $ssData['url'],
+                        'order' => $order++,
+                    ]);
+                }
+            }
+        }
+        if ($request->filled('screenshot_urls') && is_array($request->input('screenshot_urls'))) {
+            foreach ($request->input('screenshot_urls') as $sUrl) {
+                if (!empty($sUrl)) {
+                    $game->screenshots()->create([
+                        'image_url' => $sUrl,
+                        'image_webp_url' => $sUrl,
                         'order' => $order++,
                     ]);
                 }

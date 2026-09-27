@@ -4,12 +4,21 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\Game;
+use App\Services\RomDownloadResolverService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class DownloadController extends Controller
 {
+    protected RomDownloadResolverService $resolver;
+
+    public function __construct(RomDownloadResolverService $resolver)
+    {
+        $this->resolver = $resolver;
+    }
+
     /**
      * Muestra la página dedicada y enriquecida de descarga del videojuego
      */
@@ -50,5 +59,49 @@ class DownloadController extends Controller
             'success' => true,
             'download_count' => $game->download_count,
         ]);
+    }
+
+    /**
+     * Resuelve el enlace de descarga dinámico (actualizando tokens temporales si procede)
+     * e incrementa el contador de descargas
+     */
+    public function resolve(Request $request, string $slug): JsonResponse
+    {
+        $game = Game::where('slug', $slug)->firstOrFail();
+        $targetUrl = $request->input('url', $game->download_url);
+
+        if (empty($targetUrl)) {
+            $targetUrl = $game->download_url;
+        }
+
+        // Resolver URL fresca si es CDRomance u otro enlace con expiración
+        $resolvedUrl = $this->resolver->resolve($targetUrl);
+
+        // Incrementar contador de descargas
+        $game->increment('download_count');
+
+        return response()->json([
+            'success' => true,
+            'url' => $resolvedUrl,
+            'download_count' => $game->download_count,
+        ]);
+    }
+
+    /**
+     * Redirección directa hacia el archivo con resolución transparente
+     */
+    public function go(Request $request, string $slug): RedirectResponse
+    {
+        $game = Game::where('slug', $slug)->firstOrFail();
+        $targetUrl = $request->input('url', $game->download_url);
+
+        if (empty($targetUrl)) {
+            $targetUrl = $game->download_url;
+        }
+
+        $resolvedUrl = $this->resolver->resolve($targetUrl);
+        $game->increment('download_count');
+
+        return redirect()->away($resolvedUrl);
     }
 }

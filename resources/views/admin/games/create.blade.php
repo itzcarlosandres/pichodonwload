@@ -67,7 +67,7 @@
                             <label class="block text-xs font-mono text-gray-400 mb-1">Ecosistema / Consola *</label>
                             <select id="consoleSelect" name="console_id" required class="w-full bg-[#0A0C0F] border border-[#232936] rounded-xl p-2.5 text-xs text-gray-200 focus:outline-none focus:border-blue-500 font-sans">
                                 @foreach($consoles as $con)
-                                <option value="{{ $con->id }}" {{ old('console_id') == $con->id ? 'selected' : '' }}>{{ $con->name }} ({{ $con->manufacturer }})</option>
+                                <option value="{{ $con->id }}" {{ old('console_id', request('console_id')) == $con->id ? 'selected' : '' }}>{{ $con->name }} ({{ $con->manufacturer }})</option>
                                 @endforeach
                             </select>
                         </div>
@@ -234,7 +234,7 @@
                         </div>
                         <div>
                             <label class="block text-gray-400 mb-1">Idiomas</label>
-                            <input type="text" name="languages" value="{{ old('languages', 'Español, Inglés') }}" placeholder="Español, English" class="w-full bg-[#0A0C0F] border border-[#232936] rounded-lg p-2 text-gray-200">
+                            <input type="text" name="languages" x-model="languages" placeholder="Español, English" class="w-full bg-[#0A0C0F] border border-[#232936] rounded-lg p-2 text-gray-200">
                         </div>
                         <div>
                             <label class="block text-gray-400 mb-1">Formato Archivo</label>
@@ -463,6 +463,10 @@
                         <span class="text-[10px] font-mono text-emerald-400 bg-emerald-950/40 border border-emerald-500/20 px-2 py-0.5 rounded">Auto WebP</span>
                     </div>
 
+                    @if(request('cover_url'))
+                    <input type="hidden" name="cover_image_url" value="{{ request('cover_url') }}">
+                    @endif
+
                     <!-- Live Image Preview (When selected) -->
                     <div x-show="coverPreview" x-cloak class="relative group mx-auto w-36 aspect-[3/4.1] rounded-xl overflow-hidden border-2 border-blue-500/50 shadow-xl bg-[#0A0C0F] transition-all">
                         <img :src="coverPreview" class="w-full h-full object-cover">
@@ -491,42 +495,6 @@
                     </div>
                 </div>
 
-                <!-- WebP Banner Image Upload (16:9 Aspect Ratio) with Live Preview -->
-                <div class="bg-[#11141A] border border-[#232936] rounded-2xl p-5 space-y-3">
-                    <div class="flex items-center justify-between border-b border-[#232936] pb-2">
-                        <h3 class="text-xs font-bold text-white font-sans uppercase tracking-wider flex items-center gap-1.5">
-                            <i data-lucide="panorama" class="w-3.5 h-3.5 text-blue-400"></i> Banner Panorámico (16:9)
-                        </h3>
-                        <span class="text-[10px] font-mono text-emerald-400 bg-emerald-950/40 border border-emerald-500/20 px-2 py-0.5 rounded">Auto WebP</span>
-                    </div>
-
-                    <!-- Live Banner Preview (When selected) -->
-                    <div x-show="bannerPreview" x-cloak class="relative group w-full aspect-video rounded-xl overflow-hidden border-2 border-blue-500/50 shadow-xl bg-[#0A0C0F] transition-all">
-                        <img :src="bannerPreview" class="w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-2">
-                            <label class="cursor-pointer px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-mono text-[11px] font-bold transition-transform transform hover:scale-105">
-                                <span>Cambiar Banner</span>
-                                <input type="file" id="bannerFileInput" name="banner_image" accept="image/*" @change="handleBannerSelect($event)" class="hidden">
-                            </label>
-                            <button type="button" @click="clearBannerPreview()" class="px-2.5 py-1 rounded-lg bg-rose-600/80 hover:bg-rose-600 text-white font-mono text-[10px] transition-colors">
-                                Quitar
-                            </button>
-                        </div>
-                        <div class="absolute bottom-1.5 left-1.5 right-1.5 bg-black/85 backdrop-blur-sm px-1.5 py-0.5 rounded text-[9px] font-mono text-center text-emerald-400 truncate" x-text="bannerFileName || 'Vista Previa Panorámica (16:9)'"></div>
-                    </div>
-
-                    <!-- Dropzone (When no banner is selected) -->
-                    <div x-show="!bannerPreview" class="p-4 border-2 border-dashed border-[#232936] rounded-xl text-center space-y-2 hover:border-blue-500/50 transition-colors bg-[#0A0C0F]">
-                        <i data-lucide="panorama" class="w-8 h-8 text-gray-500 mx-auto"></i>
-                        <div class="text-xs font-sans text-gray-300">
-                            <label class="cursor-pointer text-blue-400 hover:underline">
-                                <span class="font-bold">Seleccionar banner panorámico</span>
-                                <input type="file" id="bannerFileInput" name="banner_image" accept="image/*" @change="handleBannerSelect($event)" class="hidden">
-                            </label>
-                        </div>
-                        <p class="text-[10px] font-mono text-gray-500">1920x1080 recomendado. Se convertirá automáticamente a WebP.</p>
-                    </div>
-                </div>
 
                 <!-- WebP In-Game Screenshots Multi-Upload Box -->
                 <div class="bg-[#11141A] border border-[#232936] rounded-2xl p-5 space-y-3">
@@ -553,6 +521,7 @@
                     <div x-show="screenshotPreviews.length > 0" x-cloak class="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 max-h-52 overflow-y-auto pr-1">
                         <template x-for="(item, idx) in screenshotPreviews" :key="idx">
                             <div class="relative group/ss aspect-video rounded-lg overflow-hidden border border-[#232936] bg-[#0A0C0F]">
+                                <input type="hidden" name="screenshot_urls[]" :value="item.url" x-show="item.isRemote">
                                 <img :src="item.url" class="w-full h-full object-cover">
                                 <button type="button" @click="removeScreenshotPreview(idx)" class="absolute top-1 right-1 p-1 rounded-md bg-rose-600 hover:bg-rose-500 text-white opacity-0 group-hover/ss:opacity-100 transition-opacity shadow-md">
                                     <i data-lucide="trash-2" class="w-3 h-3"></i>
@@ -589,8 +558,12 @@
                     </h3>
                     <div class="grid grid-cols-2 gap-1.5 max-h-48 overflow-y-auto pr-1">
                         @foreach($categories as $category)
+                        @php
+                            $requestedCats = request('categories') ? explode(',', request('categories')) : [];
+                            $isChecked = in_array($category->id, old('category_ids', $requestedCats));
+                        @endphp
                         <label class="flex items-center gap-2 p-2 rounded-lg bg-[#0A0C0F] border border-[#232936] text-xs font-mono text-gray-300 cursor-pointer hover:border-blue-500/40">
-                            <input type="checkbox" name="category_ids[]" value="{{ $category->id }}" {{ in_array($category->id, old('category_ids', [])) ? 'checked' : '' }} class="rounded bg-[#11141A] border-[#232936] text-blue-600">
+                            <input type="checkbox" name="category_ids[]" value="{{ $category->id }}" {{ $isChecked ? 'checked' : '' }} class="rounded bg-[#11141A] border-[#232936] text-blue-600">
                             <span class="truncate">{{ $category->name }}</span>
                         </label>
                         @endforeach
@@ -633,18 +606,19 @@
 <script>
 function gameCreateForm() {
     return {
-        title: @json(old('title', '')),
+        title: @json(old('title', request('title', ''))),
         consoleName: '',
         description: @json(old('description', '')),
         metaTitle: @json(old('meta_title', '')),
         metaDescription: @json(old('meta_description', '')),
-        developer: @json(old('developer', '')),
-        publisher: @json(old('publisher', '')),
-        releaseYear: @json(old('release_year', '')),
-        region: @json(old('region', 'USA / NTSC-U')),
-        fileSize: @json(old('file_size', '')),
-        fileFormat: @json(old('file_format', 'ISO')),
-        downloadUrl: @json(old('download_url', '')),
+        developer: @json(old('developer', request('developer', ''))),
+        publisher: @json(old('publisher', request('publisher', ''))),
+        releaseYear: @json(old('release_year', request('release_year', ''))),
+        region: @json(old('region', request('region', 'USA / NTSC-U'))),
+        languages: @json(old('languages', request('languages', 'Español, Inglés'))),
+        fileSize: @json(old('file_size', request('file_size', ''))),
+        fileFormat: @json(old('file_format', request('file_format', 'ZIP'))),
+        downloadUrl: @json(old('download_url', request('download_url', ''))),
         mirrors: @json(old('mirrors', [])),
         uploadedRomInfo: null,
         uploadingRom: false,
@@ -656,11 +630,20 @@ function gameCreateForm() {
         romTotalBytesFormatted: '',
         romUploadSpeedFormatted: '',
         activeRomXhr: null,
-        coverPreview: null,
-        coverFileName: '',
+        coverPreview: @json(request('cover_url', null)),
+        coverFileName: @json(request('cover_url') ? 'Portada Remota Importada' : ''),
         bannerPreview: null,
         bannerFileName: '',
-        screenshotPreviews: [],
+        @php
+            $initialScreenshots = [];
+            if (request('screenshots')) {
+                $decoded = json_decode(request('screenshots'), true);
+                if (is_array($decoded)) {
+                    $initialScreenshots = array_map(fn($u) => ['name' => 'Captura Remota', 'url' => $u, 'isRemote' => true], $decoded);
+                }
+            }
+        @endphp
+        screenshotPreviews: @json($initialScreenshots),
         aiLoading: false,
         seoLoading: false,
         descLoading: false,
@@ -935,7 +918,15 @@ function gameCreateForm() {
             return fetch('{{ route('admin.ai.seo') }}', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                body: JSON.stringify({ title: this.title.trim(), console: this.getConsoleName() })
+                body: JSON.stringify({ 
+                    title: this.title.trim(), 
+                    console: this.getConsoleName(),
+                    release_year: this.releaseYear,
+                    region: this.region,
+                    languages: this.languages,
+                    publisher: this.publisher,
+                    developer: this.developer
+                })
             })
             .then(r => r.json())
             .then(d => {
@@ -960,7 +951,15 @@ function gameCreateForm() {
             return fetch('{{ route('admin.ai.description') }}', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                body: JSON.stringify({ title: this.title.trim(), console: this.getConsoleName() })
+                body: JSON.stringify({ 
+                    title: this.title.trim(), 
+                    console: this.getConsoleName(),
+                    release_year: this.releaseYear,
+                    region: this.region,
+                    languages: this.languages,
+                    publisher: this.publisher,
+                    developer: this.developer
+                })
             })
             .then(r => r.json())
             .then(d => {

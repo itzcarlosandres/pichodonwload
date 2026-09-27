@@ -6,6 +6,7 @@
     ready: false,
     timer: null,
     downloadStarted: false,
+    resolving: false,
     init() {
         this.timer = setInterval(() => {
             if (this.countdown > 1) {
@@ -19,16 +20,32 @@
             }
         }, 1000);
     },
-    trackDownload(url) {
+    async trackDownload(url) {
+        if (this.resolving) return;
+        this.resolving = true;
         this.downloadStarted = true;
-        fetch('{{ route('download.track', $game->slug) }}', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json'
-            }
-        });
-        window.open(url, '_blank');
+
+        try {
+            const res = await fetch('{{ route('download.resolve', $game->slug) }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ url: url })
+            });
+
+            const data = await res.json();
+            const targetUrl = (data && data.url) ? data.url : url;
+            
+            // Iniciar descarga limpia directamente en el navegador del usuario
+            window.location.href = targetUrl;
+        } catch(e) {
+            window.location.href = url;
+        } finally {
+            setTimeout(() => { this.resolving = false; }, 2500);
+        }
     }
 }">
 

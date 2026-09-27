@@ -123,6 +123,24 @@
                             <span class="text-[10px] font-mono text-gray-400 bg-[#0A0C0F] px-2 py-0.5 rounded border border-[#232936]">{{ \App\Models\Game::count() }}</span>
                         </a>
 
+                        <!-- Catálogo 1-Clic -->
+                        <a href="{{ route('admin.scraper.catalog') }}" 
+                           class="w-full px-3 py-2 rounded-xl flex items-center justify-between transition-all {{ request()->routeIs('admin.scraper.catalog*') ? 'bg-purple-600/20 text-purple-300 border border-purple-500/40 font-semibold shadow-sm shadow-purple-500/20' : 'text-purple-400/90 hover:bg-purple-950/30 hover:text-purple-200 border border-purple-500/20' }}">
+                            <span class="flex items-center gap-2.5">
+                                <i data-lucide="layers" class="w-4 h-4 text-purple-400"></i> Catálogo 1-Clic
+                            </span>
+                            <span class="text-[9px] font-mono text-emerald-400 bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-500/30 font-bold uppercase tracking-wider">Nuevo</span>
+                        </a>
+
+                        <!-- Extractor URL -->
+                        <a href="{{ route('admin.scraper.demo') }}" 
+                           class="w-full px-3 py-2 rounded-xl flex items-center justify-between transition-all {{ request()->routeIs('admin.scraper.demo*') ? 'bg-purple-600/20 text-purple-300 border border-purple-500/40 font-semibold shadow-sm shadow-purple-500/20' : 'text-gray-400 hover:bg-[#171B22] hover:text-white border border-transparent' }}">
+                            <span class="flex items-center gap-2.5">
+                                <i data-lucide="sparkles" class="w-4 h-4 text-purple-400"></i> Extractor por URL
+                            </span>
+                            <span class="text-[9px] font-mono text-gray-500 bg-[#0A0C0F] px-1.5 py-0.5 rounded border border-[#232936]">Manual</span>
+                        </a>
+
                         <!-- Consolas -->
                         <a href="{{ route('admin.consoles.index') }}" 
                            class="w-full px-3 py-2.5 rounded-xl flex items-center justify-between transition-all {{ request()->routeIs('admin.consoles.*') ? 'bg-blue-600/15 text-blue-400 border border-blue-500/30 font-semibold shadow-sm shadow-blue-500/10' : 'text-gray-400 hover:bg-[#171B22] hover:text-white border border-transparent' }}">

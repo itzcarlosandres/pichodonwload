@@ -30,6 +30,8 @@ Route::post('/game/{game}/review', [GameController::class, 'submitReview'])->nam
 Route::get('/game/{slug}/download', [DownloadController::class, 'show'])->name('game.download');
 Route::get('/download/{slug}', [DownloadController::class, 'show'])->name('download.file');
 Route::post('/download/{slug}/track', [DownloadController::class, 'track'])->name('download.track');
+Route::post('/download/{slug}/resolve', [DownloadController::class, 'resolve'])->name('download.resolve');
+Route::get('/download/{slug}/go', [DownloadController::class, 'go'])->name('download.go');
 
 Route::get('/consoles', [ConsoleController::class, 'index'])->name('consoles.index');
 Route::get('/consoles/{slug}', [ConsoleController::class, 'show'])->name('consoles.show');

@@ -14,9 +14,20 @@ use App\Http\Controllers\Admin\AdminSettingController;
 use App\Http\Controllers\Admin\AdminBiosController;
 use App\Http\Controllers\Admin\AdminEmulatorController;
 use App\Http\Controllers\Admin\AdminFranchiseController;
+use App\Http\Controllers\Admin\AdminScraperDemoController;
 
 // Dashboard
 Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+// Scraper Extractor Demo & Catalog Browser
+Route::get('scraper-demo', [AdminScraperDemoController::class, 'index'])->name('scraper.demo');
+Route::post('scraper-demo/extract', [AdminScraperDemoController::class, 'extract'])->name('scraper.extract');
+Route::post('scraper-demo/save', [AdminScraperDemoController::class, 'saveToCatalog'])->name('scraper.save');
+Route::get('scraper-catalog', [AdminScraperDemoController::class, 'catalog'])->name('scraper.catalog');
+Route::get('scraper-catalog/fetch', [AdminScraperDemoController::class, 'fetchCatalog'])->name('scraper.catalog.fetch');
+Route::post('scraper-catalog/quick-import', [AdminScraperDemoController::class, 'quickImport'])->name('scraper.quick_import');
+Route::get('scraper/safety-status', [AdminScraperDemoController::class, 'safetyStatus'])->name('scraper.safety_status');
+Route::post('scraper/reset-cooldown', [AdminScraperDemoController::class, 'resetSafetyCooldown'])->name('scraper.reset_cooldown');
 
 // AI Endpoints
 Route::post('/ai/seo', [AdminAiController::class, 'generateSeo'])->name('ai.seo');

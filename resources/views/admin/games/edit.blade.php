@@ -236,7 +236,7 @@
                         </div>
                         <div>
                             <label class="block text-gray-400 mb-1">Idiomas</label>
-                            <input type="text" name="languages" value="{{ old('languages', $game->languages) }}" class="w-full bg-[#0A0C0F] border border-[#232936] rounded-lg p-2 text-gray-200">
+                            <input type="text" name="languages" x-model="languages" class="w-full bg-[#0A0C0F] border border-[#232936] rounded-lg p-2 text-gray-200">
                         </div>
                         <div>
                             <label class="block text-gray-400 mb-1">Formato Archivo</label>
@@ -497,42 +497,6 @@
                     </div>
                 </div>
 
-                <!-- WebP Banner Image Upload (16:9 Aspect Ratio) with Live Preview -->
-                <div class="bg-[#11141A] border border-[#232936] rounded-2xl p-5 space-y-3">
-                    <div class="flex items-center justify-between border-b border-[#232936] pb-2">
-                        <h3 class="text-xs font-bold text-white font-sans uppercase tracking-wider flex items-center gap-1.5">
-                            <i data-lucide="panorama" class="w-3.5 h-3.5 text-blue-400"></i> Banner Panorámico (16:9)
-                        </h3>
-                        <span class="text-[10px] font-mono text-emerald-400 bg-emerald-950/40 border border-emerald-500/20 px-2 py-0.5 rounded">Auto WebP</span>
-                    </div>
-
-                    <!-- Live Banner Preview -->
-                    <div x-show="bannerPreview" class="relative group w-full aspect-video rounded-xl overflow-hidden border-2 border-blue-500/50 shadow-xl bg-[#0A0C0F] transition-all">
-                        <img :src="bannerPreview" class="w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-2">
-                            <label class="cursor-pointer px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-mono text-[11px] font-bold transition-transform transform hover:scale-105">
-                                <span>Reemplazar Banner</span>
-                                <input type="file" id="bannerFileInputEdit" name="banner_image" accept="image/*" @change="handleBannerSelect($event)" class="hidden">
-                            </label>
-                            <button type="button" @click="clearBannerPreview()" class="px-2.5 py-1 rounded-lg bg-rose-600/80 hover:bg-rose-600 text-white font-mono text-[10px] transition-colors">
-                                Quitar
-                            </button>
-                        </div>
-                        <div class="absolute bottom-1.5 left-1.5 right-1.5 bg-black/85 backdrop-blur-sm px-1.5 py-0.5 rounded text-[9px] font-mono text-center text-emerald-400 truncate" x-text="bannerFileName || 'Banner Actual / Nuevo (16:9)'"></div>
-                    </div>
-
-                    <!-- Dropzone when no banner preview -->
-                    <div x-show="!bannerPreview" class="p-4 border-2 border-dashed border-[#232936] rounded-xl text-center space-y-2 hover:border-blue-500/50 transition-colors bg-[#0A0C0F]">
-                        <i data-lucide="panorama" class="w-8 h-8 text-gray-500 mx-auto"></i>
-                        <div class="text-xs font-sans text-gray-300">
-                            <label class="cursor-pointer text-blue-400 hover:underline">
-                                <span class="font-bold">Subir banner panorámico</span>
-                                <input type="file" id="bannerFileInputEdit" name="banner_image" accept="image/*" @change="handleBannerSelect($event)" class="hidden">
-                            </label>
-                        </div>
-                        <p class="text-[10px] font-mono text-gray-500">1920x1080 recomendado. Se convertirá automáticamente a WebP.</p>
-                    </div>
-                </div>
 
                 <!-- WebP In-Game Screenshots Multi-Upload Box -->
                 <div class="bg-[#11141A] border border-[#232936] rounded-2xl p-5 space-y-3">
@@ -672,6 +636,7 @@ function gameEditForm() {
         publisher: @json(old('publisher', $game->publisher ?? '')),
         releaseYear: @json(old('release_year', $game->release_year ?? '')),
         region: @json(old('region', $game->region ?? 'USA / NTSC-U')),
+        languages: @json(old('languages', $game->languages ?? 'Español, Inglés')),
         fileSize: @json(old('file_size', $game->file_size ?? '')),
         fileFormat: @json(old('file_format', $game->file_format ?? 'ISO')),
         downloadUrl: @json(old('download_url', $game->download_url ?? '')),
@@ -965,7 +930,15 @@ function gameEditForm() {
             return fetch('{{ route('admin.ai.seo') }}', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                body: JSON.stringify({ title: this.title.trim(), console: this.getConsoleName() })
+                body: JSON.stringify({ 
+                    title: this.title.trim(), 
+                    console: this.getConsoleName(),
+                    release_year: this.releaseYear,
+                    region: this.region,
+                    languages: this.languages,
+                    publisher: this.publisher,
+                    developer: this.developer
+                })
             })
             .then(r => r.json())
             .then(d => {
@@ -990,7 +963,15 @@ function gameEditForm() {
             return fetch('{{ route('admin.ai.description') }}', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                body: JSON.stringify({ title: this.title.trim(), console: this.getConsoleName() })
+                body: JSON.stringify({ 
+                    title: this.title.trim(), 
+                    console: this.getConsoleName(),
+                    release_year: this.releaseYear,
+                    region: this.region,
+                    languages: this.languages,
+                    publisher: this.publisher,
+                    developer: this.developer
+                })
             })
             .then(r => r.json())
             .then(d => {

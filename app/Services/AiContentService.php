@@ -23,17 +23,74 @@ class AiContentService
     ];
 
     /**
+     * Resuelve dinámicamente el nombre de la plataforma o dominio activo
+     */
+    public function getPlatformBrand(): string
+    {
+        // 1. Dominio explícito configurado en los ajustes del sistema
+        $configuredDomain = Setting::get('site_domain');
+        if (!empty($configuredDomain)) {
+            return trim($configuredDomain);
+        }
+
+        // 2. Dominio real de la petición web en vivo (ej. pichodownload.com)
+        if (app()->bound('request') && request()?->getHost()) {
+            $host = request()->getHost();
+            if ($host && !in_array($host, ['localhost', '127.0.0.1'])) {
+                return $host;
+            }
+        }
+
+        // 3. Dominio configurado en .env (APP_URL)
+        $appUrl = config('app.url');
+        if (!empty($appUrl)) {
+            $parsedHost = parse_url($appUrl, PHP_URL_HOST);
+            if ($parsedHost && !in_array($parsedHost, ['localhost', '127.0.0.1'])) {
+                return $parsedHost;
+            }
+        }
+
+        // 4. Nombre configurado en Ajustes (Settings > site_name)
+        $siteName = Setting::get('site_name');
+        if (!empty($siteName)) {
+            return trim($siteName);
+        }
+
+        // 5. Fallback a config('app.name')
+        return config('app.name', 'PichoDownload');
+    }
+
+    /**
      * Genera automáticamente Meta Title y Meta Description optimizados para SEO y CTR
      */
-    public function generateSeo(string $title, string $consoleName): array
+    public function generateSeo(string $title, string $consoleName, array $context = []): array
     {
-        $prompt = "Eres un experto en SEO para plataformas de preservación de videojuegos.\n"
+        $brand = $this->getPlatformBrand();
+        $contextLines = [];
+        if (!empty($context['release_year'])) $contextLines[] = "- Año de lanzamiento: " . $context['release_year'];
+        if (!empty($context['genre'])) $contextLines[] = "- Género: " . $context['genre'];
+        if (!empty($context['region'])) $contextLines[] = "- Región: " . $context['region'];
+        if (!empty($context['languages'])) $contextLines[] = "- Idiomas disponibles: " . $context['languages'];
+        if (!empty($context['publisher'])) $contextLines[] = "- Publicador: " . $context['publisher'];
+
+        $contextText = !empty($contextLines) 
+            ? "\nDATOS TÉCNICOS VERIFICADOS DEL VIDEOJUEGO:\n" . implode("\n", $contextLines) . "\n" 
+            : "";
+
+        $hasSpanish = !empty($context['languages']) && (stripos($context['languages'], 'span') !== false || stripos($context['languages'], 'españ') !== false);
+        $langHint = $hasSpanish ? "Menciona 'en Español' en el título o descripción para disparar el CTR si es relevante." : "";
+
+        $prompt = "Eres un experto en SEO para la plataforma de preservación y emulación de videojuegos {$brand}.\n"
             . "Para el juego '{$title}' de la consola '{$consoleName}', genera un JSON válido con la siguiente estructura exacta:\n"
             . "{\n"
             . '  "meta_title": "Título SEO persuasivo (máximo 60 caracteres)",' . "\n"
             . '  "meta_description": "Descripción atractiva con llamada a la acción y compatibilidad de emuladores (máximo 155 caracteres)",' . "\n"
             . '  "keywords": "palabras clave separadas por comas"' . "\n"
             . "}\n"
+            . $contextText
+            . "REGLAS SEO:\n"
+            . "- Aprovecha los datos técnicos reales como el año o el género.\n"
+            . ($langHint ? "- {$langHint}\n" : "")
             . "Responde ÚNICAMENTE con el objeto JSON puro sin bloques de código ni texto adicional.";
 
         $rawResponse = $this->callGeminiApi($prompt);
@@ -51,7 +108,7 @@ class AiContentService
                 return [
                     'success' => true,
                     'meta_title' => trim($data['meta_title']),
-                    'meta_description' => !empty($data['meta_description']) ? trim($data['meta_description']) : "Descarga {$title} para {$consoleName} en alta definición. ROM verificada y compatible con emuladores.",
+                    'meta_description' => !empty($data['meta_description']) ? trim($data['meta_description']) : "Descarga {$title} para {$consoleName} en alta definición en {$brand}. ROM verificada y compatible con emuladores.",
                     'keywords' => $data['keywords'] ?? "{$title}, {$consoleName}, rom, iso, emulador",
                 ];
             }
@@ -60,10 +117,11 @@ class AiContentService
         }
 
         // Default heuristic generation if Gemini key is not configured or fails
+        $extraTitle = $hasSpanish ? " en Español" : "";
         return [
             'success' => true,
-            'meta_title' => "Descargar {$title} {$consoleName} ROM ISO Verificado",
-            'meta_description' => "Descarga {$title} para {$consoleName} con volcado verificado No-Intro/Redump. Guía de emulación y configuración a 60 FPS.",
+            'meta_title' => "Descargar {$title}{$extraTitle} {$consoleName} ROM ISO Verificado",
+            'meta_description' => "Descarga {$title} para {$consoleName} con volcado verificado No-Intro/Redump en {$brand}. Guía de emulación y configuración a 60 FPS.",
             'keywords' => "{$title}, {$consoleName}, descargar rom {$title}, iso {$consoleName}, emulacion 60fps",
         ];
     }
@@ -71,17 +129,32 @@ class AiContentService
     /**
      * Genera una sinopsis y análisis técnico enriquecido en Markdown con Gemini
      */
-    public function generateRichDescription(string $title, string $consoleName): array
+    public function generateRichDescription(string $title, string $consoleName, array $context = []): array
     {
-        $prompt = "Actúa como redactor y crítico profesional de videojuegos para la enciclopedia de preservación digital ROMHUB.\n"
+        $brand = $this->getPlatformBrand();
+        $contextLines = [];
+        if (!empty($context['release_year'])) $contextLines[] = "- Año de lanzamiento original: " . $context['release_year'];
+        if (!empty($context['genre'])) $contextLines[] = "- Género: " . $context['genre'];
+        if (!empty($context['region'])) $contextLines[] = "- Región de la edición: " . $context['region'];
+        if (!empty($context['languages'])) $contextLines[] = "- Idiomas incluidos: " . $context['languages'];
+        if (!empty($context['publisher'])) $contextLines[] = "- Publicador: " . $context['publisher'];
+        if (!empty($context['developer'])) $contextLines[] = "- Desarrollador: " . $context['developer'];
+
+        $contextText = !empty($contextLines) 
+            ? "\nFICHA TÉCNICA VERIFICADA:\n" . implode("\n", $contextLines) . "\nUsa estos datos técnicos exactos sin cambiarlos ni inventar fechas, consolas o estudios erróneos.\n" 
+            : "";
+
+        $prompt = "Actúa como redactor y crítico profesional de videojuegos para la plataforma digital {$brand}.\n"
             . "Escribe un artículo, análisis y sinopsis profunda en español para el videojuego '{$title}' en su versión de {$consoleName}.\n\n"
+            . $contextText . "\n"
             . "REQUISITOS ESTRICTOS DE EXTENSIÓN Y FORMATO:\n"
             . "- LONGITUD MÍNIMA OBLIGATORIA: 200 a 260 palabras. NO hagas un resumen corto; desarrolla cada uno de los 3 párrafos de forma extensa y detallada.\n"
             . "- ESTRUCTURA: Redacta exactamente 3 párrafos completos y bien cohesionados:\n"
             . "  * Párrafo 1 (Contexto y Universo): Premisa argumental, ambientación, atmósfera y punto de partida de la aventura.\n"
             . "  * Párrafo 2 (Jugabilidad y Tecnologías): Mecánicas principales, dinámicas de combate/control, ritmo de juego y cómo aprovecha el hardware de {$consoleName}.\n"
-            . "  * Párrafo 3 (Legado y Preservación): Impacto en la industria, recepción crítica y su importancia histórica como joya imprescindible para emular y preservar.\n"
-            . "- Usa **negrita** para resaltar títulos, mecánicas, modos y personajes clave.\n\n"
+            . "  * Párrafo 3 (Legado y Preservación): Impacto en la industria, recepción crítica y su importancia histórica como joya imprescindible para emular y preservar en {$brand}.\n"
+            . "- Usa **negrita** para resaltar títulos, mecánicas, modos y personajes clave.\n"
+            . "- Si citas la plataforma web en el párrafo de preservación, utiliza siempre **{$brand}**.\n\n"
             . "REGLAS:\n"
             . "- Empieza DIRECTAMENTE con el texto del primer párrafo (sin títulos, sin 'Introducción:', sin saludos ni preámbulos).";
 
@@ -109,12 +182,12 @@ class AiContentService
             $wordCount = str_word_count(strip_tags($content));
             if ($wordCount < 120) {
                 $content .= "\n\nA nivel de diseño y mecánicas en **{$consoleName}**, la experiencia sobresale por una jugabilidad pulida, controles precisos y un ritmo perfectamente equilibrado que premia tanto la exploración como la maestría en cada desafío. Sus innovaciones jugables se complementan con un apartado sonoro y visual sobresaliente que aprovecha al máximo las capacidades de su generación.\n\n"
-                    . "Actualmente, esta entrega se consolida como una obra imprescindible dentro de la historia del videojuego. A través de la preservación digital en **ROMHUB** y la compatibilidad con emuladores de alta fidelidad a **60 FPS**, los jugadores pueden redescubrir este clásico legendario en su máxima expresión técnica.";
+                    . "Actualmente, esta entrega se consolida como una obra imprescindible dentro de la historia del videojuego. A través de la preservación digital en **{$brand}** y la compatibilidad con emuladores de alta fidelidad a **60 FPS**, los jugadores pueden redescubrir este clásico legendario en su máxima expresión técnica.";
             }
         } else {
             $content = "Ambientado en un universo fascinante y diseñado con maestría técnica, **{$title}** representa uno de los hitos más emblemáticos de la biblioteca de **{$consoleName}**. La aventura sumerge al jugador en una trama absorbente repleta de desafíos épicos, personajes memorables y una atmósfera que aprovecha al máximo las capacidades del hardware original de la época.\n\n"
                 . "A nivel jugable, destaca por su refinado sistema de control, mecánicas pulidas y un diseño de niveles que recompensa la exploración y la habilidad. Ya sea en sus secuencias de acción trepidante o en sus momentos de resolución estratégica, la experiencia mantiene un ritmo vibrante respaldado por una dirección artística excepcional y una banda sonora inolvidable que define la identidad de esta generación.\n\n"
-                . "Hoy en día, este clásico se mantiene como una pieza de culto indispensable. Gracias a los estándares modernos de preservación digital y emulación de alta fidelidad con soporte para **60 FPS** y reescalado de texturas en alta resolución, los jugadores pueden redescubrir esta obra maestra en su máxima expresión visual, conservando fielmente la esencia que lo convirtió en leyenda.";
+                . "Hoy en día, este clásico se mantiene como una pieza de culto indispensable. Gracias a los estándares modernos de preservación digital en **{$brand}** y emulación de alta fidelidad con soporte para **60 FPS** y reescalado de texturas en alta resolución, los jugadores pueden redescubrir esta obra maestra en su máxima expresión visual, conservando fielmente la esencia que lo convirtió en leyenda.";
         }
 
         return [
@@ -182,13 +255,15 @@ class AiContentService
             ];
         }
 
+        $brand = $this->getPlatformBrand();
+
         try {
             $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
             $response = Http::withoutVerifying()->timeout(15)->post($url, [
                 'contents' => [
                     [
                         'parts' => [
-                            ['text' => 'Di exactamente: "Conexión exitosa con Google Gemini API para ROMHUB."']
+                            ['text' => "Di exactamente: \"Conexión exitosa con Google Gemini API para {$brand}.\""]
                         ]
                     ]
                 ],
@@ -225,7 +300,8 @@ class AiContentService
      */
     public function generateFranchiseData(string $franchiseName): array
     {
-        $prompt = "Eres un historiador de videojuegos y diseñador UI para la plataforma de emulación ROMHUB.\n"
+        $brand = $this->getPlatformBrand();
+        $prompt = "Eres un historiador de videojuegos y diseñador UI para la plataforma de emulación {$brand}.\n"
             . "Para la franquicia o saga de videojuegos '{$franchiseName}', genera un JSON válido con la siguiente estructura exacta:\n"
             . "{\n"
             . '  "subtitle": "Un subtítulo épico de 6 a 10 palabras sobre la saga",' . "\n"
