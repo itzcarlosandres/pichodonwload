@@ -28,6 +28,8 @@ Route::get('scraper-catalog/fetch', [AdminScraperDemoController::class, 'fetchCa
 Route::post('scraper-catalog/quick-import', [AdminScraperDemoController::class, 'quickImport'])->name('scraper.quick_import');
 Route::get('scraper/safety-status', [AdminScraperDemoController::class, 'safetyStatus'])->name('scraper.safety_status');
 Route::post('scraper/reset-cooldown', [AdminScraperDemoController::class, 'resetSafetyCooldown'])->name('scraper.reset_cooldown');
+Route::get('scraper/autopilot-status', [AdminScraperDemoController::class, 'autopilotStatus'])->name('scraper.autopilot_status');
+Route::post('scraper/drip-publish-now', [AdminScraperDemoController::class, 'dripPublishNow'])->name('scraper.drip_now');
 
 // AI Endpoints
 Route::post('/ai/seo', [AdminAiController::class, 'generateSeo'])->name('ai.seo');

@@ -24,5 +24,11 @@
 /vendor
 _ide_helper.php
 Homestead.json
-Homestead.yaml
 Thumbs.db
+
+# Ignorar archivos Markdown y configuraciones de agentes IA
+*.md
+**/*.md
+/.agents/
+/boost.json
+

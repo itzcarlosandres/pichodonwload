@@ -48,6 +48,49 @@
             </div>
         </div>
     </div>
+ 
+    <!-- Autopilot & Drip-Feed SEO Control Banner -->
+    <div class="bg-gradient-to-r from-[#171B26] via-[#121620] to-[#171B26] border border-purple-500/25 rounded-2xl p-5 shadow-2xl relative overflow-hidden">
+        <div class="absolute -right-10 -bottom-10 w-44 h-44 bg-purple-600/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-5 relative z-10">
+            <div class="space-y-1.5">
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                        Piloto Automático Activo
+                    </span>
+                    <span class="text-xs font-mono text-gray-300">
+                        Publicando <strong class="text-white font-bold">{{ config('roms.posts_per_batch', 4) }} juegos</strong> cada <strong class="text-purple-400">{{ config('roms.batch_interval_hours', 2) }} horas</strong>
+                    </span>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-blue-500/15 text-blue-300 border border-blue-500/30">
+                        <i data-lucide="shield-check" class="w-3 h-3"></i>
+                        Anti-Duplicados Estricto (Google Safe)
+                    </span>
+                </div>
+                <p class="text-xs text-gray-400 leading-relaxed max-w-3xl">
+                    Los juegos extraídos desde <strong>CDRomance</strong> y <strong>Romspedia</strong> se filtran para descartar duplicados y se encolan en <code>DRAFT</code>. El cron automático los publica gradualmente para simular crecimiento orgánico y evitar penalizaciones de Google.
+                </p>
+            </div>
+
+            <!-- Quick Action & Counter -->
+            <div class="flex flex-wrap items-center gap-3 shrink-0">
+                <div class="px-4 py-2 bg-[#0A0C0F] border border-[#232936] rounded-xl text-center">
+                    <div class="text-[10px] uppercase font-mono text-gray-500">En Cola DRAFT</div>
+                    <div class="text-lg font-black text-amber-400 font-mono" x-text="autopilotQueueCount">
+                        {{ \App\Models\Game::where('status', 'DRAFT')->count() }}
+                    </div>
+                </div>
+
+                <button type="button"
+                        @click="triggerDripNow()"
+                        :disabled="dripLoading"
+                        class="px-4 py-2.5 rounded-xl text-xs font-mono font-bold bg-purple-600 hover:bg-purple-500 active:scale-95 text-white shadow-lg shadow-purple-600/30 flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50">
+                    <i data-lucide="send" class="w-3.5 h-3.5" :class="{'animate-spin': dripLoading}"></i>
+                    <span x-text="dripLoading ? 'Publicando...' : 'Publicar 4 Ahora'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Filters & Settings Bar -->
     <div class="bg-[#11141A] border border-[#232936] rounded-2xl p-5 shadow-xl space-y-4">
@@ -342,6 +385,47 @@ function scraperCatalogApp() {
         feedbackMessage: '',
         feedbackSuccess: true,
         lastImportedEditUrl: null,
+        autopilotQueueCount: {{ \App\Models\Game::where('status', 'DRAFT')->count() }},
+        dripLoading: false,
+
+        async triggerDripNow() {
+            if (this.dripLoading) return;
+            this.dripLoading = true;
+            this.feedbackMessage = 'Publicando tanda de 4 juegos en vivo...';
+            this.feedbackSuccess = true;
+
+            try {
+                const res = await fetch('{{ route("admin.scraper.drip_now") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ count: 4 })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.feedbackSuccess = true;
+                    this.feedbackMessage = data.message;
+                    if (data.remaining_drafts !== undefined) {
+                        this.autopilotQueueCount = data.remaining_drafts;
+                    }
+                    this.loadCatalog();
+                } else {
+                    this.feedbackSuccess = false;
+                    this.feedbackMessage = data.message || 'Error al ejecutar publicación.';
+                }
+            } catch (e) {
+                this.feedbackSuccess = false;
+                this.feedbackMessage = 'Error al conectar con el servidor.';
+            } finally {
+                this.dripLoading = false;
+                this.$nextTick(() => {
+                    if (window.lucide) window.lucide.createIcons();
+                });
+            }
+        },
 
         // Anti-Bloqueo & Anti-Saturación Safe State
         cooldownActive: false,

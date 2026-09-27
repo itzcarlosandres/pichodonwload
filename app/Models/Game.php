@@ -201,4 +201,53 @@ class Game extends Model
 
         return $links;
     }
+
+    /**
+     * Comprueba si un juego ya existe en la base de datos (publicado o en borrador)
+     * para evitar duplicación ante Google y colisiones de catálogo.
+     */
+    public static function findDuplicate(string $title, int $consoleId, ?string $sourceUrl = null, ?string $serial = null): ?self
+    {
+        $cleanTitle = trim($title);
+        $slug = \Illuminate\Support\Str::slug($cleanTitle);
+
+        // 1. Coincidencia por slug o título exacto dentro de la misma consola
+        $query = static::where('console_id', $consoleId)
+            ->where(function ($q) use ($slug, $cleanTitle) {
+                $q->where('slug', $slug)
+                  ->orWhere('title', $cleanTitle);
+            });
+
+        $found = $query->first();
+        if ($found) {
+            return $found;
+        }
+
+        // 2. Coincidencia por serial si se especifica
+        if (!empty($serial)) {
+            $found = static::where('serial', trim($serial))->first();
+            if ($found) {
+                return $found;
+            }
+        }
+
+        // 3. Coincidencia por URL de origen o download_url
+        if (!empty($sourceUrl)) {
+            $path = trim(parse_url($sourceUrl, PHP_URL_PATH) ?? '', '/');
+            $segment = basename($path);
+            if ($segment) {
+                $found = static::where(function ($q) use ($sourceUrl, $segment) {
+                    $q->where('download_url', $sourceUrl)
+                      ->orWhere('download_url', 'LIKE', "%{$segment}%")
+                      ->orWhere('slug', $segment);
+                })->first();
+
+                if ($found) {
+                    return $found;
+                }
+            }
+        }
+
+        return null;
+    }
 }

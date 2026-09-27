@@ -90,6 +90,21 @@ class AdminScraperDemoController extends Controller
         ]);
 
         $title = $request->input('title');
+        $consoleId = (int) $request->input('console_id');
+        $downloadUrl = $request->input('download_url');
+
+        // Verificador estricto anti-duplicados
+        $duplicate = Game::findDuplicate($title, $consoleId, $downloadUrl);
+        if ($duplicate) {
+            return response()->json([
+                'success' => false,
+                'message' => "Este juego ya existe en tu catálogo con el título '{$duplicate->title}' (Estado: {$duplicate->status}) para evitar duplicación ante Google.",
+                'game_id' => $duplicate->id,
+                'status' => $duplicate->status,
+                'is_duplicate' => true,
+            ], 409);
+        }
+
         $slug = Str::slug($title);
 
         // Asegurar slug único
@@ -396,5 +411,57 @@ class AdminScraperDemoController extends Controller
             'success' => true,
             'message' => 'Pausa de seguridad restablecida correctamente.',
         ]);
+    }
+
+    /**
+     * Endpoint AJAX para consultar estadísticas del Piloto Automático y Drip Feed
+     */
+    public function autopilotStatus(): JsonResponse
+    {
+        $logPath = storage_path('logs/drip-publisher.log');
+        $recentLogs = [];
+        if (file_exists($logPath)) {
+            $lines = file($logPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            $recentLogs = array_slice($lines, -5);
+        }
+
+        return response()->json([
+            'success' => true,
+            'enabled' => config('roms.autopilot_enabled', true),
+            'posts_per_batch' => config('roms.posts_per_batch', 4),
+            'batch_interval_hours' => config('roms.batch_interval_hours', 2),
+            'drafts_in_queue' => Game::where('status', 'DRAFT')->count(),
+            'total_published' => Game::where('status', 'PUBLISHED')->count(),
+            'recent_activity' => array_reverse($recentLogs),
+        ]);
+    }
+
+    /**
+     * Endpoint AJAX para disparar manualmente una tanda del Drip Publisher (ej. 4 posts)
+     */
+    public function dripPublishNow(Request $request): JsonResponse
+    {
+        $count = (int) $request->input('count', config('roms.posts_per_batch', 4));
+
+        try {
+            \Illuminate\Support\Facades\Artisan::call('games:publish-drip', [
+                '--count' => $count,
+                '--force' => true,
+            ]);
+
+            $output = \Illuminate\Support\Facades\Artisan::output();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Tanda de {$count} juegos ejecutada exitosamente.",
+                'output' => $output,
+                'remaining_drafts' => Game::where('status', 'DRAFT')->count(),
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al ejecutar publicación dosificada: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }
