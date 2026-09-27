@@ -71,7 +71,15 @@ class StorageService
     public function uploadRomFile(UploadedFile $file, ?string $subfolder = 'roms'): array
     {
         $originalName = $file->getClientOriginalName();
-        $extension = strtoupper($file->getClientOriginalExtension() ?: 'ISO');
+        $rawExt = strtolower($file->getClientOriginalExtension() ?: '');
+        
+        // Medida de seguridad: Bloquear extensiones ejecutables o scripts maliciosos
+        $dangerousExtensions = ['php', 'phtml', 'php3', 'php4', 'php5', 'php7', 'phps', 'phar', 'cgi', 'pl', 'exe', 'sh', 'bash', 'bat', 'cmd', 'js', 'py'];
+        if (in_array($rawExt, $dangerousExtensions, true)) {
+            throw new Exception("El tipo de archivo '.{$rawExt}' está bloqueado por razones de seguridad.");
+        }
+
+        $extension = strtoupper($rawExt ?: 'ISO');
         $sizeBytes = $file->getSize() ?: 0;
         
         // Formatear tamaño legible automáticamente

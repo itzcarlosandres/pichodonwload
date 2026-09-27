@@ -24,13 +24,13 @@ Route::get('/robots.txt', [SitemapController::class, 'robots'])->name('robots.tx
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/dmca', [PageController::class, 'dmca'])->name('dmca');
 Route::get('/contacto', [PageController::class, 'contact'])->name('contact');
-Route::post('/contacto', [PageController::class, 'submitContact'])->name('contact.submit');
+Route::post('/contacto', [PageController::class, 'submitContact'])->middleware('throttle:5,1')->name('contact.submit');
 Route::get('/game/{slug}', [GameController::class, 'show'])->name('game.show');
-Route::post('/game/{game}/review', [GameController::class, 'submitReview'])->name('game.review');
+Route::post('/game/{game}/review', [GameController::class, 'submitReview'])->middleware('throttle:10,1')->name('game.review');
 Route::get('/game/{slug}/download', [DownloadController::class, 'show'])->name('game.download');
 Route::get('/download/{slug}', [DownloadController::class, 'show'])->name('download.file');
 Route::post('/download/{slug}/track', [DownloadController::class, 'track'])->name('download.track');
-Route::post('/download/{slug}/resolve', [DownloadController::class, 'resolve'])->name('download.resolve');
+Route::post('/download/{slug}/resolve', [DownloadController::class, 'resolve'])->middleware('throttle:30,1')->name('download.resolve');
 Route::get('/download/{slug}/go', [DownloadController::class, 'go'])->name('download.go');
 
 Route::get('/consoles', [ConsoleController::class, 'index'])->name('consoles.index');
@@ -47,7 +47,7 @@ Route::get('/rankings', [PageController::class, 'rankings'])->name('rankings');
 Route::get('/top-25', [PageController::class, 'rankings'])->name('rankings.index');
 
 Route::get('/search', [SearchController::class, 'index'])->name('search');
-Route::get('/search/live', [SearchController::class, 'live'])->name('search.live');
+Route::get('/search/live', [SearchController::class, 'live'])->middleware('throttle:60,1')->name('search.live');
 Route::get('/categoria/{slug}', [SearchController::class, 'category'])->name('category.show');
 Route::get('/genero/{slug}', [SearchController::class, 'category'])->name('genre.show');
 
@@ -55,12 +55,12 @@ Route::get('/genero/{slug}', [SearchController::class, 'category'])->name('genre
 Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
 Route::post('/favorites/{game}/toggle', [ProfileController::class, 'toggleFavorite'])->name('favorites.toggle');
 
-// 3. Auth Routes
+// 3. Auth Routes (Protegidas con Rate Limiting anti Fuerza Bruta)
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
-Route::post('/login/post', [AuthController::class, 'login'])->name('login.post');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:6,1')->name('login.submit');
+Route::post('/login/post', [AuthController::class, 'login'])->middleware('throttle:6,1')->name('login.post');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-Route::post('/register', [AuthController::class, 'register'])->name('register.submit');
-Route::post('/register/post', [AuthController::class, 'register'])->name('register.post');
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:6,1')->name('register.submit');
+Route::post('/register/post', [AuthController::class, 'register'])->middleware('throttle:6,1')->name('register.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
