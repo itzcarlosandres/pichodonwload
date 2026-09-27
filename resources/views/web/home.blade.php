@@ -201,23 +201,128 @@
 
     </section>
 
-    <!-- 2. CONSOLES SECTION (Retro Card Grid) -->
-    <section class="space-y-4">
-        <div class="flex items-center justify-between border-b border-[#E5E0D8] pb-3">
+    <!-- 2. CONSOLES SECTION (Horizontal Smooth Slider with Autoplay, Mouse Drag & Mobile Optimization) -->
+    <section class="space-y-3 sm:space-y-4" x-data="{
+        isDown: false,
+        startX: 0,
+        scrollLeftPos: 0,
+        isDragging: false,
+        timer: null,
+        isPaused: false,
+
+        initSlider() {
+            this.startAuto();
+            this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+        },
+        startAuto() {
+            this.stopAuto();
+            this.timer = setInterval(() => {
+                if (this.isDown || this.isPaused) return;
+                const el = this.$refs.consolesSlider;
+                if (!el) return;
+                const maxScroll = el.scrollWidth - el.clientWidth;
+                if (el.scrollLeft >= maxScroll - 15) {
+                    el.scrollTo({ left: 0, behavior: 'smooth' });
+                } else {
+                    el.scrollBy({ left: 220, behavior: 'smooth' });
+                }
+            }, 3200);
+        },
+        stopAuto() {
+            if (this.timer) {
+                clearInterval(this.timer);
+                this.timer = null;
+            }
+        },
+        scrollLeft() {
+            this.isPaused = true;
+            this.$refs.consolesSlider.scrollBy({ left: -260, behavior: 'smooth' });
+            setTimeout(() => { this.isPaused = false; }, 3500);
+        },
+        scrollRight() {
+            this.isPaused = true;
+            this.$refs.consolesSlider.scrollBy({ left: 260, behavior: 'smooth' });
+            setTimeout(() => { this.isPaused = false; }, 3500);
+        },
+        onMouseDown(e) {
+            this.isDown = true;
+            this.isDragging = false;
+            this.isPaused = true;
+            const el = this.$refs.consolesSlider;
+            this.startX = e.pageX - el.offsetLeft;
+            this.scrollLeftPos = el.scrollLeft;
+        },
+        onMouseMove(e) {
+            if (!this.isDown) return;
+            e.preventDefault();
+            const el = this.$refs.consolesSlider;
+            const x = e.pageX - el.offsetLeft;
+            const walk = (x - this.startX) * 1.4;
+            if (Math.abs(walk) > 6) {
+                this.isDragging = true;
+            }
+            el.scrollLeft = this.scrollLeftPos - walk;
+        },
+        onMouseUp() {
+            this.isDown = false;
+            setTimeout(() => { 
+                this.isDragging = false; 
+                this.isPaused = false;
+            }, 120);
+        },
+        onLinkClick(e) {
+            if (this.isDragging) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        }
+    }" 
+    x-init="initSlider()"
+    @mouseleave="isDown = false; isPaused = false;">
+        <div class="flex items-center justify-between border-b border-[#E5E0D8] dark:border-[#27272A] pb-3">
             <div class="flex items-center gap-2">
                 <span class="w-3 h-3 bg-[#CE2D2D] rounded-sm shrink-0"></span>
-                <h2 class="text-base sm:text-lg font-black text-[#18181B] font-sans tracking-tight uppercase">
+                <h2 class="text-base sm:text-lg font-black text-[#18181B] dark:text-white font-sans tracking-tight uppercase">
                     Consoles
                 </h2>
             </div>
-            <a href="{{ route('consoles.index') }}" class="px-3 py-1 rounded-full border border-[#1E1E1E] bg-white hover:bg-[#FAF7F2] text-xs font-mono font-bold text-[#18181B] transition-colors flex items-center gap-1">
-                <span>Ver las {{ $totalConsoles }} consolas</span>
-                <i data-lucide="arrow-right" class="w-3 h-3 text-[#CE2D2D]"></i>
-            </a>
+            <div class="flex items-center gap-2">
+                <a href="{{ route('consoles.index') }}" class="px-3 py-1 rounded-full border border-[#1E1E1E] dark:border-[#27272A] bg-white dark:bg-[#18181B] hover:bg-[#FAF7F2] dark:hover:bg-[#27272A] text-xs font-mono font-bold text-[#18181B] dark:text-white transition-colors flex items-center gap-1">
+                    <span>Ver las {{ $totalConsoles }} consolas</span>
+                    <i data-lucide="arrow-right" class="w-3 h-3 text-[#CE2D2D]"></i>
+                </a>
+
+                <!-- Flechas de navegación suave -->
+                <div class="flex items-center gap-1">
+                    <button type="button" 
+                            @click="scrollLeft()" 
+                            class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl border border-[#1E1E1E] dark:border-[#27272A] bg-white dark:bg-[#18181B] hover:bg-[#CE2D2D] hover:text-white hover:border-[#CE2D2D] dark:hover:bg-[#CE2D2D] dark:hover:border-[#CE2D2D] text-[#18181B] dark:text-white flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-90" 
+                            title="Desplazar a la izquierda"
+                            aria-label="Anterior">
+                        <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                    </button>
+                    <button type="button" 
+                            @click="scrollRight()" 
+                            class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl border border-[#1E1E1E] dark:border-[#27272A] bg-white dark:bg-[#18181B] hover:bg-[#CE2D2D] hover:text-white hover:border-[#CE2D2D] dark:hover:bg-[#CE2D2D] dark:hover:border-[#CE2D2D] text-[#18181B] dark:text-white flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-90" 
+                            title="Desplazar a la derecha"
+                            aria-label="Siguiente">
+                        <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
         </div>
 
-        <!-- 20 Consoles Grid -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-2.5 sm:gap-3.5">
+        <!-- 20 Consoles Single-Line Slider (Automático, drag con mouse, swipe móvil) -->
+        <div x-ref="consolesSlider" 
+             @mousedown="onMouseDown($event)"
+             @mousemove="onMouseMove($event)"
+             @mouseup="onMouseUp()"
+             @mouseenter="isPaused = true"
+             @mouseleave="onMouseUp(); isPaused = false"
+             @touchstart.passive="isPaused = true"
+             @touchend.passive="setTimeout(() => isPaused = false, 2000)"
+             class="flex items-stretch gap-2.5 sm:gap-3.5 overflow-x-auto scroll-smooth py-1.5 px-0.5 no-scrollbar select-none cursor-grab active:cursor-grabbing touch-pan-x"
+             style="scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch;">
             @php
                 $consoleIconMap = [
                     'playstation-2' => 'gamepad-2',
@@ -248,14 +353,16 @@
                     $cIcon = $consoleIconMap[$con->slug] ?? 'gamepad-2';
                 @endphp
                 <a href="{{ route('consoles.show', $con->slug) }}" 
-                   class="bg-white border-2 border-[#1E1E1E] rounded-2xl p-2.5 sm:p-4 text-center hover:-translate-y-1 active:scale-[0.98] transition-all duration-200 shadow-sm hover:shadow-md group block">
-                    <div class="w-10 h-10 sm:w-11 sm:h-11 mx-auto rounded-xl bg-[#FAF7F2] border border-[#E5E0D8] group-hover:bg-[#FDF2F2] group-hover:border-[#FCA5A5] flex items-center justify-center transition-colors">
-                        <i data-lucide="{{ $cIcon }}" class="w-4.5 h-4.5 sm:w-5 sm:h-5 text-[#18181B] group-hover:text-[#CE2D2D] transition-colors"></i>
+                   @click="onLinkClick($event)"
+                   draggable="false"
+                   class="flex-none w-[105px] sm:w-[130px] bg-white dark:bg-[#18181B] border-2 border-[#1E1E1E] dark:border-[#27272A] rounded-2xl p-2.5 sm:p-3.5 text-center hover:-translate-y-1 active:scale-[0.98] transition-all duration-200 shadow-sm hover:shadow-md group block select-none">
+                    <div class="w-10 h-10 sm:w-11 sm:h-11 mx-auto rounded-xl bg-[#FAF7F2] dark:bg-[#202024] border border-[#E5E0D8] dark:border-[#2E2E33] group-hover:bg-[#FDF2F2] dark:group-hover:bg-red-950/40 group-hover:border-[#FCA5A5] dark:group-hover:border-red-800 flex items-center justify-center transition-colors pointer-events-none">
+                        <i data-lucide="{{ $cIcon }}" class="w-4.5 h-4.5 sm:w-5 sm:h-5 text-[#18181B] dark:text-[#E4E4E7] group-hover:text-[#CE2D2D] transition-colors"></i>
                     </div>
-                    <p class="text-[11px] sm:text-[13px] font-black text-[#18181B] group-hover:text-[#CE2D2D] transition-colors truncate mt-2 font-sans">
+                    <p class="text-[11px] sm:text-[13px] font-black text-[#18181B] dark:text-white group-hover:text-[#CE2D2D] transition-colors truncate mt-2 font-sans pointer-events-none">
                         {{ $con->short_name ?: $con->name }}
                     </p>
-                    <p class="text-[9px] sm:text-[10px] font-mono font-bold text-gray-500 uppercase tracking-wider mt-0.5">
+                    <p class="text-[9px] sm:text-[10px] font-mono font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-0.5 pointer-events-none">
                         {{ $con->games_count }} {{ $con->games_count == 1 ? 'TÍTULO' : 'TÍTULOS' }}
                     </p>
                 </a>
