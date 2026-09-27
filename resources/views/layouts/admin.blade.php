@@ -21,6 +21,9 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        [x-cloak] {
+            display: none !important;
+        }
         h1, h2, h3, h4, h5, h6, .font-heading {
             font-family: 'Bricolage Grotesque', sans-serif !important;
             letter-spacing: -0.02em;
@@ -41,6 +44,7 @@
     </style>
 </head>
 <body x-data="{ mobileMenuOpen: false }" 
+      @keydown.escape.window="mobileMenuOpen = false"
       x-init="$watch('mobileMenuOpen', value => { if (value) $nextTick(() => { if (window.lucide) window.lucide.createIcons(); }); })"
       class="min-h-screen flex flex-col bg-[#0A0C0F] text-[#E5E7EB] selection:bg-blue-600 selection:text-white">
 
@@ -116,27 +120,30 @@
          role="dialog" 
          aria-modal="true">
         
-        <!-- Backdrop Overlay -->
+        <!-- Backdrop Overlay with Fade -->
         <div x-show="mobileMenuOpen"
-             x-transition:enter="transition-opacity ease-linear duration-300"
+             x-cloak
+             x-transition:enter="transition-opacity ease-linear duration-200"
              x-transition:enter-start="opacity-0"
              x-transition:enter-end="opacity-100"
-             x-transition:leave="transition-opacity ease-linear duration-300"
+             x-transition:leave="transition-opacity ease-linear duration-200"
              x-transition:leave-start="opacity-100"
              x-transition:leave-end="opacity-0"
              @click="mobileMenuOpen = false"
-             class="fixed inset-0 bg-black/80 backdrop-blur-sm"></div>
+             class="fixed inset-0 bg-black/80 backdrop-blur-sm cursor-pointer"></div>
 
-        <!-- Slide-over Drawer Panel -->
-        <div class="fixed inset-0 flex z-50">
+        <!-- Slide-over Drawer Container -->
+        <div class="fixed inset-0 flex z-50 pointer-events-none">
             <div x-show="mobileMenuOpen"
+                 x-cloak
                  x-transition:enter="transition ease-in-out duration-300 transform"
                  x-transition:enter-start="-translate-x-full"
                  x-transition:enter-end="translate-x-0"
                  x-transition:leave="transition ease-in-out duration-300 transform"
                  x-transition:leave-start="translate-x-0"
                  x-transition:leave-end="-translate-x-full"
-                 class="relative mr-16 flex w-full max-w-xs flex-1">
+                 @click.outside="mobileMenuOpen = false"
+                 class="relative flex w-full max-w-xs flex-1 pointer-events-auto">
                 
                 <div class="flex h-full w-full flex-col bg-[#11141A] border-r border-[#232936] shadow-2xl p-5 overflow-y-auto custom-scrollbar space-y-6">
                     
@@ -150,7 +157,8 @@
                         </div>
                         <button type="button" 
                                 @click="mobileMenuOpen = false"
-                                class="p-1.5 rounded-lg bg-[#171B22] text-gray-400 hover:text-white border border-[#232936]">
+                                aria-label="Cerrar Menú"
+                                class="p-1.5 rounded-lg bg-[#171B22] text-gray-400 hover:text-white border border-[#232936] cursor-pointer">
                             <i data-lucide="x" class="w-4 h-4"></i>
                         </button>
                     </div>
@@ -161,7 +169,7 @@
                     </div>
 
                     <!-- Drawer Footer Status Widget -->
-                    <div class="pt-4 border-t border-[#232936] text-[11px] font-mono text-gray-400 space-y-2">
+                    <div class="pt-4 border-t border-[#232936] text-[11px] font-mono text-gray-400 space-y-2 mt-auto">
                         <div class="flex items-center justify-between">
                             <span class="flex items-center gap-1.5">
                                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Cloudflare R2:
@@ -176,6 +184,9 @@
 
                 </div>
             </div>
+
+            <!-- Empty area on the right: click to close immediately -->
+            <div class="flex-1 pointer-events-auto cursor-pointer" @click="mobileMenuOpen = false"></div>
         </div>
     </div>
 
