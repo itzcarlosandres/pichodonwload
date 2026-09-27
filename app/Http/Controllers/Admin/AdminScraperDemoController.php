@@ -159,12 +159,15 @@ class AdminScraperDemoController extends Controller
         }
 
         if ($request->filled('screenshots') && is_array($request->input('screenshots'))) {
-            foreach ($request->input('screenshots') as $idx => $sUrl) {
+            $order = 1;
+            foreach (array_slice($request->input('screenshots'), 0, 8) as $sUrl) {
                 if (!empty($sUrl)) {
+                    // Descargar y convertir a WebP en el servidor local (elimina cualquier rastro externo)
+                    $localUrl = $this->imageService->downloadAndProcessScreenshot($sUrl) ?: $sUrl;
                     $game->screenshots()->create([
-                        'image_url' => $sUrl,
-                        'image_webp_url' => $sUrl,
-                        'order' => $idx + 1,
+                        'image_url' => $localUrl,
+                        'image_webp_url' => $localUrl,
+                        'order' => $order++,
                     ]);
                 }
             }
@@ -341,12 +344,15 @@ class AdminScraperDemoController extends Controller
         }
 
         if (!empty($scrape['screenshots']) && is_array($scrape['screenshots'])) {
-            foreach ($scrape['screenshots'] as $idx => $sUrl) {
+            $order = 1;
+            foreach (array_slice($scrape['screenshots'], 0, 8) as $sUrl) {
                 if (!empty($sUrl)) {
+                    // Descargar y convertir a WebP en el servidor local (elimina cualquier rastro externo)
+                    $localUrl = $this->imageService->downloadAndProcessScreenshot($sUrl) ?: $sUrl;
                     $game->screenshots()->create([
-                        'image_url' => $sUrl,
-                        'image_webp_url' => $sUrl,
-                        'order' => $idx + 1,
+                        'image_url' => $localUrl,
+                        'image_webp_url' => $localUrl,
+                        'order' => $order++,
                     ]);
                 }
             }

@@ -131,5 +131,59 @@ class ImageOptimizationService
             'path' => $fullPath,
         ];
     }
+
+    /**
+     * Descarga una captura de pantalla remota, la optimiza y la guarda localmente como WebP
+     * eliminando cualquier referencia o enlace a dominios externos como CDRomance.
+     */
+    public function downloadAndProcessScreenshot(string $remoteUrl): ?string
+    {
+        $remoteUrl = trim($remoteUrl);
+        if (empty($remoteUrl) || !filter_var($remoteUrl, FILTER_VALIDATE_URL)) {
+            return null;
+        }
+
+        $tempPath = tempnam(sys_get_temp_dir(), 'ss_down_');
+
+        try {
+            $fp = fopen($tempPath, 'wb');
+            $ch = curl_init($remoteUrl);
+            curl_setopt_array($ch, [
+                CURLOPT_FILE => $fp,
+                CURLOPT_HEADER => false,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_TIMEOUT => 20,
+                CURLOPT_CONNECTTIMEOUT => 8,
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_SSL_VERIFYHOST => false,
+                CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            ]);
+            $success = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            fclose($fp);
+
+            if (!$success || $httpCode < 200 || $httpCode >= 400 || !file_exists($tempPath) || filesize($tempPath) < 500) {
+                if (file_exists($tempPath)) {
+                    @unlink($tempPath);
+                }
+                return null;
+            }
+
+            $fakeFile = new UploadedFile($tempPath, 'screenshot.jpg', 'image/jpeg', null, true);
+            $processed = $this->processScreenshot($fakeFile);
+
+            if (file_exists($tempPath)) {
+                @unlink($tempPath);
+            }
+
+            return $processed['url'] ?? null;
+        } catch (Throwable $e) {
+            if (file_exists($tempPath)) {
+                @unlink($tempPath);
+            }
+            return null;
+        }
+    }
 }
 
