@@ -443,6 +443,15 @@ class AdminScraperDemoController extends Controller
     {
         $count = (int) $request->input('count', config('roms.posts_per_batch', 4));
 
+        $draftsCount = Game::where('status', 'DRAFT')->count();
+        if ($draftsCount === 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay juegos en estado DRAFT en la cola. Importa juegos abajo con "1-Clic Importar" para ponerlos en fila.',
+                'remaining_drafts' => 0,
+            ]);
+        }
+
         try {
             \Illuminate\Support\Facades\Artisan::call('games:publish-drip', [
                 '--count' => $count,
@@ -450,12 +459,14 @@ class AdminScraperDemoController extends Controller
             ]);
 
             $output = \Illuminate\Support\Facades\Artisan::output();
+            $remaining = Game::where('status', 'DRAFT')->count();
+            $actuallyPublished = max(0, $draftsCount - $remaining);
 
             return response()->json([
                 'success' => true,
-                'message' => "Tanda de {$count} juegos ejecutada exitosamente.",
+                'message' => "¡Se publicaron {$actuallyPublished} juegos en vivo exitosamente!",
                 'output' => $output,
-                'remaining_drafts' => Game::where('status', 'DRAFT')->count(),
+                'remaining_drafts' => $remaining,
             ]);
         } catch (\Throwable $e) {
             return response()->json([

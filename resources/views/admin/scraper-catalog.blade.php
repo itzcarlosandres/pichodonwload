@@ -90,6 +90,16 @@
                 </button>
             </div>
         </div>
+
+        <!-- Alert Notification for Drip -->
+        <div x-show="dripNotice" x-transition class="mt-4 p-3.5 rounded-xl text-xs font-mono flex items-center justify-between gap-3 border shadow-lg"
+             :class="dripNoticeSuccess ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300' : 'bg-amber-950/80 border-amber-500/40 text-amber-300'">
+            <div class="flex items-center gap-2.5">
+                <i data-lucide="info" class="w-4 h-4 shrink-0"></i>
+                <span x-text="dripNotice" class="font-bold"></span>
+            </div>
+            <button type="button" @click="dripNotice = ''" class="text-gray-400 hover:text-white px-2 py-0.5 rounded cursor-pointer font-bold">&times;</button>
+        </div>
     </div>
 
     <!-- Filters & Settings Bar -->
@@ -387,12 +397,22 @@ function scraperCatalogApp() {
         lastImportedEditUrl: null,
         autopilotQueueCount: {{ \App\Models\Game::where('status', 'DRAFT')->count() }},
         dripLoading: false,
+        dripNotice: '',
+        dripNoticeSuccess: true,
 
         async triggerDripNow() {
             if (this.dripLoading) return;
+            if (this.autopilotQueueCount === 0) {
+                this.dripNotice = '⚠️ No hay juegos en estado DRAFT en la cola. Haz clic en "1-Clic Importar" en cualquier juego del catálogo inferior para ponerlo en fila.';
+                this.dripNoticeSuccess = false;
+                this.$nextTick(() => { if (window.lucide) window.lucide.createIcons(); });
+                return;
+            }
+
             this.dripLoading = true;
-            this.feedbackMessage = 'Publicando tanda de 4 juegos en vivo...';
-            this.feedbackSuccess = true;
+            this.dripNotice = '⏳ Procesando y publicando lote de 4 juegos en vivo...';
+            this.dripNoticeSuccess = true;
+            this.$nextTick(() => { if (window.lucide) window.lucide.createIcons(); });
 
             try {
                 const res = await fetch('{{ route("admin.scraper.drip_now") }}', {
@@ -406,19 +426,19 @@ function scraperCatalogApp() {
                 });
                 const data = await res.json();
                 if (data.success) {
-                    this.feedbackSuccess = true;
-                    this.feedbackMessage = data.message;
+                    this.dripNotice = data.message || '¡Tanda de 4 juegos publicada con éxito!';
+                    this.dripNoticeSuccess = true;
                     if (data.remaining_drafts !== undefined) {
                         this.autopilotQueueCount = data.remaining_drafts;
                     }
                     this.loadCatalog();
                 } else {
-                    this.feedbackSuccess = false;
-                    this.feedbackMessage = data.message || 'Error al ejecutar publicación.';
+                    this.dripNotice = data.message || 'No se pudo publicar la tanda.';
+                    this.dripNoticeSuccess = false;
                 }
             } catch (e) {
-                this.feedbackSuccess = false;
-                this.feedbackMessage = 'Error al conectar con el servidor.';
+                this.dripNotice = 'Error al conectar con el servidor: ' + e.message;
+                this.dripNoticeSuccess = false;
             } finally {
                 this.dripLoading = false;
                 this.$nextTick(() => {
