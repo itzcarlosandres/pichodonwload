@@ -71,177 +71,213 @@ class AutoHarvestRomsCommand extends Command
             ? config('roms.providers', ['cdromance', 'romspedia']) 
             : [$providerInput];
 
-        $this->info("🌾 Iniciando Auto-Cosecha de ROMs (Piloto Automático)");
-        $this->line("Proveedores: " . implode(', ', $providers) . " | Límite objetivo: {$limit} juegos nuevos");
+        $isAll = in_array(strtolower($consoleSlug), ['all', '']);
+        $consolesToExplore = $isAll 
+            ? ['nintendo-64', 'game-boy-advance', 'super-nintendo', 'playstation', 'nintendo-ds', 'gamecube', 'psp', 'playstation-2']
+            : [$consoleSlug];
+
+        // Barajar aleatoriamente para variar el punto de partida en cada ejecución del cron
+        if ($isAll) {
+            shuffle($consolesToExplore);
+        }
+
+        $this->info("🌾 Iniciando Auto-Cosecha de ROMs Rotativa (Piloto Automático)");
+        $this->line("Consolas a rastrear: " . implode(', ', $consolesToExplore) . " | Límite objetivo: {$limit} juegos nuevos");
 
         $totalHarvested = 0;
         $totalSkippedDuplicates = 0;
 
-        foreach ($providers as $provider) {
+        // Cuota máxima por consola en esta ejecución para forzar variedad equitativa
+        $maxPerConsole = $isAll ? max(1, (int) ceil($limit / count($consolesToExplore))) : $limit;
+
+        foreach ($consolesToExplore as $targetConsole) {
             if ($totalHarvested >= $limit) {
                 break;
             }
 
-            $this->newLine();
-            $this->comment("📡 Explorando catálogo en: " . strtoupper($provider));
+            $harvestedForConsole = 0;
 
-            for ($page = 1; $page <= 3; $page++) {
-                if ($totalHarvested >= $limit) {
+            foreach ($providers as $provider) {
+                if ($totalHarvested >= $limit || $harvestedForConsole >= $maxPerConsole) {
                     break;
                 }
 
-                $this->line("   📄 Leyendo página {$page} de {$provider}...");
-                try {
-                    $browseResult = $browserService->browse($provider, $consoleSlug, $page);
-                } catch (\Throwable $e) {
-                    $this->error("   ❌ Error al conectar con {$provider} pág {$page}: " . $e->getMessage());
-                    break;
-                }
+                $this->newLine();
+                $this->comment("📡 Explorando [{$targetConsole}] en: " . strtoupper($provider));
 
-                if (!$browseResult['success'] || empty($browseResult['games'])) {
-                    $this->warn("   ⚠️ No se obtuvieron resultados en la página {$page}.");
-                    break;
-                }
-
-                foreach ($browseResult['games'] as $candidate) {
-                    if ($totalHarvested >= $limit) {
+                for ($page = 1; $page <= 2; $page++) {
+                    if ($totalHarvested >= $limit || $harvestedForConsole >= $maxPerConsole) {
                         break;
                     }
 
-                    $title = $candidate['title'] ?? '';
-                    $sourceUrl = $candidate['url'] ?? '';
-                    $detectedSlug = $candidate['console_slug'] ?? $consoleSlug;
-
-                    // Mapear consola local
-                    $targetConsoleSlug = $this->consoleMap[$detectedSlug] ?? $detectedSlug;
-                    $localConsole = Console::where('slug', $targetConsoleSlug)->first()
-                        ?? Console::where('slug', 'psp')->first();
-
-                    $consoleId = $localConsole ? $localConsole->id : 1;
-
-                    // VERIFICADOR ESTRICTO ANTI-DUPLICADOS
-                    $duplicate = Game::findDuplicate($title, $consoleId, $sourceUrl);
-                    if ($duplicate) {
-                        $totalSkippedDuplicates++;
-                        $this->line("   🚫 <comment>[DUPLICADO OMITIDO]</comment> {$title} (Ya existe en BD #{$duplicate->id} - {$duplicate->status})");
-                        continue;
-                    }
-
-                    $this->info("   ✨ <info>[NUEVO CANDIDATO]</info> {$title} -> Extrayendo detalles...");
-
-                    if ($dryRun) {
-                        $this->comment("      [DRY-RUN] Simulado: se habría guardado en cola DRAFT.");
-                        $totalHarvested++;
-                        continue;
-                    }
-
-                    // Scrapear ficha completa
+                    $this->line("   📄 Leyendo página {$page} de {$provider} ({$targetConsole})...");
                     try {
-                        $scrape = $scraperService->scrape($sourceUrl);
-                        if (!$scrape['success']) {
-                            $this->warn("      ⚠️ Falló extracción detallada para {$title}: " . ($scrape['message'] ?? ''));
+                        $browseResult = $browserService->browse($provider, $targetConsole, $page);
+                    } catch (\Throwable $e) {
+                        $this->error("   ❌ Error al conectar con {$provider}: " . $e->getMessage());
+                        break;
+                    }
+
+                    if (!$browseResult['success'] || empty($browseResult['games'])) {
+                        $this->warn("   ⚠️ Sin resultados en {$provider} ({$targetConsole}) pág {$page}.");
+                        break;
+                    }
+
+                    foreach ($browseResult['games'] as $candidate) {
+                        if ($totalHarvested >= $limit || $harvestedForConsole >= $maxPerConsole) {
+                            break;
+                        }
+
+                        $title = $candidate['title'] ?? '';
+                        $sourceUrl = $candidate['url'] ?? '';
+                        $detectedSlug = $candidate['console_slug'] ?? $targetConsole;
+
+                        // Mapear consola local
+                        $targetConsoleSlug = $this->consoleMap[$detectedSlug] ?? $detectedSlug;
+                        $localConsole = Console::where('slug', $targetConsoleSlug)->first()
+                            ?? Console::where('slug', 'psp')->first();
+
+                        $consoleId = $localConsole ? $localConsole->id : 1;
+
+                        // VERIFICADOR ESTRICTO ANTI-DUPLICADOS
+                        $duplicate = Game::findDuplicate($title, $consoleId, $sourceUrl);
+                        if ($duplicate) {
+                            $totalSkippedDuplicates++;
+                            $this->line("   🚫 <comment>[DUPLICADO OMITIDO]</comment> {$title} (Ya existe en BD #{$duplicate->id} - {$duplicate->status})");
                             continue;
                         }
 
-                        // Optimización de carátula a WebP local
-                        $coverUrl = $scrape['cover_url'] ?? ($candidate['cover_thumb'] ?? null);
-                        $thumbUrl = null;
+                        $this->info("   ✨ <info>[NUEVO CANDIDATO]</info> {$title} ({$localConsole->name}) -> Extrayendo detalles...");
 
-                        if (!empty($coverUrl)) {
-                            try {
-                                $tempPath = tempnam(sys_get_temp_dir(), 'rom_cover_');
-                                $ch = curl_init($coverUrl);
-                                $fp = fopen($tempPath, 'wb');
-                                curl_setopt($ch, CURLOPT_FILE, $fp);
-                                curl_setopt($ch, CURLOPT_TIMEOUT, 15);
-                                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-                                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-                                curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)');
-                                curl_exec($ch);
-                                curl_close($ch);
-                                fclose($fp);
-
-                                if (file_exists($tempPath) && filesize($tempPath) > 500) {
-                                    $uploadedFile = new UploadedFile($tempPath, 'cover.webp', 'image/webp', null, true);
-                                    $processed = $imageService->processCover($uploadedFile);
-                                    $coverUrl = $processed['url'];
-                                    $thumbUrl = $processed['thumb_url'];
-                                }
-                            } catch (\Throwable $e) {
-                                // Fallback a URL remota si falla procesamiento WebP
-                            }
+                        if ($dryRun) {
+                            $this->comment("      [DRY-RUN] Simulado: se habría guardado en cola DRAFT.");
+                            $totalHarvested++;
+                            $harvestedForConsole++;
+                            continue;
                         }
 
-                        // Generación de descripción y SEO con IA para no duplicar texto
-                        $consoleName = $localConsole ? $localConsole->name : 'Retro Console';
-                        $context = [
-                            'release_year' => $scrape['release_year'] ?? null,
-                            'region' => $scrape['region'] ?? 'USA',
-                            'languages' => $scrape['languages'] ?? 'English',
-                            'publisher' => $scrape['publisher'] ?? null,
-                            'developer' => $scrape['developer'] ?? null,
-                        ];
-
-                        $description = 'Pendiente de revisión.';
-                        $metaTitle = null;
-                        $metaDescription = null;
-
+                        // Scrapear ficha completa
                         try {
-                            $aiRich = $aiService->generateRichDescription($title, $consoleName, $context);
-                            if (!empty($aiRich['description'])) {
-                                $description = $aiRich['description'];
+                            $scrape = $scraperService->scrape($sourceUrl);
+                            if (!$scrape['success']) {
+                                $this->warn("      ⚠️ Falló extracción detallada para {$title}: " . ($scrape['message'] ?? ''));
+                                continue;
                             }
 
-                            $aiSeo = $aiService->generateSeo($title, $consoleName, $context);
-                            if (!empty($aiSeo['meta_title'])) $metaTitle = $aiSeo['meta_title'];
-                            if (!empty($aiSeo['meta_description'])) $metaDescription = $aiSeo['meta_description'];
+                            // Optimización de carátula a WebP local con bypass anti-bloqueo
+                            $coverUrl = $scrape['cover_url'] ?? ($candidate['cover_thumb'] ?? null);
+                            $thumbUrl = null;
+
+                            if (!empty($coverUrl)) {
+                                try {
+                                    $tempPath = tempnam(sys_get_temp_dir(), 'rom_cover_');
+                                    $ch = curl_init($coverUrl);
+                                    $fp = fopen($tempPath, 'wb');
+                                    $host = parse_url($coverUrl, PHP_URL_HOST) ?? 'www.romspedia.com';
+                                    $referer = (parse_url($coverUrl, PHP_URL_SCHEME) ?? 'https') . '://' . $host . '/';
+                                    curl_setopt_array($ch, [
+                                        CURLOPT_FILE => $fp,
+                                        CURLOPT_HEADER => false,
+                                        CURLOPT_TIMEOUT => 20,
+                                        CURLOPT_FOLLOWLOCATION => true,
+                                        CURLOPT_SSL_VERIFYPEER => false,
+                                        CURLOPT_SSL_VERIFYHOST => false,
+                                        CURLOPT_REFERER => $referer,
+                                        CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                                    ]);
+                                    curl_exec($ch);
+                                    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                                    curl_close($ch);
+                                    fclose($fp);
+
+                                    if ($httpCode === 200 && file_exists($tempPath) && filesize($tempPath) > 500 && @getimagesize($tempPath) !== false) {
+                                        $uploadedFile = new UploadedFile($tempPath, 'cover.webp', 'image/webp', null, true);
+                                        $processed = $imageService->processCover($uploadedFile);
+                                        $coverUrl = $processed['url'];
+                                        $thumbUrl = $processed['thumb_url'];
+                                    }
+                                } catch (\Throwable $e) {
+                                    // Fallback a URL remota si falla procesamiento WebP
+                                }
+                            }
+
+                            // Generación de descripción y SEO con IA para no duplicar texto
+                            $consoleName = $localConsole ? $localConsole->name : 'Retro Console';
+                            $context = [
+                                'release_year' => $scrape['release_year'] ?? null,
+                                'region' => $scrape['region'] ?? 'USA',
+                                'languages' => $scrape['languages'] ?? 'English',
+                                'publisher' => $scrape['publisher'] ?? null,
+                                'developer' => $scrape['developer'] ?? null,
+                            ];
+
+                            $description = 'Pendiente de revisión.';
+                            $metaTitle = null;
+                            $metaDescription = null;
+
+                            try {
+                                $aiRich = $aiService->generateRichDescription($title, $consoleName, $context);
+                                if (!empty($aiRich['description'])) {
+                                    $description = $aiRich['description'];
+                                }
+
+                                $aiSeo = $aiService->generateSeo($title, $consoleName, $context);
+                                if (!empty($aiSeo['meta_title'])) $metaTitle = $aiSeo['meta_title'];
+                                if (!empty($aiSeo['meta_description'])) $metaDescription = $aiSeo['meta_description'];
+                            } catch (\Throwable $e) {
+                                // Ignorar error de IA y mantener contenido base
+                            }
+
+                            // Crear registro seguro en cola DRAFT
+                            $slug = Str::slug($title);
+                            $slugCount = Game::where('slug', 'LIKE', "{$slug}%")->count();
+                            if ($slugCount > 0) {
+                                $slug .= '-' . ($slugCount + 1);
+                            }
+
+                            $game = Game::create([
+                                'title' => $title,
+                                'slug' => $slug,
+                                'console_id' => $consoleId,
+                                'cover_url' => $coverUrl,
+                                'cover_thumb_url' => $thumbUrl,
+                                'download_url' => $scrape['download_url'] ?? $sourceUrl,
+                                'file_size' => $scrape['file_size'] ?? '1.0 GB',
+                                'file_format' => $scrape['file_format'] ?? 'ZIP',
+                                'release_year' => !empty($scrape['release_year']) ? (int)$scrape['release_year'] : null,
+                                'region' => $scrape['region'] ?? 'USA',
+                                'languages' => $scrape['languages'] ?? 'English',
+                                'publisher' => $scrape['publisher'] ?? null,
+                                'developer' => $scrape['developer'] ?? null,
+                                'serial' => $scrape['serial'] ?? null,
+                                'description' => $description,
+                                'meta_title' => $metaTitle,
+                                'meta_description' => $metaDescription,
+                                'status' => 'DRAFT', // EN COLA PARA EL DRIP PUBLISHER
+                                'download_count' => 0,
+                                'views_count' => 0,
+                            ]);
+
+                            // Vincular categorías y géneros detectados/creados automáticamente
+                            if (!empty($scrape['category_ids']) && is_array($scrape['category_ids'])) {
+                                $game->categories()->sync($scrape['category_ids']);
+                            }
+
+                            $totalHarvested++;
+                            $harvestedForConsole++;
+                            $this->info("      💾 Guardado en cola DRAFT: {$game->title} [{$localConsole->name}] (ID #{$game->id})");
+
+                            // Pausa de cortesía para proteger el servidor y el origen
+                            sleep(2);
+
                         } catch (\Throwable $e) {
-                            // Ignorar error de IA y mantener contenido base
+                            $this->error("      ❌ Error guardando juego {$title}: " . $e->getMessage());
                         }
-
-                        // Crear registro seguro en cola DRAFT
-                        $slug = Str::slug($title);
-                        $slugCount = Game::where('slug', 'LIKE', "{$slug}%")->count();
-                        if ($slugCount > 0) {
-                            $slug .= '-' . ($slugCount + 1);
-                        }
-
-                        $game = Game::create([
-                            'title' => $title,
-                            'slug' => $slug,
-                            'console_id' => $consoleId,
-                            'cover_url' => $coverUrl,
-                            'cover_thumb_url' => $thumbUrl,
-                            'download_url' => $scrape['download_url'] ?? $sourceUrl,
-                            'file_size' => $scrape['file_size'] ?? '1.0 GB',
-                            'file_format' => $scrape['file_format'] ?? 'ZIP',
-                            'release_year' => !empty($scrape['release_year']) ? (int)$scrape['release_year'] : null,
-                            'region' => $scrape['region'] ?? 'USA',
-                            'languages' => $scrape['languages'] ?? 'English',
-                            'publisher' => $scrape['publisher'] ?? null,
-                            'developer' => $scrape['developer'] ?? null,
-                            'serial' => $scrape['serial'] ?? null,
-                            'description' => $description,
-                            'meta_title' => $metaTitle,
-                            'meta_description' => $metaDescription,
-                            'status' => 'DRAFT', // EN COLA PARA EL DRIP PUBLISHER
-                            'download_count' => 0,
-                            'views_count' => 0,
-                        ]);
-
-                        $totalHarvested++;
-                        $this->info("      💾 Guardado en cola DRAFT: {$game->title} (ID #{$game->id})");
-
-                        // Pausa de cortesía para proteger el servidor y el origen
-                        sleep(2);
-
-                    } catch (\Throwable $e) {
-                        $this->error("      ❌ Error guardando juego {$title}: " . $e->getMessage());
                     }
-                }
 
-                if (!$browseResult['has_next']) {
-                    break;
+                    if (!$browseResult['has_next']) {
+                        break;
+                    }
                 }
             }
         }

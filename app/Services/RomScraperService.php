@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Category;
+use Illuminate\Support\Str;
 
 class RomScraperService
 {
@@ -66,16 +67,30 @@ class RomScraperService
             $title = preg_replace('/\s+ROM Download.*$/i', '', $title);
         }
 
-        // Portada
+        // Portada ultra-robusta (og:image, twitter:image, data-src, srcset, src)
         $coverUrl = '';
-        if (preg_match('/<img[^>]+src="([^">]*\/roms\/[^">]+\.(?:webp|png|jpg|jpeg))"/i', $html, $m)) {
-            $coverUrl = $m[1];
-        } elseif (preg_match('/<img[^>]+src="([^">]+static\.romspedia\.com[^">]+)"/i', $html, $m)) {
-            $coverUrl = $m[1];
+        if (preg_match('/<meta\s+property=["\']og:image["\']\s+content=["\']([^"\']+)["\']/i', $html, $m)) {
+            $coverUrl = trim($m[1]);
+        } elseif (preg_match('/<meta\s+name=["\']twitter:image["\']\s+content=["\']([^"\']+)["\']/i', $html, $m)) {
+            $coverUrl = trim($m[1]);
+        } elseif (preg_match('/<div[^>]*class=["\'][^"\']*(?:emulator-detail-img|view-emulator-detail-img|game-img|roms-img)[^"\']*["\'][^>]*>.*?<img[^>]+(?:data-src|srcset|src)=["\']([^"\']+)["\']/is', $html, $m)) {
+            $coverUrl = trim($m[1]);
+        } elseif (preg_match('/<img[^>]+(?:data-src|src)=["\']([^"\']*(?:\/roms\/|static\.romspedia\.com)[^"\']+\.(?:webp|png|jpg|jpeg))["\']/i', $html, $m)) {
+            $coverUrl = trim($m[1]);
         }
 
-        if ($coverUrl && !str_starts_with($coverUrl, 'http')) {
-            $coverUrl = 'https://www.romspedia.com' . (str_starts_with($coverUrl, '/') ? '' : '/') . $coverUrl;
+        // Si viene en srcset con múltiples resoluciones, tomar la primera URL limpia
+        if ($coverUrl && str_contains($coverUrl, ' ')) {
+            $parts = explode(' ', trim($coverUrl));
+            $coverUrl = $parts[0];
+        }
+
+        if ($coverUrl) {
+            if (str_starts_with($coverUrl, '//')) {
+                $coverUrl = 'https:' . $coverUrl;
+            } elseif (!str_starts_with($coverUrl, 'http')) {
+                $coverUrl = 'https://www.romspedia.com' . (str_starts_with($coverUrl, '/') ? '' : '/') . $coverUrl;
+            }
         }
 
         // Metadatos de la tabla view-emulator-detail
@@ -248,12 +263,20 @@ class RomScraperService
         // Limpiar sufijos típicos de CDRomance (ej. "PSP ISO", "PS2 ISO", "PSX ISO")
         $title = preg_replace('/\s+(?:PSP|PS2|PSX|GameCube|SNES|GBA|NDS)\s+(?:ISO|ROM|Game|Download).*$/i', '', $title);
 
-        // Portada (og:image o Box art)
+        // Portada ultra-robusta (og:image, twitter:image, data-src, featured-image, Box art)
         $coverUrl = '';
-        if (preg_match('/<meta property="og:image" content="([^"]+)"/i', $html, $m)) {
-            $coverUrl = $m[1];
-        } elseif (preg_match('/<img[^>]+src="([^">]+Box[0-9]*\.(?:jpg|jpeg|png|webp))"/i', $html, $m)) {
-            $coverUrl = $m[1];
+        if (preg_match('/<meta\s+property=["\']og:image["\']\s+content=["\']([^"\']+)["\']/i', $html, $m)) {
+            $coverUrl = trim($m[1]);
+        } elseif (preg_match('/<meta\s+name=["\']twitter:image["\']\s+content=["\']([^"\']+)["\']/i', $html, $m)) {
+            $coverUrl = trim($m[1]);
+        } elseif (preg_match('/<div[^>]*class=["\'][^"\']*(?:featured-image|entry-featured|game-cover)[^"\']*["\'][^>]*>.*?<img[^>]+(?:data-src|src)=["\']([^"\']+)["\']/is', $html, $m)) {
+            $coverUrl = trim($m[1]);
+        } elseif (preg_match('/<img[^>]+(?:data-src|src)=["\']([^"\']+(?:Box[0-9]*|covers?|uploads)[^"\']*\.(?:jpg|jpeg|png|webp))["\']/i', $html, $m)) {
+            $coverUrl = trim($m[1]);
+        }
+
+        if ($coverUrl && str_starts_with($coverUrl, '//')) {
+            $coverUrl = 'https:' . $coverUrl;
         }
 
         // Parsear tabla estructurada "GAME INFORMATION" de CDRomance
@@ -438,36 +461,82 @@ class RomScraperService
     }
 
     /**
-     * Mapea un texto de género a las categorías locales de la base de datos
+     * Mapea un texto de género a las categorías locales de la base de datos.
+     * Si el género no existe, lo crea automáticamente con slug, color e icono.
      */
     protected function mapCategories(string $rawGenre): array
     {
-        $raw = mb_strtolower($rawGenre);
+        $raw = mb_strtolower(trim($rawGenre));
         $ids = [];
 
-        // DB Categories IDs:
-        // 1 => Acción & Aventura
-        // 2 => RPG & JRPG
-        // 3 => Plataformas 3D & 2D
-        // 4 => Lucha / Fighting
-        // 5 => Shooter & FPS
-        // 6 => Carreras & Conducción
-        // 7 => Terror & Survival
-        // 8 => Estrategia & Táctico
-        // 9 => Deportes & Simulación
+        // 1. Detección por palabras clave para las categorías estándar
+        if (preg_match('/action|aventura|adventure|hack|beat|slash/i', $raw)) {
+            $cat = Category::where('slug', 'accion-aventura')->first();
+            if ($cat) $ids[] = $cat->id;
+        }
+        if (preg_match('/rpg|role|jrpg|dungeon|fantasy/i', $raw)) {
+            $cat = Category::where('slug', 'rpg-jrpg')->first();
+            if ($cat) $ids[] = $cat->id;
+        }
+        if (preg_match('/platform|plataforma/i', $raw)) {
+            $cat = Category::where('slug', 'plataformas')->first();
+            if ($cat) $ids[] = $cat->id;
+        }
+        if (preg_match('/fight|lucha|brawl|versus/i', $raw)) {
+            $cat = Category::where('slug', 'lucha')->first();
+            if ($cat) $ids[] = $cat->id;
+        }
+        if (preg_match('/shoot|fps|tps|gun/i', $raw)) {
+            $cat = Category::where('slug', 'shooter-fps')->first();
+            if ($cat) $ids[] = $cat->id;
+        }
+        if (preg_match('/rac|carrera|driv|conducci/i', $raw)) {
+            $cat = Category::where('slug', 'carreras')->first();
+            if ($cat) $ids[] = $cat->id;
+        }
+        if (preg_match('/horror|terror|survival|zombie/i', $raw)) {
+            $cat = Category::where('slug', 'terror-survival')->first();
+            if ($cat) $ids[] = $cat->id;
+        }
+        if (preg_match('/strateg|tactic|estrategia/i', $raw)) {
+            $cat = Category::where('slug', 'estrategia')->first();
+            if ($cat) $ids[] = $cat->id;
+        }
+        if (preg_match('/sport|deporte|soccer|fifa|racing|nba|wrestling/i', $raw)) {
+            $cat = Category::where('slug', 'deportes')->first();
+            if ($cat) $ids[] = $cat->id;
+        }
 
-        if (preg_match('/action|aventura|adventure|hack|beat|slash/i', $raw)) $ids[] = 1;
-        if (preg_match('/rpg|role|jrpg|dungeon|fantasy/i', $raw)) $ids[] = 2;
-        if (preg_match('/platform|plataforma/i', $raw)) $ids[] = 3;
-        if (preg_match('/fight|lucha|brawl|versus/i', $raw)) $ids[] = 4;
-        if (preg_match('/shoot|fps|tps|gun/i', $raw)) $ids[] = 5;
-        if (preg_match('/rac|carrera|driv|conducci/i', $raw)) $ids[] = 6;
-        if (preg_match('/horror|terror|survival|zombie/i', $raw)) $ids[] = 7;
-        if (preg_match('/strateg|tactic|estrategia/i', $raw)) $ids[] = 8;
-        if (preg_match('/sport|deporte|soccer|fifa|racing|nba|wrestling/i', $raw)) $ids[] = 9;
+        // 2. Si no coincide con ninguna palabra clave, buscar o crear la categoría automáticamente
+        $cleanName = trim(ucwords(preg_replace('/[_\-]+/', ' ', $rawGenre)));
+        if (!empty($cleanName) && empty($ids)) {
+            $slug = Str::slug($cleanName);
+            $existing = Category::where('slug', $slug)->orWhere('name', 'LIKE', $cleanName)->first();
+            if ($existing) {
+                $ids[] = $existing->id;
+            } else {
+                // 3. ¡Creación automática de la nueva categoría en la base de datos!
+                $colorPalette = ['#3B82F6', '#8B5CF6', '#10B981', '#EF4444', '#F59E0B', '#06B6D4', '#EC4899', '#6366F1', '#14B8A6', '#F97316'];
+                $hash = abs(crc32($slug));
+                $randomColor = $colorPalette[$hash % count($colorPalette)];
 
+                $newCat = Category::create([
+                    'name' => $cleanName,
+                    'slug' => $slug,
+                    'color' => $randomColor,
+                    'icon' => 'tag',
+                    'description' => "Juegos y ROMs clásicos del género {$cleanName}.",
+                ]);
+                $ids[] = $newCat->id;
+            }
+        }
+
+        // Si todavía está vacío, asignar Acción & Aventura
         if (empty($ids)) {
-            $ids[] = 1; // Por defecto Acción & Aventura
+            $fallback = Category::where('slug', 'accion-aventura')->first() ?? Category::first();
+            if ($fallback) {
+                $ids[] = $fallback->id;
+            }
         }
 
         $ids = array_values(array_unique($ids));

@@ -44,12 +44,49 @@ class PublishDripGamesCommand extends Command
 
         $this->info("🔍 Buscando juegos en cola (DRAFT) para publicar (Lote: {$count} juegos)...");
 
-        // Obtenemos los juegos más antiguos en borrador
-        $drafts = Game::with('console')
-            ->where('status', 'DRAFT')
-            ->orderBy('created_at', 'asc')
-            ->limit($count)
-            ->get();
+        // Obtenemos los borradores rotando equitativamente por consola para garantizar variedad
+        $distinctConsoles = Game::where('status', 'DRAFT')
+            ->select('console_id')
+            ->distinct()
+            ->inRandomOrder()
+            ->pluck('console_id');
+
+        $drafts = collect();
+        if ($distinctConsoles->isNotEmpty()) {
+            // Seleccionar 1 juego por consola en cada ronda hasta completar el cupo del lote
+            while ($drafts->count() < $count && $distinctConsoles->isNotEmpty()) {
+                $addedInRound = 0;
+                foreach ($distinctConsoles as $cId) {
+                    if ($drafts->count() >= $count) {
+                        break;
+                    }
+                    $game = Game::with('console')
+                        ->where('status', 'DRAFT')
+                        ->where('console_id', $cId)
+                        ->whereNotIn('id', $drafts->pluck('id'))
+                        ->orderBy('created_at', 'asc')
+                        ->first();
+                    if ($game) {
+                        $drafts->push($game);
+                        $addedInRound++;
+                    }
+                }
+                if ($addedInRound === 0) {
+                    break;
+                }
+            }
+        }
+
+        // Si aún faltan para completar la tanda, rellenar con los borradores restantes
+        if ($drafts->count() < $count) {
+            $remaining = Game::with('console')
+                ->where('status', 'DRAFT')
+                ->whereNotIn('id', $drafts->pluck('id'))
+                ->orderBy('created_at', 'asc')
+                ->limit($count - $drafts->count())
+                ->get();
+            $drafts = $drafts->concat($remaining);
+        }
 
         if ($drafts->isEmpty()) {
             $this->warn('ℹ️ No hay juegos en estado DRAFT pendientes en la cola.');

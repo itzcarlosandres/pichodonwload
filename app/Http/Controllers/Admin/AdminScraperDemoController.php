@@ -70,6 +70,8 @@ class AdminScraperDemoController extends Controller
             return response()->json($result, $code);
         }
 
+        $result['all_categories'] = Category::orderBy('name')->get(['id', 'name', 'slug']);
+
         return response()->json($result);
     }
 
@@ -122,17 +124,24 @@ class AdminScraperDemoController extends Controller
                 $tempPath = tempnam(sys_get_temp_dir(), 'cover_');
                 $ch = curl_init($coverUrl);
                 $fp = fopen($tempPath, 'wb');
-                curl_setopt($ch, CURLOPT_FILE, $fp);
-                curl_setopt($ch, CURLOPT_HEADER, false);
-                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-                curl_setopt($ch, CURLOPT_TIMEOUT, 15);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-                curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)');
+                $host = parse_url($coverUrl, PHP_URL_HOST) ?? 'www.romspedia.com';
+                $referer = (parse_url($coverUrl, PHP_URL_SCHEME) ?? 'https') . '://' . $host . '/';
+                curl_setopt_array($ch, [
+                    CURLOPT_FILE => $fp,
+                    CURLOPT_HEADER => false,
+                    CURLOPT_FOLLOWLOCATION => true,
+                    CURLOPT_TIMEOUT => 20,
+                    CURLOPT_SSL_VERIFYPEER => false,
+                    CURLOPT_SSL_VERIFYHOST => false,
+                    CURLOPT_REFERER => $referer,
+                    CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                ]);
                 curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                 curl_close($ch);
                 fclose($fp);
 
-                if (file_exists($tempPath) && filesize($tempPath) > 500) {
+                if ($httpCode === 200 && file_exists($tempPath) && filesize($tempPath) > 500 && @getimagesize($tempPath) !== false) {
                     $uploadedFile = new UploadedFile($tempPath, 'cover.webp', 'image/webp', null, true);
                     $processed = $this->imageService->processCover($uploadedFile);
                     $coverUrl = $processed['url'];
@@ -277,19 +286,24 @@ class AdminScraperDemoController extends Controller
                 $tempPath = tempnam(sys_get_temp_dir(), 'quick_cov_');
                 $ch = curl_init($coverUrl);
                 $fp = fopen($tempPath, 'wb');
+                $host = parse_url($coverUrl, PHP_URL_HOST) ?? 'www.romspedia.com';
+                $referer = (parse_url($coverUrl, PHP_URL_SCHEME) ?? 'https') . '://' . $host . '/';
                 curl_setopt_array($ch, [
                     CURLOPT_FILE => $fp,
                     CURLOPT_HEADER => false,
                     CURLOPT_FOLLOWLOCATION => true,
-                    CURLOPT_TIMEOUT => 15,
+                    CURLOPT_TIMEOUT => 20,
                     CURLOPT_SSL_VERIFYPEER => false,
-                    CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+                    CURLOPT_SSL_VERIFYHOST => false,
+                    CURLOPT_REFERER => $referer,
+                    CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
                 ]);
                 curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                 curl_close($ch);
                 fclose($fp);
 
-                if (file_exists($tempPath) && filesize($tempPath) > 500) {
+                if ($httpCode === 200 && file_exists($tempPath) && filesize($tempPath) > 500 && @getimagesize($tempPath) !== false) {
                     $uploadedFile = new UploadedFile($tempPath, 'cover.webp', 'image/webp', null, true);
                     $processed = $this->imageService->processCover($uploadedFile);
                     $coverUrl = $processed['url'];

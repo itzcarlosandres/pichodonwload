@@ -71,11 +71,10 @@
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ \App\Models\Setting::get('site_favicon_url') ?: asset('favicon.ico') }}">
 
-    <!-- Google Fonts: Bricolage Grotesque, Plus Jakarta Sans & JetBrains Mono -->
+    <!-- Google Fonts: Instrument Sans, Bricolage Grotesque, Plus Jakarta Sans & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Lucide CDN for immediate icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -103,6 +102,7 @@
                         }
                     },
                     fontFamily: {
+                        instrument: ['"Instrument Sans"', 'sans-serif'],
                         heading: ['"Bricolage Grotesque"', 'sans-serif'],
                         sans: ['"Plus Jakarta Sans"', 'sans-serif'],
                         mono: ['"JetBrains Mono"', 'monospace'],
@@ -122,6 +122,9 @@
         [x-cloak] {
             display: none !important;
         }
+        .font-instrument {
+            font-family: 'Instrument Sans', sans-serif !important;
+        }
         h1, h2, .font-heading {
             font-family: 'Bricolage Grotesque', sans-serif !important;
             letter-spacing: -0.02em;
@@ -129,6 +132,50 @@
         .card-game-title, .font-sans {
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
             letter-spacing: -0.01em;
+        }
+
+        /* ================= GAME CARD HOVER SHINE RAY EFFECT ================= */
+        .card-shine-ray {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 12;
+            overflow: hidden;
+            border-radius: inherit;
+        }
+        .card-shine-ray::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -130%;
+            width: 70%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent 0%,
+                rgba(255, 255, 255, 0.05) 25%,
+                rgba(255, 255, 255, 0.55) 50%,
+                rgba(255, 255, 255, 0.05) 75%,
+                transparent 100%
+            );
+            transform: skewX(-25deg);
+        }
+        .group:hover .card-shine-ray::before {
+            left: 190%;
+            transition: left 0.75s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        /* Title animated red underline effect on hover */
+        .card-title-line {
+            background-image: linear-gradient(#CE2D2D, #CE2D2D);
+            background-size: 0% 2px;
+            background-repeat: no-repeat;
+            background-position: left bottom;
+            transition: background-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding-bottom: 2px;
+        }
+        .group:hover .card-title-line {
+            background-size: 100% 2px;
         }
         /* Markdown / Rich Game Content Typography */
         .prose-game-content h1, .prose-game-content h2, .prose-game-content h3, .prose-game-content h4 {

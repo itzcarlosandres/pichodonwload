@@ -388,53 +388,56 @@
         <!-- Games Grid -->
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             @forelse($recentGames as $game)
-                <div class="bg-white border-2 border-[#1E1E1E] rounded-2xl overflow-hidden flex flex-col justify-between transition-all duration-200 group hover:-translate-y-1 hover:shadow-lg relative">
+                <div class="group relative flex flex-col justify-between space-y-2 cursor-pointer">
                     
-                    <!-- Cover image container -->
-                    <div class="aspect-[3/4.1] bg-[#FAF7F2] relative overflow-hidden border-b border-[#E5E0D8]">
+                    <!-- Seamless Floating Cover with Smooth Lift & Red Glow on Hover -->
+                    <div class="relative aspect-[3/4.2] rounded-2xl overflow-hidden border border-[#E5E0D8] dark:border-white/[0.08] hover:border-[#CE2D2D]/60 dark:hover:border-[#CE2D2D]/60 shadow-md hover:shadow-2xl hover:shadow-red-600/25 transition-all duration-400 group-hover:-translate-y-1.5 bg-[#FAF7F2] dark:bg-[#090C12]">
                         <a href="{{ route('game.show', $game->slug) }}" class="block w-full h-full">
                             <img src="{{ $game->cover_thumb_url ?: $game->cover_url }}" 
                                  alt="{{ $game->title }}" 
                                  loading="lazy"
                                  onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80';"
-                                 class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300">
+                                 class="w-full h-full object-cover object-center group-hover:scale-106 transition-transform duration-500 ease-out">
                         </a>
-                        
-                        <!-- Top floating console pill -->
-                        <div class="absolute top-2 left-2 z-10">
-                            <span class="console-card-badge px-2 py-0.5 rounded-md bg-white/95 dark:bg-[#18181B]/95 text-[#18181B] dark:text-white border border-[#1E1E1E] dark:border-[#3F3F46] shadow-sm text-[10px] font-mono font-black backdrop-blur">
+
+                        <!-- Subtle Bottom Vignette on the Artwork -->
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none"></div>
+
+                        <!-- Floating Console Tag on Top-Left -->
+                        <div class="absolute top-2.5 left-2.5 z-10">
+                            <span class="px-2 py-0.5 rounded-lg bg-black/65 backdrop-blur-md border border-white/15 text-[9px] font-mono font-bold text-white shadow-sm">
                                 {{ $game->console->short_name ?: $game->console->name }}
                             </span>
                         </div>
 
-                        <!-- Hover quick action -->
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2.5 pointer-events-none">
-                            <span class="w-full py-1.5 rounded-lg bg-[#CE2D2D] text-white text-[11px] font-bold font-sans flex items-center justify-center gap-1 shadow-md">
-                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                                <span>Ver ROM</span>
-                            </span>
+                        <!-- Size Pill on Bottom-Left (Fades smoothly on hover) -->
+                        <div class="absolute bottom-2.5 left-2.5 z-10 px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-md text-[10px] font-mono text-gray-200 border border-white/10 group-hover:opacity-0 transition-opacity duration-200 pointer-events-none">
+                            {{ $game->formatted_size }}
+                        </div>
+
+                        <!-- Rating Pill on Bottom-Right (Fades smoothly on hover) -->
+                        <div class="absolute bottom-2.5 right-2.5 z-10 px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-md text-[10px] font-mono text-amber-400 font-bold border border-white/10 flex items-center gap-1 group-hover:opacity-0 transition-opacity duration-200 pointer-events-none">
+                            <span>★</span>
+                            <span>{{ number_format($game->rating_average, 1) }}</span>
+                        </div>
+
+                        <!-- Luminous Light Ray Streak Effect on Hover ("Raya de luz") -->
+                        <div class="card-shine-ray"></div>
+
+                        <!-- Red Brand Color Hover Download Button (#CE2D2D) -->
+                        <div class="absolute inset-x-2.5 bottom-2.5 z-20 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 ease-out pointer-events-auto">
+                            <a href="{{ route('game.show', $game->slug) }}" class="w-full py-2 px-3 rounded-xl bg-[#CE2D2D] hover:bg-[#B71C1C] text-white font-instrument text-xs font-bold flex items-center justify-center gap-1.5 shadow-xl shadow-red-600/40 backdrop-blur-md active:scale-95 transition-all text-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                                <span>Descargar ROM</span>
+                            </a>
                         </div>
                     </div>
 
-                    <!-- Card Body -->
-                    <div class="p-3 space-y-1.5 flex-1 flex flex-col justify-between">
-                        <div>
-                            <span class="text-[10px] font-mono font-bold text-gray-500 uppercase block truncate">
-                                {{ $game->console->name }}
-                            </span>
-                            <h3 class="card-game-title text-xs sm:text-[13px] font-black text-[#18181B] group-hover:text-[#CE2D2D] transition-colors line-clamp-1 leading-snug font-sans mt-0.5">
-                                <a href="{{ route('game.show', $game->slug) }}">{{ $game->title }}</a>
-                            </h3>
-                        </div>
-
-                        <!-- Footer info -->
-                        <div class="pt-2 border-t border-[#E5E0D8] flex items-center justify-between text-[11px] font-mono">
-                            <span class="text-[10px] text-gray-500 font-semibold">{{ $game->formatted_size }}</span>
-                            <span class="text-amber-500 font-bold flex items-center gap-0.5">
-                                <span>★</span>
-                                <span>{{ number_format($game->rating_average, 1) }}</span>
-                            </span>
-                        </div>
+                    <!-- Title in Instrument Sans (Directly below cover, no noisy category line) -->
+                    <div class="px-0.5 pt-0.5 space-y-0.5">
+                        <h3 class="font-instrument text-[13px] sm:text-[14px] font-bold text-[#18181B] dark:text-white group-hover:text-[#CE2D2D] dark:group-hover:text-[#CE2D2D] transition-colors line-clamp-1 tracking-tight leading-snug">
+                            <a href="{{ route('game.show', $game->slug) }}" class="card-title-line inline">{{ $game->title }}</a>
+                        </h3>
                     </div>
 
                 </div>

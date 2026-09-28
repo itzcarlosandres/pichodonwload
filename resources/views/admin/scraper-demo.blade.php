@@ -358,12 +358,12 @@
                                 <span class="text-purple-400 text-[10px]" x-show="result?.raw_genre" x-text="'Detectado: ' + result?.raw_genre"></span>
                             </label>
                             <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 p-2.5 rounded-xl bg-[#11141A] border border-[#232936] max-h-36 overflow-y-auto">
-                                @foreach($categories as $cat)
-                                <label class="flex items-center gap-2 p-1.5 rounded-lg bg-[#0A0C0F] border border-[#232936] text-[11px] font-mono text-gray-300 cursor-pointer hover:border-purple-500/40">
-                                    <input type="checkbox" value="{{ $cat->id }}" x-model="selectedCategoryIds" class="rounded bg-[#171B22] border-[#232936] text-purple-600 focus:ring-purple-500">
-                                    <span class="truncate">{{ $cat->name }}</span>
-                                </label>
-                                @endforeach
+                                <template x-for="cat in categoriesList" :key="cat.id">
+                                    <label class="flex items-center gap-2 p-1.5 rounded-lg bg-[#0A0C0F] border border-[#232936] text-[11px] font-mono text-gray-300 cursor-pointer hover:border-purple-500/40">
+                                        <input type="checkbox" :value="String(cat.id)" x-model="selectedCategoryIds" class="rounded bg-[#171B22] border-[#232936] text-purple-600 focus:ring-purple-500">
+                                        <span class="truncate" x-text="cat.name"></span>
+                                    </label>
+                                </template>
                             </div>
                         </div>
 
@@ -515,6 +515,7 @@ function scraperDemoApp() {
         errorMessage: '',
         result: null,
         consolesList: @json($consoles),
+        categoriesList: @json($categories),
         saveStatus: 'DRAFT',
         optimizeCover: true,
         selectedCategoryIds: [],
@@ -610,6 +611,11 @@ function scraperDemoApp() {
                         if (matched) {
                             this.selectedConsoleId = matched.id;
                         }
+                    }
+
+                    // Actualizar lista de categorías reactiva si se crearon nuevas en el backend
+                    if (data.all_categories && Array.isArray(data.all_categories)) {
+                        this.categoriesList = data.all_categories;
                     }
 
                     // Autoseleccionar las categorías detectadas

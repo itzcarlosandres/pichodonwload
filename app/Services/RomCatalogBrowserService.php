@@ -100,10 +100,17 @@ class RomCatalogBrowserService
                     continue;
                 }
 
-                // Portada
+                // Portada ultra-robusta
                 $coverUrl = '';
-                if (preg_match('/<img[^>]+(?:src|data-src)="([^"]+)"/i', $block, $im)) {
-                    $coverUrl = $im[1];
+                if (preg_match('/<img[^>]+(?:data-src|data-lazy-src|srcset|src)=["\']([^"\']+)["\']/i', $block, $im)) {
+                    $coverUrl = trim($im[1]);
+                    if (str_contains($coverUrl, ' ')) {
+                        $parts = explode(' ', $coverUrl);
+                        $coverUrl = $parts[0];
+                    }
+                }
+                if ($coverUrl && str_starts_with($coverUrl, '//')) {
+                    $coverUrl = 'https:' . $coverUrl;
                 }
 
                 // Etiqueta de Consola visible
@@ -167,10 +174,21 @@ class RomCatalogBrowserService
      */
     protected function browseRomspedia(string $consoleSlug, int $page): array
     {
-        $platformPath = $this->platformMap['romspedia'][$consoleSlug] ?? 'playstation-portable';
-        $url = $page > 1
-            ? "https://www.romspedia.com/roms/{$platformPath}?page={$page}"
-            : "https://www.romspedia.com/roms/{$platformPath}";
+        $isAll = in_array(strtolower($consoleSlug), ['all', 'latest', '']);
+
+        if ($isAll) {
+            // Rotar equitativamente por las consolas de Romspedia según la página solicitada
+            $availableConsoles = ['nintendo-64', 'game-boy-advance', 'super-nintendo', 'playstation', 'nintendo-ds', 'gamecube', 'psp', 'playstation-2'];
+            $targetConsole = $availableConsoles[($page - 1) % count($availableConsoles)];
+            $platformPath = $this->platformMap['romspedia'][$targetConsole] ?? 'nintendo-64';
+            $consoleSlug = $targetConsole;
+            $url = "https://www.romspedia.com/roms/{$platformPath}?page=" . (intval(($page - 1) / count($availableConsoles)) + 1);
+        } else {
+            $platformPath = $this->platformMap['romspedia'][$consoleSlug] ?? 'playstation-portable';
+            $url = $page > 1
+                ? "https://www.romspedia.com/roms/{$platformPath}?page={$page}"
+                : "https://www.romspedia.com/roms/{$platformPath}";
+        }
 
         $fetchRes = $this->safety->safeFetch($url, 'romspedia', [], true, 900);
         if (!$fetchRes['success']) {
@@ -201,13 +219,33 @@ class RomCatalogBrowserService
 
                 $fullUrl = "https://www.romspedia.com" . $relativeUrl;
 
-                // Extraer imagen miniatura del bloque correspondiente
-                $coverThumb = "https://static.romspedia.com/webp/roms/thumbs/{$gameSlug}-psp-thumb-250x140.webp";
+                // Extraer imagen miniatura del bloque correspondiente con consola correcta
+                $consoleThumbSlug = match(strtolower($consoleSlug)) {
+                    'nintendo-64', 'n64' => 'nintendo-64',
+                    'super-nintendo', 'snes' => 'super-nintendo',
+                    'game-boy-advance', 'gba' => 'game-boy-advance',
+                    'nintendo-ds', 'nds' => 'nintendo-ds',
+                    'playstation-2', 'ps2' => 'playstation-2',
+                    'playstation', 'ps1', 'psx' => 'playstation',
+                    'gamecube' => 'gamecube',
+                    default => $consoleSlug,
+                };
+                $coverThumb = "https://static.romspedia.com/webp/roms/thumbs/{$gameSlug}-{$consoleThumbSlug}-thumb-250x140.webp";
                 $pos = strpos($html, $relativeUrl);
                 if ($pos !== false) {
-                    $snippet = substr($html, $pos, 600);
-                    if (preg_match('/(?:src|srcset)="([^">]+\.(?:webp|jpg|jpeg|png))"/i', $snippet, $imgMatch)) {
-                        $coverThumb = $imgMatch[1];
+                    $snippet = substr($html, $pos, 800);
+                    if (preg_match('/(?:data-src|data-lazy-src|srcset|src)=["\']([^"\']+\.(?:webp|jpg|jpeg|png)[^"\']*)["\']/i', $snippet, $imgMatch)) {
+                        $foundImg = trim($imgMatch[1]);
+                        if (str_contains($foundImg, ' ')) {
+                            $parts = explode(' ', $foundImg);
+                            $foundImg = $parts[0];
+                        }
+                        if (str_starts_with($foundImg, '//')) {
+                            $foundImg = 'https:' . $foundImg;
+                        } elseif (!str_starts_with($foundImg, 'http')) {
+                            $foundImg = 'https://www.romspedia.com' . (str_starts_with($foundImg, '/') ? '' : '/') . $foundImg;
+                        }
+                        $coverThumb = $foundImg;
                     }
                 }
 
