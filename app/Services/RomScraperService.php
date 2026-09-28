@@ -326,12 +326,7 @@ class RomScraperService
             $coverUrl = 'https:' . $coverUrl;
         }
 
-        // 6. Si CDRomance no tiene carátula propia (o solo tenía el logo), buscar carátula oficial en Romspedia
-        if (!$coverUrl) {
-            $coverUrl = $this->searchRomspediaCover($title, $platformSlug ?? '');
-        }
-
-        // Parsear tabla estructurada "GAME INFORMATION" de CDRomance
+        // Parsear tabla estructurada "GAME INFORMATION" de CDRomance primero para conocer la plataforma
         $tableData = [];
         if (preg_match_all('/<tr>\s*<th>(.*?)<\/th>\s*<td>(.*?)<\/td>\s*<\/tr>/is', $html, $rows)) {
             for ($i = 0; $i < count($rows[1]); $i++) {
@@ -353,6 +348,11 @@ class RomScraperService
             $detected = $this->mapPlatform($pm[1]);
             $platform = $detected['name'];
             $platformSlug = $detected['slug'];
+        }
+
+        // 6. Si CDRomance no tiene carátula propia (o solo tenía el logo), buscar carátula oficial en Romspedia con la plataforma ya detectada
+        if (!$coverUrl) {
+            $coverUrl = $this->searchRomspediaCover($title, $platformSlug);
         }
 
         // 2. Género y Mapeo a Categorías
@@ -724,8 +724,13 @@ class RomScraperService
      */
     public function searchRomspediaCover(string $title, string $platformSlug = ''): ?string
     {
-        $cleanSearch = trim(preg_replace('/\s+(?:ROM|ISO|Download|Game).*$/i', '', $title));
-        $url = 'https://www.romspedia.com/search?keyword=' . urlencode($cleanSearch);
+        $cleanSearch = trim(preg_replace('/\s*(?:\([^)]*\)|\[[^\]]*\])/', '', $title));
+        $cleanSearch = trim(preg_replace('/\s+(?:ROM|ISO|Download|Game).*$/i', '', $cleanSearch));
+        if (empty($cleanSearch)) {
+            return null;
+        }
+
+        $url = 'https://www.romspedia.com/search?search_term_string=' . urlencode($cleanSearch);
 
         $res = $this->safety->safeFetch($url, 'romspedia', [], true, 3600);
         if (!$res['success'] || empty($res['html'])) {
@@ -734,18 +739,46 @@ class RomScraperService
 
         $html = $res['html'];
 
-        if (preg_match_all('/(?:data-srcset|srcset|data-src|src)=["\']([^"\']*static\.romspedia\.com\/webp\/roms\/[^"\']*cover[^"\']*\.(?:webp|jpg|jpeg|png))["\']/i', $html, $matches)) {
-            foreach ($matches[1] as $candidate) {
-                if (str_contains($candidate, ' ')) {
-                    $parts = explode(' ', trim($candidate));
-                    $candidate = $parts[0];
-                }
-                if (!$this->isSiteLogoOrInvalid($candidate)) {
-                    return $candidate;
-                }
+        // Solo buscar dentro de los items de resultado <div class="single-rom">
+        if (!preg_match_all('/<div class="single-rom">(.*?)<\/div>\s*<\/div>\s*<\/a>/is', $html, $matches)) {
+            return null;
+        }
+
+        $bestCandidate = null;
+        $highestScore = 0;
+
+        foreach ($matches[1] as $card) {
+            $cardTitle = '';
+            if (preg_match('/<h2 class="roms-title">([^<]+)<\/h2>/i', $card, $tm)) {
+                $cardTitle = trim(html_entity_decode($tm[1], ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+            }
+
+            $cardCover = '';
+            if (preg_match('/(?:srcset|src)=["\']([^"\'\s]*static\.romspedia\.com\/webp\/roms\/[^"\'\s]*cover[^"\'\s]*\.webp)/i', $card, $im)) {
+                $cardCover = $im[1];
+            }
+
+            if (!$cardTitle || !$cardCover || $this->isSiteLogoOrInvalid($cardCover)) {
+                continue;
+            }
+
+            $cardPlatform = '';
+            if (preg_match('/<a href="\/roms\/([^"]+)"[^>]*class="[^"]*emulator[^"]*"/i', $card, $pm)) {
+                $cardPlatform = $pm[1];
+            }
+
+            similar_text(strtolower($cleanSearch), strtolower($cardTitle), $percent);
+            if ($platformSlug && $cardPlatform && (str_contains(strtolower($platformSlug), strtolower($cardPlatform)) || str_contains(strtolower($cardPlatform), strtolower($platformSlug)))) {
+                $percent += 15;
+            }
+
+            // Exigir al menos 40% de coincidencia para no traer juegos no relacionados de footer
+            if ($percent > $highestScore && $percent >= 40) {
+                $highestScore = $percent;
+                $bestCandidate = $cardCover;
             }
         }
 
-        return null;
+        return $bestCandidate;
     }
 }

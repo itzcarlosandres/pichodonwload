@@ -22,7 +22,8 @@ class FixBrokenCoversCommand extends Command
                             {--game= : ID específico de juego a reparar} 
                             {--console= : Filtrar por slug o nombre de consola (ej. nintendo-64)} 
                             {--all-cdromance : Reparar todos los juegos cuyo origen sea CDRomance} 
-                            {--force : Forzar actualización en todos los juegos filtrados} 
+                            {--all : Escanear y reparar todos los juegos sin excepción} 
+                            {--force : Forzar actualización en todos los juegos seleccionados} 
                             {--dry-run : Simular la reparación sin modificar archivos ni base de datos}';
 
     /**
@@ -30,7 +31,7 @@ class FixBrokenCoversCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Repara y descarga carátulas HD auténticas para juegos con portadas rotas, logos de CDRomance o placeholders';
+    protected $description = 'Detecta y repara carátulas defectuosas, logos de CDRomance convertidos a WebP o placeholders por portadas HD auténticas';
 
     /**
      * Execute the console command.
@@ -43,10 +44,11 @@ class FixBrokenCoversCommand extends Command
         $gameId = $this->option('game');
         $consoleFilter = $this->option('console');
         $allCdromance = (bool) $this->option('all-cdromance');
+        $all = (bool) $this->option('all');
         $force = (bool) $this->option('force');
         $dryRun = (bool) $this->option('dry-run');
 
-        $this->info("🔍 Identificando juegos que requieren corrección de carátula...");
+        $this->info("🔍 Escaneando base de datos y archivos de carátula...");
 
         $query = Game::with('console');
 
@@ -69,26 +71,28 @@ class FixBrokenCoversCommand extends Command
                       ->orWhere('cover_url', 'LIKE', '%cdromance%')
                       ->orWhere('cover_url', 'LIKE', '%cdr-logo%');
                 });
-            } elseif (!$force) {
-                // Filtro estándar de carátulas sospechosas o con logos
-                $query->where(function ($q) {
-                    $q->where('cover_url', 'LIKE', '%cdr-logo%')
-                      ->orWhere('cover_url', 'LIKE', '%phoenix%')
-                      ->orWhere('cover_url', 'LIKE', '%logo%')
-                      ->orWhere('cover_url', 'LIKE', '%unsplash%')
-                      ->orWhere('cover_url', 'LIKE', '%placeholder%')
-                      ->orWhere('cover_url', 'LIKE', '%thumb-unavailable%')
-                      ->orWhere('cover_url', 'LIKE', '%-psp-thumb-%')
-                      ->orWhereNull('cover_url')
-                      ->orWhere('cover_url', '');
-                });
             }
         }
 
-        $games = $query->orderBy('id', 'asc')->get();
+        $candidates = $query->orderBy('id', 'asc')->get();
+
+        if ($candidates->isEmpty()) {
+            $this->info("✨ No se encontraron juegos según los filtros especificados.");
+            return self::SUCCESS;
+        }
+
+        // Si se especificó --force o --all, procesar todos los candidatos
+        // De lo contrario, usar detección inteligente (URLs con logo o archivos locales con peso/hash de logo)
+        if ($force || $all) {
+            $games = $candidates;
+        } else {
+            $games = $candidates->filter(function (Game $game) {
+                return $this->isBrokenCover($game);
+            })->values();
+        }
 
         if ($games->isEmpty()) {
-            $this->info("✨ ¡Excelente! No se encontraron juegos con portadas defectuosas o logos.");
+            $this->info("✨ ¡Excelente! Todas las carátulas inspeccionadas son válidas (no se detectaron logos ni portadas rotas).");
             return self::SUCCESS;
         }
 
@@ -108,7 +112,7 @@ class FixBrokenCoversCommand extends Command
 
             $targetCoverUrl = null;
 
-            // 1. Si el juego tiene enlace a CDRomance, buscar ficha para extraer box art real
+            // 1. Si el juego proviene de CDRomance, buscar ficha para extraer box art real
             $isCdromance = str_contains($game->download_url ?? '', 'cdromance') || 
                            str_contains($game->cover_url ?? '', 'cdromance') ||
                            str_contains($game->download_links ?? '', 'cdromance');
@@ -123,7 +127,7 @@ class FixBrokenCoversCommand extends Command
                 $targetCoverUrl = $scraperService->searchRomspediaCover($game->title, $consoleSlug);
             }
 
-            // 3. Si sigue sin portada, verificar si el archivo de Romspedia tiene URL directa
+            // 3. Si sigue sin portada, verificar si el archivo de Romspedia tiene URL directa basada en slug
             if (empty($targetCoverUrl)) {
                 $slug = Str::slug($game->title);
                 $directUrl = "https://static.romspedia.com/webp/roms/{$slug}-cover.webp";
@@ -175,6 +179,10 @@ class FixBrokenCoversCommand extends Command
                     $uploadedFile = new UploadedFile($tempPath, 'cover.webp', 'image/webp', null, true);
                     $processed = $imageService->processCover($uploadedFile);
 
+                    // Limpiar archivo antiguo defectuoso del disco si existía localmente
+                    $this->cleanupLocalCoverFile($game->cover_url);
+                    $this->cleanupLocalCoverFile($game->cover_thumb_url);
+
                     $game->update([
                         'cover_url' => $processed['url'],
                         'cover_thumb_url' => $processed['thumb_url'],
@@ -201,7 +209,7 @@ class FixBrokenCoversCommand extends Command
                 $failedCount++;
             }
 
-            // Pequeña pausa para no sobrecargar los servidores de origen
+            // Pausa de cortesía para no saturar servidores
             usleep(500000); // 0.5s
         }
 
@@ -218,13 +226,66 @@ class FixBrokenCoversCommand extends Command
     }
 
     /**
+     * Determina si la carátula de un juego está rota, vacía o contiene el logo de CDRomance
+     */
+    protected function isBrokenCover(Game $game): bool
+    {
+        $cover = $game->cover_url;
+
+        // 1. Vacía o nula
+        if (empty($cover)) {
+            return true;
+        }
+
+        // 2. Coincidencias de texto obvias en la URL
+        if (preg_match('/(?:cdr-logo|logo|phoenix|banner|header|unsplash|placeholder|thumb-unavailable|-psp-thumb-)/i', $cover)) {
+            return true;
+        }
+
+        // 3. Inspección del archivo local en disco
+        // Si la imagen fue descargada y convertida a WebP (ej: /uploads/covers/xxx.webp)
+        $parsedPath = parse_url($cover, PHP_URL_PATH);
+        if ($parsedPath) {
+            $relativePath = ltrim($parsedPath, '/');
+            $localPath = public_path($relativePath);
+
+            if (!file_exists($localPath)) {
+                $storagePath = storage_path('app/public/' . preg_replace('#^storage/#', '', $relativePath));
+                if (file_exists($storagePath)) {
+                    $localPath = $storagePath;
+                }
+            }
+
+            if (file_exists($localPath)) {
+                $fileSize = filesize($localPath);
+                // El logo de CDRomance convertido a WebP 600x820 pesa entre 6.8KB y 7.4KB.
+                // Una carátula auténtica HD a 600x820 pesa entre 35KB y 200KB.
+                // Todo archivo menor a 15KB o con hash del logo es defectuoso.
+                if ($fileSize < 15000) {
+                    return true;
+                }
+
+                $md5 = md5_file($localPath);
+                if (in_array($md5, [
+                    'c2028ac818ff3793ffc52a3f2bcc104a', // CDRomance phoenix logo
+                    '508d3b1348550f475f09dde36da4e830', // CDRomance 900x272 banner logo
+                ])) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Resuelve el box art real de una entrada de CDRomance
      */
     protected function resolveCdromanceBoxArt(Game $game, RomScraperService $scraper, ScraperSafetyService $safety): ?string
     {
         $url = $game->download_url;
 
-        // Si es URL directa de juego (no AJAX download.php)
+        // 1. Si es URL directa de juego (no AJAX download.php)
         if ($url && str_contains($url, 'cdromance.org') && !str_contains($url, 'download.php')) {
             $scrape = $scraper->scrape($url);
             if (!empty($scrape['cover_url']) && !$scraper->isSiteLogoOrInvalid($scrape['cover_url'])) {
@@ -232,20 +293,73 @@ class FixBrokenCoversCommand extends Command
             }
         }
 
-        // Si es enlace download.php o genérico, buscar la página del juego en CDRomance por título
-        $searchUrl = 'https://cdromance.org/?s=' . urlencode($game->title);
+        // 2. Buscar en CDRomance por título limpio (sin paréntesis como [USA] o [Europe])
+        $cleanTitle = trim(preg_replace('/\s*(?:\([^)]*\)|\[[^\]]*\])/', '', $game->title));
+        $searchUrl = 'https://cdromance.org/?s=' . urlencode($cleanTitle);
         $searchRes = $safety->safeFetch($searchUrl, 'cdromance', [], true, 3600);
 
         if ($searchRes['success'] && !empty($searchRes['html'])) {
-            if (preg_match('/<a class="cover-link" href="([^"]+)"/i', $searchRes['html'], $lm)) {
-                $gamePageUrl = $lm[1];
-                $scrape = $scraper->scrape($gamePageUrl);
-                if (!empty($scrape['cover_url']) && !$scraper->isSiteLogoOrInvalid($scrape['cover_url'])) {
-                    return $scrape['cover_url'];
+            if (preg_match_all('/<div class="game-container">(.*?)<\/div>\s*<\/div>/is', $searchRes['html'], $blocks)) {
+                $consoleSlug = $game->console ? strtolower($game->console->slug) : '';
+                $bestUrl = null;
+                $bestScore = 0;
+
+                foreach ($blocks[0] as $block) {
+                    if (!preg_match('/<a class="cover-link" href="([^"]+)"/i', $block, $lm)) {
+                        continue;
+                    }
+                    $candidateUrl = $lm[1];
+                    $candidateTitle = '';
+                    if (preg_match('/<div class="game-title">([^<]+)<\/div>/i', $block, $tm)) {
+                        $candidateTitle = trim(html_entity_decode(strip_tags($tm[1]), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+                    }
+                    $candidateConsole = '';
+                    if (preg_match('/<div class="console[^"]*"[^>]*>([^<]+)<\/div>/i', $block, $cm)) {
+                        $candidateConsole = strtolower(trim($cm[1]));
+                    }
+
+                    similar_text(strtolower($cleanTitle), strtolower($candidateTitle), $score);
+                    if ($consoleSlug && $candidateConsole && str_contains($consoleSlug, $candidateConsole)) {
+                        $score += 20;
+                    }
+
+                    if ($score > $bestScore && $score >= 45) {
+                        $bestScore = $score;
+                        $bestUrl = $candidateUrl;
+                    }
+                }
+
+                if ($bestUrl) {
+                    $scrape = $scraper->scrape($bestUrl);
+                    if (!empty($scrape['cover_url']) && !$scraper->isSiteLogoOrInvalid($scrape['cover_url'])) {
+                        return $scrape['cover_url'];
+                    }
                 }
             }
         }
 
         return null;
     }
+
+    /**
+     * Limpia un archivo de carátula local antiguo si existe
+     */
+    protected function cleanupLocalCoverFile(?string $url): void
+    {
+        if (empty($url)) {
+            return;
+        }
+
+        $parsedPath = parse_url($url, PHP_URL_PATH);
+        if (!$parsedPath) {
+            return;
+        }
+
+        $relativePath = ltrim($parsedPath, '/');
+        $localPath = public_path($relativePath);
+        if (file_exists($localPath) && is_file($localPath)) {
+            @unlink($localPath);
+        }
+    }
 }
+
