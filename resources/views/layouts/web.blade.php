@@ -142,27 +142,33 @@
             z-index: 12;
             overflow: hidden;
             border-radius: inherit;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .group:hover .card-shine-ray {
+            opacity: 1;
         }
         .card-shine-ray::before {
             content: '';
             position: absolute;
             top: 0;
-            left: -130%;
-            width: 70%;
+            left: -150%;
+            width: 80%;
             height: 100%;
             background: linear-gradient(
                 90deg,
                 transparent 0%,
-                rgba(255, 255, 255, 0.05) 25%,
-                rgba(255, 255, 255, 0.55) 50%,
-                rgba(255, 255, 255, 0.05) 75%,
+                rgba(255, 255, 255, 0.02) 20%,
+                rgba(255, 255, 255, 0.16) 50%,
+                rgba(255, 255, 255, 0.02) 80%,
                 transparent 100%
             );
-            transform: skewX(-25deg);
+            transform: skewX(-20deg);
+            filter: blur(4px);
         }
         .group:hover .card-shine-ray::before {
-            left: 190%;
-            transition: left 0.75s cubic-bezier(0.2, 0.8, 0.2, 1);
+            left: 200%;
+            transition: left 0.9s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
         /* Title animated red underline effect on hover */
