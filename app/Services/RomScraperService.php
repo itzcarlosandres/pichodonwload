@@ -147,9 +147,9 @@ class RomScraperService
 
         if ($downloadHtml) {
             if (preg_match('/href="([^"]*(?:downloads\.romspedia\.com\/roms\/[^"]+|\.(?:zip|7z|iso|cso)))"/i', $downloadHtml, $m)) {
-                $directDownloadUrl = html_entity_decode($m[1]);
+                $directDownloadUrl = str_replace(' ', '%20', html_entity_decode($m[1]));
             } elseif (preg_match('/window\.location\.href\s*=\s*["\']([^"\']+)["\']/i', $downloadHtml, $m)) {
-                $directDownloadUrl = html_entity_decode($m[1]);
+                $directDownloadUrl = str_replace(' ', '%20', html_entity_decode($m[1]));
             }
         }
 
@@ -188,6 +188,7 @@ class RomScraperService
             'languages' => 'English',
             'publisher' => $details['publisher'] ?? null,
             'source_url' => $url,
+            'download_url' => $directDownloadUrl ?: $downloadPageUrl,
             'download_page_url' => $downloadPageUrl,
             'direct_download_url' => $directDownloadUrl,
             'is_download_available' => $isDownloadAvailable,
@@ -500,6 +501,7 @@ class RomScraperService
             'publisher' => $publisher,
             'developer' => $developer,
             'source_url' => $url,
+            'download_url' => $directDownloadUrl ?: ($url . '#download'),
             'download_page_url' => $url . '#download',
             'direct_download_url' => $directDownloadUrl,
             'is_download_available' => $isDownloadAvailable,
@@ -673,7 +675,8 @@ class RomScraperService
      */
     protected function checkFile(string $url): array
     {
-        $ch = curl_init($url);
+        $cleanUrl = str_replace(' ', '%20', $url);
+        $ch = curl_init($cleanUrl);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_NOBODY, true);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);

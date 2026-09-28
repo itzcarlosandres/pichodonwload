@@ -14,9 +14,9 @@ class RomCatalogBrowserService
         'romspedia' => [
             'psp' => 'playstation-portable',
             'playstation-2' => 'playstation-2',
-            'playstation' => 'playstation',
-            'gamecube' => 'gamecube',
-            'game-boy-advance' => 'game-boy-advance',
+            'playstation' => 'playstation-1',
+            'gamecube' => 'nintendo-gamecube',
+            'game-boy-advance' => 'gameboy-advance',
             'nintendo-ds' => 'nintendo-ds',
             'super-nintendo' => 'super-nintendo',
             'nintendo-64' => 'nintendo-64',

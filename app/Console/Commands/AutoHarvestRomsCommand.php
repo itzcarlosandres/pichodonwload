@@ -92,14 +92,20 @@ class AutoHarvestRomsCommand extends Command
         // Cuota máxima por consola en esta ejecución para forzar variedad equitativa
         $maxPerConsole = $isAll ? max(1, (int) ceil($limit / count($consolesToExplore))) : $limit;
 
-        foreach ($consolesToExplore as $targetConsole) {
+        foreach ($consolesToExplore as $consoleIndex => $targetConsole) {
             if ($totalHarvested >= $limit) {
                 break;
             }
 
             $harvestedForConsole = 0;
 
-            foreach ($providers as $provider) {
+            // Alternar equitativamente el proveedor inicial para que Romspedia y CDRomance alimenten la cola por igual
+            $providersForConsole = $providers;
+            if ($consoleIndex % 2 !== 0) {
+                $providersForConsole = array_reverse($providersForConsole);
+            }
+
+            foreach ($providersForConsole as $provider) {
                 if ($totalHarvested >= $limit || $harvestedForConsole >= $maxPerConsole) {
                     break;
                 }
