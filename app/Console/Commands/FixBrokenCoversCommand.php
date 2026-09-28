@@ -113,9 +113,13 @@ class FixBrokenCoversCommand extends Command
             $targetCoverUrl = null;
 
             // 1. Si el juego proviene de CDRomance, buscar ficha para extraer box art real
+            $downloadLinksText = is_array($game->download_links) 
+                ? json_encode($game->download_links) 
+                : (string) ($game->download_links ?? '');
+
             $isCdromance = str_contains($game->download_url ?? '', 'cdromance') || 
                            str_contains($game->cover_url ?? '', 'cdromance') ||
-                           str_contains($game->download_links ?? '', 'cdromance');
+                           str_contains($downloadLinksText, 'cdromance');
 
             if ($isCdromance) {
                 $targetCoverUrl = $this->resolveCdromanceBoxArt($game, $scraperService, $safetyService);
@@ -284,6 +288,16 @@ class FixBrokenCoversCommand extends Command
     protected function resolveCdromanceBoxArt(Game $game, RomScraperService $scraper, ScraperSafetyService $safety): ?string
     {
         $url = $game->download_url;
+
+        // Si no está en download_url, comprobar si está guardado en download_links
+        if ((!$url || !str_contains($url, 'cdromance.org')) && is_array($game->download_links)) {
+            foreach ($game->download_links as $l) {
+                if (!empty($l['url']) && str_contains($l['url'], 'cdromance.org')) {
+                    $url = $l['url'];
+                    break;
+                }
+            }
+        }
 
         // 1. Si es URL directa de juego (no AJAX download.php)
         if ($url && str_contains($url, 'cdromance.org') && !str_contains($url, 'download.php')) {
