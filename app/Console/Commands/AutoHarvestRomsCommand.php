@@ -23,6 +23,7 @@ class AutoHarvestRomsCommand extends Command
                             {--provider= : Proveedor a rastrear: cdromance, romspedia o all} 
                             {--console=all : Consola a explorar o all} 
                             {--limit= : Límite de nuevos juegos a guardar en cola DRAFT} 
+                            {--page= : Página específica para iniciar el rastreo} 
                             {--dry-run : Solo rastrear y verificar sin guardar en base de datos}';
 
     /**
@@ -113,7 +114,13 @@ class AutoHarvestRomsCommand extends Command
                 $this->newLine();
                 $this->comment("📡 Explorando [{$targetConsole}] en: " . strtoupper($provider));
 
-                for ($page = 1; $page <= 2; $page++) {
+                $userPage = $this->option('page') ? (int) $this->option('page') : null;
+                // Romspedia ordena por popularidad fija; alternamos página inicial (1 a 6) para explorar catálogo profundo
+                $startPage = $userPage ?: ($provider === 'romspedia' ? rand(1, 6) : 1);
+                $maxPagesToScan = ($provider === 'romspedia') ? 4 : 2;
+
+                for ($offset = 0; $offset < $maxPagesToScan; $offset++) {
+                    $page = $startPage + $offset;
                     if ($totalHarvested >= $limit || $harvestedForConsole >= $maxPerConsole) {
                         break;
                     }

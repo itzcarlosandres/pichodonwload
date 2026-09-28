@@ -188,11 +188,14 @@ class RomCatalogBrowserService
             $targetConsole = $availableConsoles[($page - 1) % count($availableConsoles)];
             $platformPath = $this->platformMap['romspedia'][$targetConsole] ?? 'nintendo-64';
             $consoleSlug = $targetConsole;
-            $url = "https://www.romspedia.com/roms/{$platformPath}?page=" . (intval(($page - 1) / count($availableConsoles)) + 1);
+            $subPage = intval(($page - 1) / count($availableConsoles)) + 1;
+            $url = $subPage > 1
+                ? "https://www.romspedia.com/roms/{$platformPath}/page/{$subPage}"
+                : "https://www.romspedia.com/roms/{$platformPath}";
         } else {
             $platformPath = $this->platformMap['romspedia'][$consoleSlug] ?? 'playstation-portable';
             $url = $page > 1
-                ? "https://www.romspedia.com/roms/{$platformPath}?page={$page}"
+                ? "https://www.romspedia.com/roms/{$platformPath}/page/{$page}"
                 : "https://www.romspedia.com/roms/{$platformPath}";
         }
 
@@ -274,7 +277,7 @@ class RomCatalogBrowserService
 
         $games = $this->attachExistingStatus($games);
 
-        $hasNext = str_contains($html, "page=" . ($page + 1)) || str_contains($html, "rel=\"next\"");
+        $hasNext = str_contains($html, "/page/" . ($page + 1)) || str_contains($html, "page=" . ($page + 1)) || str_contains($html, "rel=\"next\"");
 
         return [
             'success' => true,
