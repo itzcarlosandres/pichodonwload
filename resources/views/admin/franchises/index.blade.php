@@ -14,7 +14,7 @@
             <p class="text-xs text-gray-400 font-mono mt-0.5">Crea colecciones, autocompleta datos con Gemini IA y gestiona la visibilidad pública</p>
         </div>
         <div class="flex items-center gap-2 flex-wrap">
-            <form action="{{ route('admin.franchises.syncAll') }}" method="POST" onsubmit="return confirm('¿Deseas escanear todo el catálogo y vincular automáticamente los juegos a sus respectivas sagas según sus palabras clave?');">
+            <form action="{{ Route::has('admin.franchises.syncAll') ? route('admin.franchises.syncAll') : url('/admin/franchises/sync-all') }}" method="POST" onsubmit="return confirm('¿Deseas escanear todo el catálogo y vincular automáticamente los juegos a sus respectivas sagas según sus palabras clave?');">
                 @csrf
                 <button type="submit" class="px-3.5 py-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-400 font-bold text-xs uppercase tracking-wide flex items-center gap-2 transition-all">
                     <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i> Auto-Sincronizar Catálogo

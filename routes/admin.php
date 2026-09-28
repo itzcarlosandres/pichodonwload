@@ -44,7 +44,7 @@ Route::resource('games', AdminGameController::class);
 Route::post('games/{game}/duplicate', [AdminGameController::class, 'duplicate'])->name('games.duplicate');
 
 // Sagas & Franquicias CRUD
-Route::post('franchises/sync-all', [AdminFranchiseController::class, 'syncAll'])->name('franchises.syncAll');
+Route::match(['get', 'post'], 'franchises/sync-all', [AdminFranchiseController::class, 'syncAll'])->name('franchises.syncAll');
 Route::post('franchises/{franchise}/toggle-status', [AdminFranchiseController::class, 'toggleStatus'])->name('franchises.toggleStatus');
 Route::resource('franchises', AdminFranchiseController::class)->except(['create', 'show', 'edit']);
 
