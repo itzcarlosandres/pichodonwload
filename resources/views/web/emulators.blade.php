@@ -47,48 +47,67 @@
         </div>
     </section>
 
-    <!-- Filter Chips by Operating System (Touch edge-to-edge scroll on mobile) -->
-    <div class="flex items-center gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-none text-xs font-mono">
-        <button @click="selectedPlatform = 'all'" 
-                :class="selectedPlatform === 'all' ? 'bg-[#CE2D2D] text-white border-[#CE2D2D] font-bold shadow-sm' : 'bg-white text-gray-700 hover:text-black border-[#DDD6CB] hover:bg-[#FAF7F2]'"
-                class="px-4 py-2 rounded-xl border whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 shrink-0">
-            <i data-lucide="layers" class="w-3.5 h-3.5"></i>
-            <span>Todos los Sistemas ({{ count($emulators) }})</span>
-        </button>
+    <!-- Search Bar & Filters -->
+    <div class="space-y-3">
+        <!-- Live Search Input -->
+        <div class="relative w-full">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                <i data-lucide="search" class="w-4 h-4"></i>
+            </div>
+            <input type="text"
+                   x-model="search"
+                   placeholder="Buscar emulador por nombre (ej. PCSX2, DuckStation, Dolphin) o sistema (ej. PS2, N64, 3DS)..."
+                   class="w-full pl-10 pr-10 py-3 rounded-2xl bg-white border-2 border-[#1E1E1E] focus:border-[#CE2D2D] focus:ring-2 focus:ring-[#CE2D2D]/20 text-sm font-sans placeholder-gray-400 text-[#18181B] outline-none shadow-sm transition-all">
+            <button x-show="search.length > 0"
+                    @click="search = ''"
+                    class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-black">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
 
-        <button @click="selectedPlatform = 'Windows'" 
-                :class="selectedPlatform === 'Windows' ? 'bg-[#CE2D2D] text-white border-[#CE2D2D] font-bold shadow-sm' : 'bg-white text-gray-700 hover:text-black border-[#DDD6CB] hover:bg-[#FAF7F2]'"
-                class="px-4 py-2 rounded-xl border whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 shrink-0">
-            <i data-lucide="monitor" class="w-3.5 h-3.5"></i>
-            <span>Windows PC</span>
-        </button>
+        <!-- Filter Chips by Operating System (Touch edge-to-edge scroll on mobile) -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-none text-xs font-mono">
+            <button @click="selectedPlatform = 'all'" 
+                    :class="selectedPlatform === 'all' ? 'bg-[#CE2D2D] text-white border-[#CE2D2D] font-bold shadow-sm' : 'bg-white text-gray-700 hover:text-black border-[#DDD6CB] hover:bg-[#FAF7F2]'"
+                    class="px-4 py-2 rounded-xl border whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 shrink-0">
+                <i data-lucide="layers" class="w-3.5 h-3.5"></i>
+                <span>Todos los Sistemas ({{ count($emulators) }})</span>
+            </button>
 
-        <button @click="selectedPlatform = 'Android'" 
-                :class="selectedPlatform === 'Android' ? 'bg-[#CE2D2D] text-white border-[#CE2D2D] font-bold shadow-sm' : 'bg-white text-gray-700 hover:text-black border-[#DDD6CB] hover:bg-[#FAF7F2]'"
-                class="px-4 py-2 rounded-xl border whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 shrink-0">
-            <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
-            <span>Android</span>
-        </button>
+            <button @click="selectedPlatform = 'Windows'" 
+                    :class="selectedPlatform === 'Windows' ? 'bg-[#CE2D2D] text-white border-[#CE2D2D] font-bold shadow-sm' : 'bg-white text-gray-700 hover:text-black border-[#DDD6CB] hover:bg-[#FAF7F2]'"
+                    class="px-4 py-2 rounded-xl border whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 shrink-0">
+                <i data-lucide="monitor" class="w-3.5 h-3.5"></i>
+                <span>Windows PC</span>
+            </button>
 
-        <button @click="selectedPlatform = 'macOS'" 
-                :class="selectedPlatform === 'macOS' ? 'bg-[#CE2D2D] text-white border-[#CE2D2D] font-bold shadow-sm' : 'bg-white text-gray-700 hover:text-black border-[#DDD6CB] hover:bg-[#FAF7F2]'"
-                class="px-4 py-2 rounded-xl border whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 shrink-0">
-            <i data-lucide="laptop" class="w-3.5 h-3.5"></i>
-            <span>macOS Apple Silicon / Intel</span>
-        </button>
+            <button @click="selectedPlatform = 'Android'" 
+                    :class="selectedPlatform === 'Android' ? 'bg-[#CE2D2D] text-white border-[#CE2D2D] font-bold shadow-sm' : 'bg-white text-gray-700 hover:text-black border-[#DDD6CB] hover:bg-[#FAF7F2]'"
+                    class="px-4 py-2 rounded-xl border whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 shrink-0">
+                <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
+                <span>Android</span>
+            </button>
 
-        <button @click="selectedPlatform = 'Linux'" 
-                :class="selectedPlatform === 'Linux' ? 'bg-[#CE2D2D] text-white border-[#CE2D2D] font-bold shadow-sm' : 'bg-white text-gray-700 hover:text-black border-[#DDD6CB] hover:bg-[#FAF7F2]'"
-                class="px-4 py-2 rounded-xl border whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 shrink-0">
-            <i data-lucide="terminal" class="w-3.5 h-3.5"></i>
-            <span>Linux & Steam Deck</span>
-        </button>
+            <button @click="selectedPlatform = 'macOS'" 
+                    :class="selectedPlatform === 'macOS' ? 'bg-[#CE2D2D] text-white border-[#CE2D2D] font-bold shadow-sm' : 'bg-white text-gray-700 hover:text-black border-[#DDD6CB] hover:bg-[#FAF7F2]'"
+                    class="px-4 py-2 rounded-xl border whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 shrink-0">
+                <i data-lucide="laptop" class="w-3.5 h-3.5"></i>
+                <span>macOS Apple Silicon / Intel</span>
+            </button>
+
+            <button @click="selectedPlatform = 'Linux'" 
+                    :class="selectedPlatform === 'Linux' ? 'bg-[#CE2D2D] text-white border-[#CE2D2D] font-bold shadow-sm' : 'bg-white text-gray-700 hover:text-black border-[#DDD6CB] hover:bg-[#FAF7F2]'"
+                    class="px-4 py-2 rounded-xl border whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 shrink-0">
+                <i data-lucide="terminal" class="w-3.5 h-3.5"></i>
+                <span>Linux & Steam Deck</span>
+            </button>
+        </div>
     </div>
 
     <!-- Emulators Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         @foreach($emulators as $emu)
-            <div x-show="selectedPlatform === 'all' || {{ json_encode($emu->platforms ?? []) }}.includes(selectedPlatform)"
+            <div x-show="(selectedPlatform === 'all' || {{ json_encode($emu->platforms ?? []) }}.includes(selectedPlatform)) && (!search || '{{ strtolower(addslashes($emu->name . ' ' . $emu->system . ' ' . $emu->description)) }}'.includes(search.toLowerCase().trim()))"
                  class="bg-white border-2 border-[#1E1E1E] rounded-2xl p-5 flex flex-col justify-between space-y-4 hover:shadow-md transition-all group">
                 
                 <div class="space-y-3.5">
