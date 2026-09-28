@@ -107,7 +107,7 @@
                     <img src="{{ $game->cover_thumb_url ?: $game->cover_url }}" 
                          alt="{{ $game->title }}" 
                          loading="lazy"
-                         onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80';"
+                         onerror="this.onerror=null; this.src='{{ asset('images/placeholder-cover.svg') }}';"
                          class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300">
                 </a>
                 

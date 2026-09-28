@@ -29,6 +29,7 @@ class RomCatalogBrowserService
             'game-boy-advance' => 'gba-roms',
             'nintendo-ds' => 'nds-roms',
             'super-nintendo' => 'snes-rom',
+            'nintendo-64' => 'n64-roms',
         ],
     ];
 
@@ -111,6 +112,11 @@ class RomCatalogBrowserService
                 }
                 if ($coverUrl && str_starts_with($coverUrl, '//')) {
                     $coverUrl = 'https:' . $coverUrl;
+                }
+
+                // Descartar si es el logo del sitio o banner
+                if (preg_match('/(?:cdr-logo|logo|banner|header|phoenix|avatar|favicon)/i', $coverUrl)) {
+                    $coverUrl = '';
                 }
 
                 // Etiqueta de Consola visible
@@ -230,11 +236,13 @@ class RomCatalogBrowserService
                     'gamecube' => 'gamecube',
                     default => $consoleSlug,
                 };
-                $coverThumb = "https://static.romspedia.com/webp/roms/thumbs/{$gameSlug}-{$consoleThumbSlug}-thumb-250x140.webp";
+                $coverThumb = "https://static.romspedia.com/webp/roms/{$gameSlug}-cover.webp";
                 $pos = strpos($html, $relativeUrl);
                 if ($pos !== false) {
-                    $snippet = substr($html, $pos, 800);
-                    if (preg_match('/(?:data-src|data-lazy-src|srcset|src)=["\']([^"\']+\.(?:webp|jpg|jpeg|png)[^"\']*)["\']/i', $snippet, $imgMatch)) {
+                    $snippet = substr($html, $pos, 1000);
+                    // Priorizar la carátula activa real (ignora miniaturas comentadas)
+                    if (preg_match('/(?:data-srcset|srcset|data-src|src)=["\']([^"\']*static\.romspedia\.com\/webp\/roms\/[^"\']*cover[^"\']*\.(?:webp|jpg|jpeg|png)[^"\']*)["\']/i', $snippet, $imgMatch) ||
+                        preg_match('/(?:data-src|data-lazy-src|srcset|src)=["\']([^"\']+\.(?:webp|jpg|jpeg|png)[^"\']*)["\']/i', $snippet, $imgMatch)) {
                         $foundImg = trim($imgMatch[1]);
                         if (str_contains($foundImg, ' ')) {
                             $parts = explode(' ', $foundImg);
@@ -245,7 +253,9 @@ class RomCatalogBrowserService
                         } elseif (!str_starts_with($foundImg, 'http')) {
                             $foundImg = 'https://www.romspedia.com' . (str_starts_with($foundImg, '/') ? '' : '/') . $foundImg;
                         }
-                        $coverThumb = $foundImg;
+                        if (!preg_match('/(?:logo|banner|avatar|favicon)/i', $foundImg)) {
+                            $coverThumb = $foundImg;
+                        }
                     }
                 }
 

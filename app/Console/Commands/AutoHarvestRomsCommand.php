@@ -166,6 +166,12 @@ class AutoHarvestRomsCommand extends Command
 
                             // Optimización de carátula a WebP local con bypass anti-bloqueo
                             $coverUrl = $scrape['cover_url'] ?? ($candidate['cover_thumb'] ?? null);
+                            if (!empty($coverUrl) && preg_match('/(?:cdr-logo|logo|banner|header|phoenix|avatar|favicon)/i', $coverUrl)) {
+                                $coverUrl = null;
+                            }
+                            if (empty($coverUrl)) {
+                                $coverUrl = $scraperService->searchRomspediaCover($title, $localConsole->slug ?? '');
+                            }
                             $thumbUrl = null;
 
                             if (!empty($coverUrl)) {

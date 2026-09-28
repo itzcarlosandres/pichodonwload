@@ -67,15 +67,15 @@ class RomScraperService
             $title = preg_replace('/\s+ROM Download.*$/i', '', $title);
         }
 
-        // Portada ultra-robusta (og:image, twitter:image, data-src, srcset, src)
+        // Portada ultra-robusta (contenedor img, static.romspedia, og:image)
         $coverUrl = '';
-        if (preg_match('/<meta\s+property=["\']og:image["\']\s+content=["\']([^"\']+)["\']/i', $html, $m)) {
-            $coverUrl = trim($m[1]);
-        } elseif (preg_match('/<meta\s+name=["\']twitter:image["\']\s+content=["\']([^"\']+)["\']/i', $html, $m)) {
-            $coverUrl = trim($m[1]);
-        } elseif (preg_match('/<div[^>]*class=["\'][^"\']*(?:emulator-detail-img|view-emulator-detail-img|game-img|roms-img)[^"\']*["\'][^>]*>.*?<img[^>]+(?:data-src|srcset|src)=["\']([^"\']+)["\']/is', $html, $m)) {
+        if (preg_match('/<div[^>]*class=["\'][^"\']*(?:emulator-detail-img|view-emulator-detail-img|game-img|roms-img)[^"\']*["\'][^>]*>.*?<img[^>]+(?:data-src|srcset|src)=["\']([^"\']+)["\']/is', $html, $m)) {
             $coverUrl = trim($m[1]);
         } elseif (preg_match('/<img[^>]+(?:data-src|src)=["\']([^"\']*(?:\/roms\/|static\.romspedia\.com)[^"\']+\.(?:webp|png|jpg|jpeg))["\']/i', $html, $m)) {
+            $coverUrl = trim($m[1]);
+        } elseif (preg_match('/<meta\s+property=["\']og:image["\']\s+content=["\']([^"\']+)["\']/i', $html, $m)) {
+            $coverUrl = trim($m[1]);
+        } elseif (preg_match('/<meta\s+name=["\']twitter:image["\']\s+content=["\']([^"\']+)["\']/i', $html, $m)) {
             $coverUrl = trim($m[1]);
         }
 
@@ -83,6 +83,10 @@ class RomScraperService
         if ($coverUrl && str_contains($coverUrl, ' ')) {
             $parts = explode(' ', trim($coverUrl));
             $coverUrl = $parts[0];
+        }
+
+        if ($this->isSiteLogoOrInvalid($coverUrl)) {
+            $coverUrl = '';
         }
 
         if ($coverUrl) {
@@ -263,20 +267,68 @@ class RomScraperService
         // Limpiar sufijos típicos de CDRomance (ej. "PSP ISO", "PS2 ISO", "PSX ISO")
         $title = preg_replace('/\s+(?:PSP|PS2|PSX|GameCube|SNES|GBA|NDS)\s+(?:ISO|ROM|Game|Download).*$/i', '', $title);
 
-        // Portada ultra-robusta (og:image, twitter:image, data-src, featured-image, Box art)
+        // Portada ultra-robusta evitando logos de CDRomance (cdr-logo-phoenix, cdr-logo-900x272, etc.)
         $coverUrl = '';
-        if (preg_match('/<meta\s+property=["\']og:image["\']\s+content=["\']([^"\']+)["\']/i', $html, $m)) {
-            $coverUrl = trim($m[1]);
-        } elseif (preg_match('/<meta\s+name=["\']twitter:image["\']\s+content=["\']([^"\']+)["\']/i', $html, $m)) {
-            $coverUrl = trim($m[1]);
-        } elseif (preg_match('/<div[^>]*class=["\'][^"\']*(?:featured-image|entry-featured|game-cover)[^"\']*["\'][^>]*>.*?<img[^>]+(?:data-src|src)=["\']([^"\']+)["\']/is', $html, $m)) {
-            $coverUrl = trim($m[1]);
-        } elseif (preg_match('/<img[^>]+(?:data-src|src)=["\']([^"\']+(?:Box[0-9]*|covers?|uploads)[^"\']*\.(?:jpg|jpeg|png|webp))["\']/i', $html, $m)) {
-            $coverUrl = trim($m[1]);
+
+        // 1. JSON-LD Yoast Schema primary image (la imagen auténtica de la carátula)
+        if (preg_match('/"(?:url|contentUrl)":"([^"]+)".*?"#primaryimage"/is', $html, $m) || preg_match('/"@id":"[^"]*#primaryimage".*?"(?:url|contentUrl)":"([^"]+)"/is', $html, $m)) {
+            $candidate = stripslashes(trim($m[1]));
+            if (!$this->isSiteLogoOrInvalid($candidate)) {
+                $coverUrl = $candidate;
+            }
+        }
+
+        // 2. Contenedor .post-thumbnail o clase wp-post-image
+        if (!$coverUrl && preg_match('/<div[^>]*class=["\'][^"\']*post-thumbnail[^"\']*["\'][^>]*>.*?<img[^>]+(?:data-src|src)=["\']([^"\']+)["\']/is', $html, $m)) {
+            $candidate = trim($m[1]);
+            if (!$this->isSiteLogoOrInvalid($candidate)) {
+                $coverUrl = $candidate;
+            }
+        }
+        if (!$coverUrl && preg_match('/<img[^>]+class=["\'][^"\']*wp-post-image[^"\']*["\'][^>]+(?:data-src|src)=["\']([^"\']+)["\']/is', $html, $m)) {
+            $candidate = trim($m[1]);
+            if (!$this->isSiteLogoOrInvalid($candidate)) {
+                $coverUrl = $candidate;
+            }
+        }
+
+        // 3. Contenedores de carátula destacados
+        if (!$coverUrl && preg_match('/<div[^>]*class=["\'][^"\']*(?:featured-image|entry-featured|game-cover)[^"\']*["\'][^>]*>.*?<img[^>]+(?:data-src|src)=["\']([^"\']+)["\']/is', $html, $m)) {
+            $candidate = trim($m[1]);
+            if (!$this->isSiteLogoOrInvalid($candidate)) {
+                $coverUrl = $candidate;
+            }
+        }
+
+        // 4. Imagen en el artículo que mencione box, cover o front
+        if (!$coverUrl && preg_match('/<img[^>]+(?:data-src|src)=["\']([^"\']*(?:box[0-9_-]*|covers?|front)[^"\']*\.(?:jpg|jpeg|png|webp))["\']/i', $html, $m)) {
+            $candidate = trim($m[1]);
+            if (!$this->isSiteLogoOrInvalid($candidate)) {
+                $coverUrl = $candidate;
+            }
+        }
+
+        // 5. OpenGraph o Twitter card siempre que NO sea logo del sitio
+        if (!$coverUrl && preg_match('/<meta\s+property=["\']og:image["\']\s+content=["\']([^"\']+)["\']/i', $html, $m)) {
+            $candidate = trim($m[1]);
+            if (!$this->isSiteLogoOrInvalid($candidate)) {
+                $coverUrl = $candidate;
+            }
+        }
+        if (!$coverUrl && preg_match('/<meta\s+name=["\']twitter:image["\']\s+content=["\']([^"\']+)["\']/i', $html, $m)) {
+            $candidate = trim($m[1]);
+            if (!$this->isSiteLogoOrInvalid($candidate)) {
+                $coverUrl = $candidate;
+            }
         }
 
         if ($coverUrl && str_starts_with($coverUrl, '//')) {
             $coverUrl = 'https:' . $coverUrl;
+        }
+
+        // 6. Si CDRomance no tiene carátula propia (o solo tenía el logo), buscar carátula oficial en Romspedia
+        if (!$coverUrl) {
+            $coverUrl = $this->searchRomspediaCover($title, $platformSlug ?? '');
         }
 
         // Parsear tabla estructurada "GAME INFORMATION" de CDRomance
@@ -649,5 +701,51 @@ class RomScraperService
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
         $i = floor(log($bytes, 1024));
         return round($bytes / pow(1024, $i), 2) . ' ' . $units[$i];
+    }
+
+    /**
+     * Comprueba si una URL es un logo del sitio, banner, avatar o placeholder inválido
+     */
+    public function isSiteLogoOrInvalid(?string $url): bool
+    {
+        if (empty($url)) {
+            return true;
+        }
+
+        if (preg_match('/(?:cdr-logo|logo|banner|header|phoenix|avatar|favicon|icon|spinner|thumb(?:nail)?-unavailable)/i', $url)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Busca una carátula oficial HD 3D en Romspedia basada en título y plataforma
+     */
+    public function searchRomspediaCover(string $title, string $platformSlug = ''): ?string
+    {
+        $cleanSearch = trim(preg_replace('/\s+(?:ROM|ISO|Download|Game).*$/i', '', $title));
+        $url = 'https://www.romspedia.com/search?keyword=' . urlencode($cleanSearch);
+
+        $res = $this->safety->safeFetch($url, 'romspedia', [], true, 3600);
+        if (!$res['success'] || empty($res['html'])) {
+            return null;
+        }
+
+        $html = $res['html'];
+
+        if (preg_match_all('/(?:data-srcset|srcset|data-src|src)=["\']([^"\']*static\.romspedia\.com\/webp\/roms\/[^"\']*cover[^"\']*\.(?:webp|jpg|jpeg|png))["\']/i', $html, $matches)) {
+            foreach ($matches[1] as $candidate) {
+                if (str_contains($candidate, ' ')) {
+                    $parts = explode(' ', trim($candidate));
+                    $candidate = $parts[0];
+                }
+                if (!$this->isSiteLogoOrInvalid($candidate)) {
+                    return $candidate;
+                }
+            }
+        }
+
+        return null;
     }
 }
