@@ -30,8 +30,10 @@ class PublishDripGamesCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle(AiContentService $aiService): int
-    {
+    public function handle(
+        AiContentService $aiService,
+        \App\Services\CategorySyncService $categoryService
+    ): int {
         $autopilot = config('roms.autopilot_enabled', true);
         if (!$autopilot && !$this->option('force')) {
             $this->warn('⏸️ El piloto automático está pausado en config/roms.php (ROMS_AUTOPILOT_ENABLED=false). Usa --force para forzar la ejecución manual.');
@@ -133,6 +135,14 @@ class PublishDripGamesCommand extends Command
             if ($dryRun) {
                 $this->comment("   [DRY-RUN] Se habría publicado: {$game->title} (ID #{$game->id})");
             } else {
+                // Garantizar que el juego tenga al menos una categoría asignada
+                if ($game->categories()->count() === 0) {
+                    $assignedCats = $categoryService->syncGame($game);
+                    if (!empty($assignedCats)) {
+                        $this->line("   🏷️ <fg=cyan>[CATEGORÍAS AUTO-ASIGNADAS]</> " . implode(', ', $assignedCats));
+                    }
+                }
+
                 $game->status = 'PUBLISHED';
                 $game->updated_at = now();
                 $game->save();

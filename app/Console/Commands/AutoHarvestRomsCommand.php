@@ -61,7 +61,8 @@ class AutoHarvestRomsCommand extends Command
         RomScraperService $scraperService,
         ImageOptimizationService $imageService,
         AiContentService $aiService,
-        \App\Services\FranchiseSyncService $franchiseService
+        \App\Services\FranchiseSyncService $franchiseService,
+        \App\Services\CategorySyncService $categoryService
     ): int {
         $providerInput = strtolower($this->option('provider') ?: 'all');
         $consoleSlug = $this->option('console') ?: 'all';
@@ -269,8 +270,9 @@ class AutoHarvestRomsCommand extends Command
                             ]);
 
                             // Vincular categorías y géneros detectados/creados automáticamente
-                            if (!empty($scrape['category_ids']) && is_array($scrape['category_ids'])) {
-                                $game->categories()->sync($scrape['category_ids']);
+                            $assignedCats = $categoryService->syncGame($game, false, $scrape['category_ids'] ?? []);
+                            if (!empty($assignedCats)) {
+                                $this->line("      🏷️ <fg=cyan>[CATEGORÍAS AUTO-ASIGNADAS]</> " . implode(', ', $assignedCats));
                             }
 
                             // Vincular automáticamente a Sagas / Franquicias correspondientes
