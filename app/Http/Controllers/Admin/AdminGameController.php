@@ -221,6 +221,8 @@ class AdminGameController extends Controller
 
         if ($request->filled('franchise_ids')) {
             $game->franchises()->sync($request->input('franchise_ids'));
+        } else {
+            app(\App\Services\FranchiseSyncService::class)->syncGame($game);
         }
 
         return redirect()->route('admin.games.index')->with('success', "El videojuego '{$game->title}' se ha creado y publicado exitosamente.");

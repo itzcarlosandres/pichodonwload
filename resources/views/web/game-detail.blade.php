@@ -197,6 +197,16 @@ function gameDetailComponent() {
                             <span>{{ $badge->name }}</span>
                         </span>
                     @endforeach
+
+                    @foreach($game->franchises as $franchise)
+                        <a href="{{ route('collections.show', $franchise->slug) }}" 
+                           class="px-3 py-1 rounded-full text-xs font-mono font-bold shadow-sm hover:scale-105 transition-all flex items-center gap-1.5"
+                           style="background-color: {{ $franchise->color ? $franchise->color . '18' : '#CE2D2D18' }}; color: {{ $franchise->color ?: '#CE2D2D' }}; border: 1px solid {{ $franchise->color ? $franchise->color . '40' : '#CE2D2D40' }}"
+                           title="Ver todos los juegos de la saga {{ $franchise->name }}">
+                            <i data-lucide="{{ $franchise->icon ?: 'sparkles' }}" class="w-3.5 h-3.5"></i>
+                            <span>Saga {{ $franchise->name }}</span>
+                        </a>
+                    @endforeach
                 </div>
 
                 <!-- Main Game Title -->

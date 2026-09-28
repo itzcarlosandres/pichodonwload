@@ -111,4 +111,13 @@ class AdminFranchiseController extends Controller
 
         return redirect()->route('admin.franchises.index')->with('success', "La saga '{$franchise->name}' ahora está {$statusText}.");
     }
+
+    public function syncAll(\App\Services\FranchiseSyncService $syncService): RedirectResponse
+    {
+        $res = $syncService->syncAllFranchises();
+        $count = $res['links_created'];
+
+        return redirect()->route('admin.franchises.index')
+            ->with('success', "¡Sincronización completada con éxito! Se escanearon {$res['total_games_scanned']} juegos y se vincularon {$count} nuevos títulos a sus respectivas sagas.");
+    }
 }

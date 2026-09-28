@@ -80,9 +80,9 @@
                     </div>
 
                     <div class="pt-3 border-t border-[#E5E0D8] flex items-center justify-between text-xs font-mono">
-                        <span class="text-gray-500 font-medium flex items-center gap-1">
+                        <span class="text-gray-500 font-medium flex items-center gap-1.5">
                             <i data-lucide="sparkles" class="w-3.5 h-3.5 text-[#CE2D2D]"></i>
-                            Multi-Consola
+                            <span>{{ $fr->games_count > 0 ? $fr->games_count . ' ' . Str::plural('juego', $fr->games_count) : 'Multi-Consola' }}</span>
                         </span>
                         <span class="text-[#CE2D2D] font-bold group-hover:underline flex items-center gap-1">
                             <span>Explorar títulos</span>

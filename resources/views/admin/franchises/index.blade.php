@@ -13,7 +13,13 @@
             </h1>
             <p class="text-xs text-gray-400 font-mono mt-0.5">Crea colecciones, autocompleta datos con Gemini IA y gestiona la visibilidad pública</p>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
+            <form action="{{ route('admin.franchises.syncAll') }}" method="POST" onsubmit="return confirm('¿Deseas escanear todo el catálogo y vincular automáticamente los juegos a sus respectivas sagas según sus palabras clave?');">
+                @csrf
+                <button type="submit" class="px-3.5 py-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-400 font-bold text-xs uppercase tracking-wide flex items-center gap-2 transition-all">
+                    <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i> Auto-Sincronizar Catálogo
+                </button>
+            </form>
             <a href="{{ route('collections.index') }}" target="_blank" class="px-3 py-2 rounded-xl bg-[#11141A] hover:bg-[#171B22] border border-[#232936] text-gray-300 text-xs font-semibold flex items-center gap-1.5 transition-colors">
                 <i data-lucide="external-link" class="w-4 h-4 text-gray-400"></i> Ver en Web Pública
             </a>
@@ -82,9 +88,14 @@
 
                 <!-- Footer Actions -->
                 <div class="pt-3 border-t border-[#232936] flex items-center justify-between font-mono text-xs">
-                    <a href="{{ route('collections.show', $fr->slug) }}" target="_blank" class="text-amber-400 hover:underline flex items-center gap-1">
-                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Ver en Web Pública
-                    </a>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-mono font-bold">
+                            {{ $fr->games_count }} {{ Str::plural('juego', $fr->games_count) }}
+                        </span>
+                        <a href="{{ route('collections.show', $fr->slug) }}" target="_blank" class="text-amber-400 hover:underline flex items-center gap-1 text-[11px]">
+                            <i data-lucide="external-link" class="w-3 h-3"></i> Web
+                        </a>
+                    </div>
 
                     <div class="flex items-center gap-1.5">
                         @php

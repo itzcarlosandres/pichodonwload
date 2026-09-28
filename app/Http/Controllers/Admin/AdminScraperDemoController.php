@@ -372,6 +372,9 @@ class AdminScraperDemoController extends Controller
             $game->categories()->sync($scrape['category_ids']);
         }
 
+        // Auto-vincular a Sagas / Franquicias correspondientes
+        app(\App\Services\FranchiseSyncService::class)->syncGame($game);
+
         if (!empty($scrape['screenshots']) && is_array($scrape['screenshots'])) {
             $order = 1;
             foreach (array_slice($scrape['screenshots'], 0, 8) as $sUrl) {
