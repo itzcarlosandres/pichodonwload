@@ -45,10 +45,17 @@
         </button>
 
         <!-- Tab 4: Cloudflare R2 / S3 -->
-        <button @click="activeTab = 'storage'" 
+        <button type="button" @click="activeTab = 'storage'" 
                 :class="activeTab === 'storage' ? 'border-blue-500 text-blue-400 bg-[#11141A]' : 'border-transparent text-gray-400 hover:text-white'"
-                class="px-5 py-3 border-b-2 font-bold uppercase tracking-wider transition-colors rounded-t-xl flex items-center gap-2">
+                class="px-5 py-3 border-b-2 font-bold uppercase tracking-wider transition-colors rounded-t-xl flex items-center gap-2 cursor-pointer">
             <i data-lucide="cloud" class="w-4 h-4"></i> Cloudflare R2 / S3
+        </button>
+
+        <!-- Tab 5: Scripts & Analytics -->
+        <button type="button" @click="activeTab = 'custom_code'" 
+                :class="activeTab === 'custom_code' ? 'border-emerald-500 text-emerald-400 bg-[#11141A]' : 'border-transparent text-gray-400 hover:text-white'"
+                class="px-5 py-3 border-b-2 font-bold uppercase tracking-wider transition-colors rounded-t-xl flex items-center gap-2 cursor-pointer">
+            <i data-lucide="code-2" class="w-4 h-4 text-emerald-400"></i> Scripts & Analytics
         </button>
     </div>
 
@@ -728,6 +735,99 @@
                     <input type="text" name="r2_public_url" value="{{ $settings['r2_public_url'] ?? '' }}" placeholder="https://pub-vault.romhub.io" class="w-full bg-[#0A0C0F] border border-[#232936] rounded-lg p-2.5 text-white">
                 </div>
             </div>
+        </div>
+
+        <!-- TAB 5: Scripts, Analytics & Custom Code Injection -->
+        <div x-show="activeTab === 'custom_code'" class="space-y-6">
+
+            <!-- Banner Informativo -->
+            <div class="bg-gradient-to-r from-emerald-950/40 via-[#11141A] to-[#11141A] border border-emerald-500/30 rounded-2xl p-5 shadow-xl flex items-start gap-4">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                    <i data-lucide="code-2" class="w-5 h-5 text-emerald-400"></i>
+                </div>
+                <div class="space-y-1">
+                    <h2 class="text-sm font-bold text-white font-sans flex items-center gap-2">
+                        Inyección de Código Personalizado & Analítica Web
+                        <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Google Analytics / Pixel / Ads</span>
+                    </h2>
+                    <p class="text-xs text-gray-400 leading-relaxed">
+                        Inserta tus etiquetas de seguimiento de forma segura sin tener que tocar archivos PHP. El código se inyecta directamente en las páginas públicas respetando el estándar técnico de Google, Meta y redes de publicidad.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Field 1: Head Code -->
+            <div class="bg-[#11141A] border border-[#232936] rounded-2xl p-6 shadow-xl space-y-4">
+                <div class="flex items-center justify-between border-b border-[#232936] pb-3">
+                    <div>
+                        <h3 class="text-xs font-mono font-bold uppercase text-white tracking-wider flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px]">&lt;head&gt;</span>
+                            Código en la Cabecera (&lt;head&gt;)
+                        </h3>
+                        <p class="text-[11px] text-gray-400 font-mono mt-0.5">Se inserta justo antes de <code>&lt;/head&gt;</code>. Ideal para Google Analytics (gtag.js), Google Tag Manager, Meta Pixel, verificación de Google AdSense o scripts de tracking principales.</p>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-mono text-gray-300 font-bold mb-1.5 flex items-center justify-between">
+                        <span>Fragmento HTML / JavaScript para &lt;head&gt;:</span>
+                        <span class="text-[10px] font-mono text-gray-500">Ejemplo: &lt;script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXX"&gt;&lt;/script&gt;</span>
+                    </label>
+                    <textarea name="custom_head_code" 
+                              rows="8" 
+                              placeholder="<!-- Google tag (gtag.js) -->&#10;<script async src=&quot;https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX&quot;></script>&#10;<script>&#10;  window.dataLayer = window.dataLayer || [];&#10;  function gtag(){dataLayer.push(arguments);}&#10;  gtag('js', new Date());&#10;  gtag('config', 'G-XXXXXXXXXX');&#10;</script>" 
+                              class="w-full bg-[#0A0C0F] border border-[#232936] rounded-xl p-3.5 text-xs text-emerald-400 font-mono focus:outline-none focus:border-emerald-500 leading-relaxed selection:bg-emerald-900 selection:text-white">{{ $settings['custom_head_code'] ?? '' }}</textarea>
+                </div>
+            </div>
+
+            <!-- Field 2: Body Open Code -->
+            <div class="bg-[#11141A] border border-[#232936] rounded-2xl p-6 shadow-xl space-y-4">
+                <div class="flex items-center justify-between border-b border-[#232936] pb-3">
+                    <div>
+                        <h3 class="text-xs font-mono font-bold uppercase text-white tracking-wider flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[10px]">&lt;body&gt;</span>
+                            Código de Apertura (&lt;body&gt;)
+                        </h3>
+                        <p class="text-[11px] text-gray-400 font-mono mt-0.5">Se inserta inmediatamente después de la apertura de la etiqueta <code>&lt;body&gt;</code>. Utilizado habitualmente por el fragmento <code>&lt;noscript&gt;</code> de Google Tag Manager.</p>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-mono text-gray-300 font-bold mb-1.5 flex items-center justify-between">
+                        <span>Fragmento HTML / Noscript para inicio de &lt;body&gt;:</span>
+                        <span class="text-[10px] font-mono text-gray-500">Ejemplo: &lt;noscript&gt;&lt;iframe src="https://www.googletagmanager.com/ns.html?id=GTM-XXXX" ...&gt;</span>
+                    </label>
+                    <textarea name="custom_body_open_code" 
+                              rows="5" 
+                              placeholder="<!-- Google Tag Manager (noscript) -->&#10;<noscript><iframe src=&quot;https://www.googletagmanager.com/ns.html?id=GTM-XXXXXXX&quot;&#10;height=&quot;0&quot; width=&quot;0&quot; style=&quot;display:none;visibility:hidden&quot;></iframe></noscript>" 
+                              class="w-full bg-[#0A0C0F] border border-[#232936] rounded-xl p-3.5 text-xs text-purple-400 font-mono focus:outline-none focus:border-purple-500 leading-relaxed selection:bg-purple-900 selection:text-white">{{ $settings['custom_body_open_code'] ?? '' }}</textarea>
+                </div>
+            </div>
+
+            <!-- Field 3: Footer Code -->
+            <div class="bg-[#11141A] border border-[#232936] rounded-2xl p-6 shadow-xl space-y-4">
+                <div class="flex items-center justify-between border-b border-[#232936] pb-3">
+                    <div>
+                        <h3 class="text-xs font-mono font-bold uppercase text-white tracking-wider flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px]">&lt;/body&gt;</span>
+                            Código de Pie de Página (Antes de &lt;/body&gt;)
+                        </h3>
+                        <p class="text-[11px] text-gray-400 font-mono mt-0.5">Se inserta justo antes de cerrar <code>&lt;/body&gt;</code>. Ideal para widgets de soporte (Crisp, Tawk.to, WhatsApp), scripts de anuncios diferidos, popunders o JavaScript de analítica secundaria.</p>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-mono text-gray-300 font-bold mb-1.5 flex items-center justify-between">
+                        <span>Fragmento HTML / JavaScript para pie de página:</span>
+                        <span class="text-[10px] font-mono text-gray-500">Ejemplo: Scripts de Chat, Anuncios o Analytics diferido</span>
+                    </label>
+                    <textarea name="custom_footer_code" 
+                              rows="6" 
+                              placeholder="<!-- Widget de Chat o Scripts diferidos -->&#10;<script>&#10;  // Tu script personalizado&#10;</script>" 
+                              class="w-full bg-[#0A0C0F] border border-[#232936] rounded-xl p-3.5 text-xs text-amber-400 font-mono focus:outline-none focus:border-amber-500 leading-relaxed selection:bg-amber-900 selection:text-white">{{ $settings['custom_footer_code'] ?? '' }}</textarea>
+                </div>
+            </div>
+
         </div>
 
         <!-- Save Button -->

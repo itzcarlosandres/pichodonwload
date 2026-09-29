@@ -427,8 +427,12 @@
         html.dark nav.nav-capsule button.nav-item-active i,
         html.dark nav.nav-capsule button.nav-item-active svg {
             color: #EF4444 !important;
-        }
     </style>
+
+    {{-- Inyección de Código Personalizado en <head> (Google Analytics, GTM, Meta Pixel, AdSense, etc.) --}}
+    @if(!empty(\App\Models\Setting::get('custom_head_code')))
+    {!! \App\Models\Setting::get('custom_head_code') !!}
+    @endif
 </head>
 @php
     $containerWidth = \App\Models\Setting::get('container_max_width', 'max-w-[1200px]');
@@ -464,6 +468,11 @@
               }
           }
       }">
+
+    {{-- Inyección de Código Personalizado al inicio de <body> (Google Tag Manager noscript, etc.) --}}
+    @if(!empty(\App\Models\Setting::get('custom_body_open_code')))
+    {!! \App\Models\Setting::get('custom_body_open_code') !!}
+    @endif
 
     <!-- Top Retro Multi-Color Spectrum Line -->
     <div class="h-[3px] w-full flex overflow-hidden shadow-sm">
@@ -876,5 +885,10 @@
             });
         }
     </script>
+
+    {{-- Inyección de Código Personalizado en Footer antes de </body> (Scripts diferidos, Chat, Ads) --}}
+    @if(!empty(\App\Models\Setting::get('custom_footer_code')))
+    {!! \App\Models\Setting::get('custom_footer_code') !!}
+    @endif
 </body>
 </html>

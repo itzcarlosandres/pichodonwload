@@ -58,6 +58,8 @@ class AdminSettingController extends Controller
                 $group = 'seo';
             } elseif (str_starts_with($key, 'ai_')) {
                 $group = 'ai';
+            } elseif (str_starts_with($key, 'custom_')) {
+                $group = 'custom_code';
             }
 
             Setting::set($key, $value ?? '', $group);
