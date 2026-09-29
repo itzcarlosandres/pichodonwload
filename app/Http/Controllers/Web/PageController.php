@@ -4,14 +4,19 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
-use App\Models\Setting;
 use App\Models\Bios;
+use App\Models\Console;
 use App\Models\Emulator;
 use App\Models\Franchise;
 use App\Models\Game;
-use App\Models\Console;
+use App\Models\Setting;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+
+use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+
 
 class PageController extends Controller
 {
@@ -61,6 +66,63 @@ class PageController extends Controller
 
         return view('web.bios', compact('biosList'));
     }
+
+    /**
+     * Módulo 3: Descarga Segura y Oculta de BIOS desde la Bóveda Privada
+     * Oculta completamente el dominio y bucket de Cloudflare R2 ante el navegador
+     */
+    public function downloadBios(Request $request, int $id): StreamedResponse|RedirectResponse
+    {
+        $bios = Bios::where('is_active', true)->findOrFail($id);
+
+        // Medida de seguridad 1: Anti-Hotlinking
+        // Evita que otros sitios web roben ancho de banda incrustando los enlaces de descarga
+        $referer = $request->header('referer');
+        $appUrl = config('app.url');
+        if (!empty($referer) && !empty($appUrl)) {
+            $refererHost = parse_url($referer, PHP_URL_HOST);
+            $appHost = parse_url($appUrl, PHP_URL_HOST);
+
+            if ($refererHost && $appHost && 
+                !str_contains(strtolower($refererHost), strtolower($appHost)) && 
+                !str_contains($refererHost, 'localhost') && 
+                !str_contains($refererHost, '127.0.0.1')) {
+                abort(403, 'Descarga permitida exclusivamente desde la plataforma oficial.');
+            }
+        }
+
+        $rawUrl = $bios->download_url;
+        if (empty($rawUrl)) {
+            abort(404, 'Archivo no disponible temporalmente en la bóveda.');
+        }
+
+        // Extraer la ruta/key interna en el almacenamiento (ej. vault/bios/playstation-2-all-regions.7z)
+        $parsedPath = parse_url($rawUrl, PHP_URL_PATH);
+        $key = ltrim($parsedPath, '/');
+
+        // Nombre de archivo limpio y profesional para el usuario final
+        $ext = pathinfo($key, PATHINFO_EXTENSION) ?: 'zip';
+        $safeFileName = Str::slug($bios->system) . '.' . $ext;
+
+        // Medida de seguridad 2: Streaming Proxy sin exponer la URL pública de R2
+        if (Storage::disk('s3')->exists($key)) {
+            return Storage::disk('s3')->response(
+                $key,
+                $safeFileName,
+                [
+                    'Content-Type' => 'application/octet-stream',
+                    'Content-Disposition' => 'attachment; filename="' . $safeFileName . '"',
+                    'X-Content-Type-Options' => 'nosniff',
+                    'Cache-Control' => 'no-store, no-cache, must-revalidate',
+                    'Pragma' => 'no-cache',
+                ]
+            );
+        }
+
+        // Fallback seguro si no está en la raíz del bucket S3
+        return redirect()->away($rawUrl);
+    }
+
 
     /**
      * Módulo 3: Directorio de Emuladores Oficiales desde Base de Datos

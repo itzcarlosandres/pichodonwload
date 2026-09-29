@@ -39,7 +39,9 @@ Route::get('/consoles/{slug}', [ConsoleController::class, 'show'])->name('consol
 // Bios, Emuladores & Sagas / Colecciones
 Route::get('/bios', [PageController::class, 'bios'])->name('bios');
 Route::get('/bios/hub', [PageController::class, 'bios'])->name('bios.index');
+Route::get('/vault/download/bios/{id}/{slug?}', [PageController::class, 'downloadBios'])->middleware('throttle:30,1')->name('bios.download');
 Route::get('/emuladores', [PageController::class, 'emulators'])->name('emulators');
+
 Route::get('/emuladores/hub', [PageController::class, 'emulators'])->name('emulators.index');
 Route::get('/colecciones', [PageController::class, 'collections'])->name('collections.index');
 Route::get('/colecciones/{slug}', [PageController::class, 'collectionDetail'])->name('collections.show');

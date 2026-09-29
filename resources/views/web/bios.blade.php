@@ -421,16 +421,15 @@
                     </div>
                 </div>
 
-                <!-- Bottom CTA Download Button -->
+                <!-- Bottom CTA Download Button (URL Protegida & Streaming Seguro) -->
                 <div class="pt-2">
-                    <a href="{{ $bios->download_url }}" 
-                       target="_blank"
-                       rel="noopener noreferrer"
-                       class="w-full py-3 rounded-2xl bg-[#CE2D2D] hover:bg-[#B71C1C] text-white border-2 border-[#1E1E1E] font-black text-xs font-sans uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md shadow-red-500/20 active:scale-95 group-hover:border-black">
+                    <a href="{{ route('bios.download', ['id' => $bios->id, 'slug' => \Illuminate\Support\Str::slug($bios->system)]) }}" 
+                       class="w-full py-3 rounded-2xl bg-[#CE2D2D] hover:bg-[#B71C1C] text-white border-2 border-[#1E1E1E] font-black text-xs font-sans uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md shadow-red-500/20 active:scale-95 group-hover:border-black cursor-pointer">
                         <i data-lucide="download" class="w-4 h-4"></i>
                         <span>Descargar desde Servidor Vault CDN ({{ $bios->size }})</span>
                     </a>
                 </div>
+
 
             </div>
         @endforeach
