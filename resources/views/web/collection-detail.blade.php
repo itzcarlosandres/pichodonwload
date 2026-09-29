@@ -73,6 +73,22 @@
                             </span>
                         </div>
 
+                        <!-- Floating Special Badge on Top-Right -->
+                        @if($game->badges && $game->badges->isNotEmpty())
+                            @php $topBadge = $game->badges->first(); @endphp
+                            <div class="absolute top-2.5 right-2.5 z-10 max-w-[65%] pointer-events-none">
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] sm:text-[9.5px] font-mono font-bold shadow-md truncate backdrop-blur-md transition-transform group-hover:scale-105"
+                                      style="background-color: {{ $topBadge->bg_color ?: '#881337' }}; color: {{ $topBadge->text_color ?: '#fff0f2' }}; border: 1px solid {{ $topBadge->border_color ?: '#e11d48' }}">
+                                    @if($topBadge->icon)
+                                        <i data-lucide="{{ $topBadge->icon }}" class="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0"></i>
+                                    @else
+                                        <i data-lucide="award" class="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0"></i>
+                                    @endif
+                                    <span class="truncate">{{ $topBadge->name }}</span>
+                                </span>
+                            </div>
+                        @endif
+
                         <!-- Size Pill on Bottom-Left (Fades on hover) -->
                         <div class="absolute bottom-2.5 left-2.5 z-10 px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-md text-[10px] font-mono text-gray-200 border border-white/10 group-hover:opacity-0 transition-opacity duration-200 pointer-events-none">
                             {{ $game->formatted_size }}
@@ -97,10 +113,25 @@
                     </div>
 
                     <!-- Title in Instrument Sans -->
-                    <div class="px-0.5 pt-0.5 space-y-0.5">
+                    <div class="px-0.5 pt-0.5 space-y-1">
                         <h3 class="font-instrument text-[13px] sm:text-[14px] font-bold text-[#18181B] dark:text-white group-hover:text-[#CE2D2D] dark:group-hover:text-[#CE2D2D] transition-colors line-clamp-1 tracking-tight leading-snug">
                             <a href="{{ route('game.show', $game->slug) }}" class="card-title-line inline">{{ $game->title }}</a>
                         </h3>
+
+                        <!-- Badges Row under title -->
+                        @if($game->badges && $game->badges->isNotEmpty())
+                            <div class="flex items-center gap-1 flex-wrap pt-0.5">
+                                @foreach($game->badges->take(2) as $badge)
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8.5px] sm:text-[9px] font-mono font-bold shadow-xs truncate"
+                                          style="background-color: {{ $badge->bg_color ?: '#881337' }}; color: {{ $badge->text_color ?: '#fff0f2' }}; border: 1px solid {{ $badge->border_color ?: '#e11d48' }}">
+                                        @if($badge->icon)
+                                            <i data-lucide="{{ $badge->icon }}" class="w-2.5 h-2.5 shrink-0"></i>
+                                        @endif
+                                        <span class="truncate">{{ $badge->name }}</span>
+                                    </span>
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
 
                 </div>
