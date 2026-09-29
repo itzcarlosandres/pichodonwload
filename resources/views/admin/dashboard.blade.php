@@ -197,81 +197,313 @@
         </div>
     </div>
 
-    <!-- Top 5 Most Downloaded Games Ranking Section -->
-    <div class="bg-[#11141A] border border-[#232936] rounded-2xl p-5 space-y-4">
-        <div class="flex items-center justify-between border-b border-[#232936] pb-3">
+    <!-- Top Most Downloaded & Popular Games Ranking Section -->
+    <div class="bg-[#11141A] border border-[#232936] rounded-2xl p-5 space-y-4 shadow-xl"
+         x-data="{ rankingTab: 'downloads', limit: 5 }">
+        
+        <!-- Header with Interactive Filter Controls -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#232936] pb-3">
             <div>
-                <h3 class="text-sm font-bold text-white font-sans flex items-center gap-2">
-                    <i data-lucide="flame" class="w-4 h-4 text-amber-400"></i> Top 5 Títulos Más Populares & Descargados
-                </h3>
-                <p class="text-[11px] text-gray-400 font-mono mt-0.5">Ranking de mayor demanda en la red global</p>
+                <div class="flex items-center gap-2">
+                    <h3 class="text-sm font-bold text-white font-sans flex items-center gap-2">
+                        <i data-lucide="flame" class="w-4 h-4 text-amber-400"></i>
+                        <span>Top Títulos Más Populares & Descargados</span>
+                    </h3>
+                    <span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] font-mono flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> Ranking en Vivo
+                    </span>
+                </div>
+                <p class="text-[11px] text-gray-400 font-mono mt-0.5">Monitoreo de títulos con mayor demanda y tráfico en el catálogo</p>
             </div>
-            <a href="{{ route('admin.games.index') }}" class="text-xs text-blue-400 hover:text-blue-300 font-mono flex items-center gap-1">
-                Ver todos <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
-            </a>
+
+            <!-- Controls: Tabs (Descargas vs Vistas) & Limit Toggle -->
+            <div class="flex flex-wrap items-center gap-2 font-mono text-xs">
+                
+                <!-- Tab Selector -->
+                <div class="flex items-center p-1 bg-[#0A0C0F] border border-[#232936] rounded-xl">
+                    <button type="button" 
+                            @click="rankingTab = 'downloads'" 
+                            :class="rankingTab === 'downloads' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30' : 'text-gray-400 hover:text-white'"
+                            class="px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        <span>Más Descargados</span>
+                    </button>
+                    <button type="button" 
+                            @click="rankingTab = 'views'" 
+                            :class="rankingTab === 'views' ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30' : 'text-gray-400 hover:text-white'"
+                            class="px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
+                        <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                        <span>Más Visitados</span>
+                    </button>
+                </div>
+
+                <!-- Limit Toggle: Top 5 vs Top 10 -->
+                <button type="button" 
+                        @click="limit = (limit === 5 ? 10 : 5)" 
+                        class="px-3 py-1.5 rounded-xl bg-[#171B22] hover:bg-[#232936] border border-[#232936] text-gray-300 hover:text-white transition-colors cursor-pointer text-xs flex items-center gap-1.5"
+                        :title="limit === 5 ? 'Expandir a Top 10' : 'Reducir a Top 5'">
+                    <i data-lucide="layers" class="w-3.5 h-3.5 text-blue-400"></i>
+                    <span x-text="limit === 5 ? 'Top 5' : 'Top 10'"></span>
+                </button>
+
+                <a href="{{ route('admin.games.index') }}" class="p-1.5 rounded-xl bg-[#171B22] hover:bg-blue-600 text-gray-300 hover:text-white border border-[#232936] transition-colors" title="Ver catálogo completo de juegos">
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </a>
+            </div>
         </div>
 
         @php
             $maxDownloads = $topGames->max('download_count') ?: 1;
+            $maxViews = $topViewedGames->max('views_count') ?: 1;
         @endphp
 
-        <div class="divide-y divide-[#232936]/60">
+        <!-- TAB 1: MÁS DESCARGADOS -->
+        <div x-show="rankingTab === 'downloads'" class="divide-y divide-[#232936]/60">
             @forelse($topGames as $idx => $game)
                 @php
                     $pct = round(($game->download_count / $maxDownloads) * 100);
+                    $convRate = $game->views_count > 0 ? round(($game->download_count / $game->views_count) * 100, 1) : 0;
                 @endphp
-                <div class="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 first:pt-0 last:pb-0">
+                <div x-show="{{ $idx }} < limit" 
+                     class="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 first:pt-0 last:pb-0 hover:bg-[#171B22]/40 rounded-xl px-2.5 transition-colors group">
+                    
+                    <!-- Left: Podio + Cover + Title & Metadata -->
                     <div class="flex items-center gap-3.5 min-w-0">
-                        <!-- Ranking Badge -->
-                        <div class="w-7 h-7 rounded-lg shrink-0 flex items-center justify-center font-mono font-black text-xs {{ $idx === 0 ? 'bg-amber-400 text-black shadow-md shadow-amber-400/30' : ($idx === 1 ? 'bg-gray-300 text-black' : ($idx === 2 ? 'bg-amber-700 text-white' : 'bg-[#171B22] text-gray-400 border border-[#232936]')) }}">
-                            #{{ $idx + 1 }}
+                        
+                        <!-- Ranking Podio Medal -->
+                        <div class="w-8 h-8 rounded-xl shrink-0 flex items-center justify-center font-mono font-black text-xs shadow-sm
+                            {{ $idx === 0 ? 'bg-gradient-to-tr from-amber-500 to-yellow-400 text-black shadow-amber-500/25 ring-2 ring-amber-400/40' : 
+                              ($idx === 1 ? 'bg-gradient-to-tr from-slate-300 to-gray-200 text-black shadow-slate-400/20 ring-1 ring-slate-300/40' : 
+                              ($idx === 2 ? 'bg-gradient-to-tr from-amber-700 to-amber-600 text-white shadow-amber-700/20' : 
+                              'bg-[#0A0C0F] text-gray-400 border border-[#232936]')) }}">
+                            @if($idx === 0)
+                                <span class="flex items-center gap-0.5">👑 1</span>
+                            @elseif($idx === 1)
+                                <span>🥈 2</span>
+                            @elseif($idx === 2)
+                                <span>🥉 3</span>
+                            @else
+                                <span>#{{ $idx + 1 }}</span>
+                            @endif
                         </div>
 
-                        <!-- Game Cover -->
-                        <img src="{{ $game->cover_thumb_url ?: ($game->cover_url ?: asset('images/placeholder-cover.svg')) }}" 
-                             alt="{{ $game->title }}" 
-                             onerror="this.onerror=null; this.src='{{ asset('images/placeholder-cover.svg') }}';"
-                             class="w-10 h-14 object-cover rounded-lg bg-[#0A0C0F] border border-[#232936] shrink-0">
+                        <!-- Game Artwork Thumbnail -->
+                        <div class="relative shrink-0">
+                            <img src="{{ $game->cover_thumb_url ?: ($game->cover_url ?: asset('images/placeholder-cover.svg')) }}" 
+                                 alt="{{ $game->title }}" 
+                                 onerror="this.onerror=null; this.src='{{ asset('images/placeholder-cover.svg') }}';"
+                                 class="w-11 h-14 object-cover rounded-lg bg-[#0A0C0F] border border-[#232936] shadow-sm group-hover:scale-105 transition-transform duration-300">
+                        </div>
 
-                        <!-- Game Info -->
+                        <!-- Title, Console Pill & Specs -->
                         <div class="min-w-0">
-                            <h4 class="text-xs font-bold text-white truncate font-sans group-hover:text-blue-400">{{ $game->title }}</h4>
-                            <div class="flex items-center gap-2 mt-1 text-[10px] font-mono text-gray-400">
-                                <span class="px-1.5 py-0.2 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-semibold">{{ $game->console->name ?? 'Console' }}</span>
+                            <div class="flex items-center gap-2">
+                                <a href="{{ route('game.show', $game->slug) }}" 
+                                   target="_blank" 
+                                   class="text-xs font-bold text-white truncate font-sans hover:text-blue-400 transition-colors"
+                                   title="Ver en la web pública: {{ $game->title }}">
+                                    {{ $game->title }}
+                                </a>
+                                @if($game->status === 'PUBLISHED')
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" title="Publicado"></span>
+                                @else
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" title="Borrador"></span>
+                                @endif
+                            </div>
+                            
+                            <div class="flex flex-wrap items-center gap-2 mt-1 text-[10px] font-mono text-gray-400">
+                                <span class="px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20 font-semibold font-mono">
+                                    {{ $game->console->short_name ?: ($game->console->name ?? 'ROM') }}
+                                </span>
                                 <span>•</span>
                                 <span>{{ $game->formatted_size }}</span>
                                 <span>•</span>
-                                <span class="text-amber-400 font-bold">★ {{ number_format($game->rating, 1) }}</span>
+                                <span class="text-amber-400 font-bold flex items-center gap-0.5">
+                                    ★ {{ number_format($game->rating_average ?: 5.0, 1) }}
+                                </span>
+                                <span>•</span>
+                                <span class="text-gray-400 font-mono">
+                                    👁️ {{ number_format($game->views_count) }} vistas
+                                </span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Progress Bar & Count -->
-                    <div class="flex items-center gap-4 sm:w-64 shrink-0 justify-between sm:justify-end">
-                        <div class="w-32 hidden sm:block">
+                    <!-- Right: Demand Bar + Stats + Action Buttons -->
+                    <div class="flex items-center gap-4 sm:w-80 shrink-0 justify-between sm:justify-end">
+                        
+                        <!-- Demand Progress Bar against #1 -->
+                        <div class="w-32 hidden md:block">
                             <div class="flex justify-between text-[10px] font-mono text-gray-400 mb-1">
                                 <span>Demanda</span>
                                 <span class="text-blue-400 font-bold">{{ $pct }}%</span>
                             </div>
                             <div class="w-full h-1.5 bg-[#0A0C0F] rounded-full overflow-hidden border border-[#232936]">
-                                <div class="bg-gradient-to-r from-blue-500 to-emerald-400 h-full rounded-full" style="width: {{ $pct }}%"></div>
+                                <div class="bg-gradient-to-r from-blue-500 to-emerald-400 h-full rounded-full transition-all duration-500" style="width: {{ $pct }}%"></div>
                             </div>
                         </div>
 
-                        <div class="text-right">
-                            <span class="text-sm font-black text-white font-mono">{{ number_format($game->download_count) }}</span>
-                            <span class="block text-[9px] font-mono text-gray-500 uppercase">Descargas</span>
+                        <!-- Numerical Stats -->
+                        <div class="text-right min-w-[70px]">
+                            <span class="text-sm font-black text-white font-mono flex items-center justify-end gap-1">
+                                <i data-lucide="download" class="w-3.5 h-3.5 text-blue-400"></i>
+                                {{ number_format($game->download_count) }}
+                            </span>
+                            <span class="block text-[9px] font-mono text-gray-400 uppercase">
+                                {{ $convRate }}% conv.
+                            </span>
                         </div>
 
-                        <a href="{{ route('admin.games.edit', $game->id) }}" class="p-1.5 rounded-lg bg-[#171B22] hover:bg-blue-600 hover:text-white text-gray-300 transition-colors" title="Editar">
-                            <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
-                        </a>
+                        <!-- Quick Actions: Public View & Admin Edit -->
+                        <div class="flex items-center gap-1 shrink-0">
+                            <a href="{{ route('game.show', $game->slug) }}" 
+                               target="_blank" 
+                               rel="noopener noreferrer"
+                               class="p-2 rounded-xl bg-[#0A0C0F] hover:bg-blue-600 hover:text-white text-gray-400 border border-[#232936] transition-all" 
+                               title="Abrir ficha pública en nueva pestaña">
+                                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                            </a>
+
+                            <a href="{{ route('admin.games.edit', $game->id) }}" 
+                               class="p-2 rounded-xl bg-[#0A0C0F] hover:bg-emerald-600 hover:text-white text-gray-400 border border-[#232936] transition-all" 
+                               title="Editar videojuego en administración">
+                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                            </a>
+                        </div>
+
                     </div>
                 </div>
             @empty
-                <p class="text-xs text-gray-500 font-mono py-4 text-center">No hay títulos registrados con descargas aún.</p>
+                <div class="p-8 text-center text-xs text-gray-500 font-mono space-y-2">
+                    <i data-lucide="inbox" class="w-8 h-8 mx-auto text-gray-600"></i>
+                    <p>No hay títulos registrados con descargas aún.</p>
+                </div>
             @endforelse
         </div>
+
+        <!-- TAB 2: MÁS VISITADOS / POPULARES -->
+        <div x-show="rankingTab === 'views'" class="divide-y divide-[#232936]/60">
+            @forelse($topViewedGames as $idx => $game)
+                @php
+                    $pct = round(($game->views_count / $maxViews) * 100);
+                @endphp
+                <div x-show="{{ $idx }} < limit" 
+                     class="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 first:pt-0 last:pb-0 hover:bg-[#171B22]/40 rounded-xl px-2.5 transition-colors group">
+                    
+                    <!-- Left: Podio + Cover + Title & Metadata -->
+                    <div class="flex items-center gap-3.5 min-w-0">
+                        
+                        <!-- Ranking Podio Medal -->
+                        <div class="w-8 h-8 rounded-xl shrink-0 flex items-center justify-center font-mono font-black text-xs shadow-sm
+                            {{ $idx === 0 ? 'bg-gradient-to-tr from-purple-500 to-indigo-400 text-white shadow-purple-500/25 ring-2 ring-purple-400/40' : 
+                              ($idx === 1 ? 'bg-gradient-to-tr from-slate-300 to-gray-200 text-black shadow-slate-400/20' : 
+                              ($idx === 2 ? 'bg-gradient-to-tr from-amber-700 to-amber-600 text-white shadow-amber-700/20' : 
+                              'bg-[#0A0C0F] text-gray-400 border border-[#232936]')) }}">
+                            @if($idx === 0)
+                                <span class="flex items-center gap-0.5">👁️ 1</span>
+                            @elseif($idx === 1)
+                                <span>🥈 2</span>
+                            @elseif($idx === 2)
+                                <span>🥉 3</span>
+                            @else
+                                <span>#{{ $idx + 1 }}</span>
+                            @endif
+                        </div>
+
+                        <!-- Game Artwork Thumbnail -->
+                        <div class="relative shrink-0">
+                            <img src="{{ $game->cover_thumb_url ?: ($game->cover_url ?: asset('images/placeholder-cover.svg')) }}" 
+                                 alt="{{ $game->title }}" 
+                                 onerror="this.onerror=null; this.src='{{ asset('images/placeholder-cover.svg') }}';"
+                                 class="w-11 h-14 object-cover rounded-lg bg-[#0A0C0F] border border-[#232936] shadow-sm group-hover:scale-105 transition-transform duration-300">
+                        </div>
+
+                        <!-- Title, Console Pill & Specs -->
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2">
+                                <a href="{{ route('game.show', $game->slug) }}" 
+                                   target="_blank" 
+                                   class="text-xs font-bold text-white truncate font-sans hover:text-purple-400 transition-colors"
+                                   title="Ver en la web pública: {{ $game->title }}">
+                                    {{ $game->title }}
+                                </a>
+                                @if($game->status === 'PUBLISHED')
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" title="Publicado"></span>
+                                @else
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" title="Borrador"></span>
+                                @endif
+                            </div>
+                            
+                            <div class="flex flex-wrap items-center gap-2 mt-1 text-[10px] font-mono text-gray-400">
+                                <span class="px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-400 border border-purple-500/20 font-semibold font-mono">
+                                    {{ $game->console->short_name ?: ($game->console->name ?? 'ROM') }}
+                                </span>
+                                <span>•</span>
+                                <span>{{ $game->formatted_size }}</span>
+                                <span>•</span>
+                                <span class="text-amber-400 font-bold flex items-center gap-0.5">
+                                    ★ {{ number_format($game->rating_average ?: 5.0, 1) }}
+                                </span>
+                                <span>•</span>
+                                <span class="text-emerald-400 font-mono">
+                                    📥 {{ number_format($game->download_count) }} descargas
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Traffic Bar + Stats + Action Buttons -->
+                    <div class="flex items-center gap-4 sm:w-80 shrink-0 justify-between sm:justify-end">
+                        
+                        <!-- Traffic Progress Bar against #1 -->
+                        <div class="w-32 hidden md:block">
+                            <div class="flex justify-between text-[10px] font-mono text-gray-400 mb-1">
+                                <span>Popularidad</span>
+                                <span class="text-purple-400 font-bold">{{ $pct }}%</span>
+                            </div>
+                            <div class="w-full h-1.5 bg-[#0A0C0F] rounded-full overflow-hidden border border-[#232936]">
+                                <div class="bg-gradient-to-r from-purple-500 to-pink-500 h-full rounded-full transition-all duration-500" style="width: {{ $pct }}%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Numerical Stats -->
+                        <div class="text-right min-w-[70px]">
+                            <span class="text-sm font-black text-white font-mono flex items-center justify-end gap-1">
+                                <i data-lucide="eye" class="w-3.5 h-3.5 text-purple-400"></i>
+                                {{ number_format($game->views_count) }}
+                            </span>
+                            <span class="block text-[9px] font-mono text-gray-400 uppercase">
+                                Visitas
+                            </span>
+                        </div>
+
+                        <!-- Quick Actions: Public View & Admin Edit -->
+                        <div class="flex items-center gap-1 shrink-0">
+                            <a href="{{ route('game.show', $game->slug) }}" 
+                               target="_blank" 
+                               rel="noopener noreferrer"
+                               class="p-2 rounded-xl bg-[#0A0C0F] hover:bg-purple-600 hover:text-white text-gray-400 border border-[#232936] transition-all" 
+                               title="Abrir ficha pública en nueva pestaña">
+                                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                            </a>
+
+                            <a href="{{ route('admin.games.edit', $game->id) }}" 
+                               class="p-2 rounded-xl bg-[#0A0C0F] hover:bg-emerald-600 hover:text-white text-gray-400 border border-[#232936] transition-all" 
+                               title="Editar videojuego en administración">
+                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
+            @empty
+                <div class="p-8 text-center text-xs text-gray-500 font-mono space-y-2">
+                    <i data-lucide="inbox" class="w-8 h-8 mx-auto text-gray-600"></i>
+                    <p>No hay títulos registrados con visitas aún.</p>
+                </div>
+            @endforelse
+        </div>
+
     </div>
 
     <!-- Recent Uploads and Moderation Tables -->

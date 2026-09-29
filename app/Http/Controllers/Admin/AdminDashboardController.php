@@ -23,8 +23,19 @@ class AdminDashboardController extends Controller
         $recentGames = Game::with('console')->latest()->take(5)->get();
         $recentReviews = Review::with(['game', 'user'])->latest()->take(5)->get();
 
-        // Top 5 Most Downloaded Games
-        $topGames = Game::with('console')->orderByDesc('download_count')->take(5)->get();
+        // Top 10 Títulos Más Descargados (con desempate por vistas y fecha)
+        $topGames = Game::with('console')
+            ->orderByDesc('download_count')
+            ->orderByDesc('views_count')
+            ->take(10)
+            ->get();
+
+        // Top 10 Títulos Más Vistos / Populares
+        $topViewedGames = Game::with('console')
+            ->orderByDesc('views_count')
+            ->orderByDesc('download_count')
+            ->take(10)
+            ->get();
 
         // Top Consoles
         $topConsoles = Console::withCount('games')->orderByDesc('games_count')->take(6)->get();
@@ -55,6 +66,7 @@ class AdminDashboardController extends Controller
             'recentGames',
             'recentReviews',
             'topGames',
+            'topViewedGames',
             'topConsoles',
             'storageStats',
             'downloadTrend'
