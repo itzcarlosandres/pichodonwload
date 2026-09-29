@@ -71,46 +71,17 @@
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ \App\Models\Setting::get('site_favicon_url') ?: asset('favicon.ico') }}">
 
-    <!-- Google Fonts: Instrument Sans, Bricolage Grotesque, Plus Jakarta Sans & JetBrains Mono -->
+    <!-- Google Fonts: Asynchronous & Non-Blocking -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+    </noscript>
     
-    <!-- Lucide CDN for immediate icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    
-    <!-- Tailwind & Alpine compiled via Vite -->
+    <!-- Tailwind & Alpine compiled via Vite (Zero Blocking Production Bundle) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        retro: {
-                            bg: '#F5EFE6',
-                            card: '#FFFFFF',
-                            surface: '#FAF7F2',
-                            red: '#CE2D2D',
-                            redHover: '#B71C1C',
-                            dark: '#18181B',
-                            border: '#E5E0D8',
-                            borderDark: '#1E1E1E',
-                            muted: '#71717A',
-                            pill: '#EDE7DE',
-                        }
-                    },
-                    fontFamily: {
-                        instrument: ['"Instrument Sans"', 'sans-serif'],
-                        heading: ['"Bricolage Grotesque"', 'sans-serif'],
-                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-                        mono: ['"JetBrains Mono"', 'monospace'],
-                    }
-                }
-            }
-        }
-    </script>
     <script>
         if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
@@ -876,7 +847,9 @@
     </div>
 
     <script>
-        lucide.createIcons();
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            window.lucide.createIcons();
+        }
 
         // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {

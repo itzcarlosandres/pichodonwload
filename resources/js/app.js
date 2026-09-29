@@ -2,6 +2,8 @@ import Alpine from 'alpinejs';
 import { createIcons, icons } from 'lucide';
 
 window.Alpine = Alpine;
+window.createIcons = createIcons;
+window.lucide = { createIcons, icons };
 
 // Helper global para notificaciones Toast
 window.showToast = function(message) {
