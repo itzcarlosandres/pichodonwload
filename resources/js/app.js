@@ -1,9 +1,20 @@
 import Alpine from 'alpinejs';
 import { createIcons, icons } from 'lucide';
 
+// Wrapper seguro que provee automáticamente todos los iconos si se invoca sin argumentos
+const safeCreateIcons = (options = {}) => {
+    return createIcons({
+        icons,
+        ...options,
+    });
+};
+
 window.Alpine = Alpine;
-window.createIcons = createIcons;
-window.lucide = { createIcons, icons };
+window.createIcons = safeCreateIcons;
+window.lucide = {
+    createIcons: safeCreateIcons,
+    icons,
+};
 
 // Helper global para notificaciones Toast
 window.showToast = function(message) {
@@ -11,12 +22,13 @@ window.showToast = function(message) {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    createIcons({ icons });
+    safeCreateIcons();
 });
 
 // Re-ejecutar Lucide icons tras actualizaciones del DOM
 document.addEventListener('lucide-refresh', () => {
-    createIcons({ icons });
+    safeCreateIcons();
 });
 
 Alpine.start();
+
