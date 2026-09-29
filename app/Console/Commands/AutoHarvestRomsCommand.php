@@ -21,9 +21,11 @@ class AutoHarvestRomsCommand extends Command
      */
     protected $signature = 'roms:auto-harvest 
                             {--provider= : Proveedor a rastrear: cdromance, romspedia o all} 
-                            {--console=all : Consola a explorar o all} 
+                            {--console=all : Consola a explorar (ej: ps2), "random" para una aleatoria, o lista separada por comas (ej: ps2,psp,gba)} 
                             {--limit= : Límite de nuevos juegos a guardar en cola DRAFT} 
-                            {--page= : Página específica para iniciar el rastreo} 
+                            {--page= : Página específica para iniciar el rastreo o "random"} 
+                            {--random-page : Iniciar en una página aleatoria (1-10) para explorar catálogo profundo} 
+                            {--shuffle : Barajar los juegos encontrados para cosechar títulos variados y no siempre los primeros} 
                             {--dry-run : Solo rastrear y verificar sin guardar en base de datos}';
 
     /**
@@ -43,16 +45,19 @@ class AutoHarvestRomsCommand extends Command
         'playstation-2' => 'playstation-2',
         'psx' => 'playstation',
         'playstation' => 'playstation',
+        'ps1' => 'playstation',
         'gamecube' => 'gamecube',
+        'gc' => 'gamecube',
         'gba' => 'game-boy-advance',
         'game-boy-advance' => 'game-boy-advance',
         'nds' => 'nintendo-ds',
         'nintendo-ds' => 'nintendo-ds',
-        'snes' => 'snes',
-        'super-nintendo' => 'snes',
+        'snes' => 'super-nintendo',
+        'super-nintendo' => 'super-nintendo',
         'n64' => 'nintendo-64',
         'nintendo-64' => 'nintendo-64',
         'dreamcast' => 'dreamcast',
+        'dc' => 'dreamcast',
         'genesis' => 'sega-genesis',
         'sega-genesis' => 'sega-genesis',
     ];
@@ -66,26 +71,60 @@ class AutoHarvestRomsCommand extends Command
         \App\Services\CategorySyncService $categoryService
     ): int {
         $providerInput = strtolower($this->option('provider') ?: 'all');
-        $consoleSlug = $this->option('console') ?: 'all';
+        $consoleInput = strtolower(trim($this->option('console') ?: 'all'));
         $limit = (int) ($this->option('limit') ?: config('roms.auto_harvest_limit', 10));
         $dryRun = (bool) $this->option('dry-run');
+        $shouldShuffle = (bool) $this->option('shuffle');
+        $userPageInput = $this->option('page');
+        $isRandomPage = (bool) $this->option('random-page') || strtolower((string) $userPageInput) === 'random';
 
         $providers = $providerInput === 'all' 
             ? config('roms.providers', ['cdromance', 'romspedia']) 
             : [$providerInput];
 
-        $isAll = in_array(strtolower($consoleSlug), ['all', '']);
-        $consolesToExplore = $isAll 
-            ? ['nintendo-64', 'game-boy-advance', 'super-nintendo', 'playstation', 'nintendo-ds', 'gamecube', 'psp', 'playstation-2']
-            : [$consoleSlug];
+        $supportedConsoles = [
+            'playstation-2', 
+            'psp', 
+            'playstation', 
+            'gamecube', 
+            'game-boy-advance', 
+            'nintendo-ds', 
+            'super-nintendo', 
+            'nintendo-64'
+        ];
 
-        // Barajar aleatoriamente para variar el punto de partida en cada ejecución del cron
-        if ($isAll) {
+        // Resolución dinámica de consolas
+        if ($consoleInput === 'random') {
+            // Elegir 1 consola al azar de las soportadas
+            $chosen = $supportedConsoles[array_rand($supportedConsoles)];
+            $consolesToExplore = [$chosen];
+            $isAll = false;
+            $shouldShuffle = true;
+        } elseif (str_contains($consoleInput, ',')) {
+            // Múltiples consolas separadas por comas (ej. ps2,psp,gba)
+            $parsedConsoles = array_map(function ($c) {
+                $clean = trim($c);
+                return $this->consoleMap[$clean] ?? $clean;
+            }, explode(',', $consoleInput));
+            
+            $consolesToExplore = array_values(array_filter($parsedConsoles));
             shuffle($consolesToExplore);
+            $isAll = count($consolesToExplore) > 1;
+        } elseif ($consoleInput === 'all' || empty($consoleInput)) {
+            $consolesToExplore = $supportedConsoles;
+            shuffle($consolesToExplore);
+            $isAll = true;
+        } else {
+            $mapped = $this->consoleMap[$consoleInput] ?? $consoleInput;
+            $consolesToExplore = [$mapped];
+            $isAll = false;
         }
 
         $this->info("🌾 Iniciando Auto-Cosecha de ROMs Rotativa (Piloto Automático)");
-        $this->line("Consolas a rastrear: " . implode(', ', $consolesToExplore) . " | Límite objetivo: {$limit} juegos nuevos");
+        $this->line("Consolas a rastrear: <info>" . implode(', ', $consolesToExplore) . "</info> | Límite objetivo: <comment>{$limit} juegos nuevos</comment>");
+        if ($isRandomPage) {
+            $this->line("🎲 Modo de catálogo profundo activo: Páginas aleatorias habilitadas.");
+        }
 
         $totalHarvested = 0;
         $totalSkippedDuplicates = 0;
@@ -114,10 +153,16 @@ class AutoHarvestRomsCommand extends Command
                 $this->newLine();
                 $this->comment("📡 Explorando [{$targetConsole}] en: " . strtoupper($provider));
 
-                $userPage = $this->option('page') ? (int) $this->option('page') : null;
-                // Romspedia ordena por popularidad fija; alternamos página inicial (1 a 6) para explorar catálogo profundo
-                $startPage = $userPage ?: ($provider === 'romspedia' ? rand(1, 6) : 1);
-                $maxPagesToScan = ($provider === 'romspedia') ? 4 : 2;
+                // Cálculo de página inicial
+                if ($isRandomPage) {
+                    $startPage = rand(1, 8);
+                } elseif ($userPageInput && is_numeric($userPageInput)) {
+                    $startPage = (int) $userPageInput;
+                } else {
+                    $startPage = ($provider === 'romspedia') ? rand(1, 6) : 1;
+                }
+
+                $maxPagesToScan = ($provider === 'romspedia') ? 4 : 3;
 
                 for ($offset = 0; $offset < $maxPagesToScan; $offset++) {
                     $page = $startPage + $offset;
@@ -138,7 +183,13 @@ class AutoHarvestRomsCommand extends Command
                         break;
                     }
 
-                    foreach ($browseResult['games'] as $candidate) {
+                    // Barajar candidatos si se solicitó o si está en modo aleatorio
+                    $candidates = $browseResult['games'];
+                    if ($shouldShuffle || $isRandomPage) {
+                        shuffle($candidates);
+                    }
+
+                    foreach ($candidates as $candidate) {
                         if ($totalHarvested >= $limit || $harvestedForConsole >= $maxPerConsole) {
                             break;
                         }
