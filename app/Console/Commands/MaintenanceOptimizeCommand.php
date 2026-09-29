@@ -47,7 +47,10 @@ class MaintenanceOptimizeCommand extends Command
             $this->optimizeDatabaseTables();
         }
 
-        // 4. Precalentamiento de caché (Cache Warming)
+        // 4. Saneamiento de descripciones con posibles fragmentos de enlaces corruptos
+        $this->cleanCorruptedDescriptions();
+
+        // 5. Precalentamiento de caché (Cache Warming)
         $this->warmHotCaches();
 
         $this->newLine();
@@ -144,6 +147,44 @@ class MaintenanceOptimizeCommand extends Command
             $this->info('   ⚡ Caché precalentada con éxito.');
         } catch (\Throwable $e) {
             $this->warn('   ⚠️ No se pudo completar el precalentamiento de caché: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Sanea descripciones con fragmentos de enlaces HTML o Markdown malformados
+     */
+    protected function cleanCorruptedDescriptions(): void
+    {
+        $this->line('🧹 Verificando integridad de descripciones de juegos...');
+
+        try {
+            $corrupted = Game::where('description', 'LIKE', '%class="text-[#CE2D2D]%')
+                ->orWhere('description', 'LIKE', '%title="Ver catálogo completo%')
+                ->orWhere('description', 'LIKE', '%href=%')
+                ->orWhere('description', 'LIKE', '%<a%')
+                ->get(['id', 'title', 'description']);
+
+            $fixed = 0;
+            foreach ($corrupted as $game) {
+                $clean = $game->description;
+                $clean = preg_replace('/\[[a-z0-9_-]+\]\([^)]*(?:%3Ca|<a\s+href)[^)]*\)"[^>]*>/iu', '', $clean);
+                $clean = preg_replace('/<a\b[^>]*<a\b/iu', '<a', $clean);
+                $clean = preg_replace('/class="text-\[#CE2D2D\][^"]*"[^>]*>/iu', '', $clean);
+
+                if ($clean !== $game->description) {
+                    $game->description = $clean;
+                    $game->save();
+                    $fixed++;
+                }
+            }
+
+            if ($fixed > 0) {
+                $this->info("   🛠️ Descripciones saneadas con éxito: {$fixed} juegos.");
+            } else {
+                $this->info("   ✨ Todas las descripciones se encuentran íntegras y limpias.");
+            }
+        } catch (\Throwable $e) {
+            $this->warn('   ⚠️ No se pudo completar la verificación de descripciones: ' . $e->getMessage());
         }
     }
 }

@@ -406,6 +406,11 @@ function gameDetailComponent() {
                                     $cleanDesc = ltrim($cleanDesc);
                                     if ($cleanDesc === $prevDesc) break;
                                 }
+
+                                // Sanitizar posibles fragmentos de enlaces corruptos heredados en la base de datos
+                                $cleanDesc = preg_replace('/\[[a-z0-9_-]+\]\([^)]*(?:%3Ca|<a\s+href)[^)]*\)"[^>]*>/iu', '', $cleanDesc);
+                                $cleanDesc = preg_replace('/class="text-\[#CE2D2D\][^"]*"[^>]*>/iu', '', $cleanDesc);
+
                                 $rawHtml = \Illuminate\Support\Str::markdown($cleanDesc);
                                 $interlinkedHtml = isset($interlinkService) 
                                     ? $interlinkService->interlinkDescription($rawHtml, $game) 
