@@ -96,32 +96,67 @@ class PageController extends Controller
             abort(404, 'Archivo no disponible temporalmente en la bóveda.');
         }
 
-        // Extraer la ruta/key interna en el almacenamiento (ej. vault/bios/playstation-2-all-regions.7z)
+        // Extraer la ruta y extensión para generar un nombre de descarga limpio
         $parsedPath = parse_url($rawUrl, PHP_URL_PATH);
-        $key = ltrim($parsedPath, '/');
-
-        // Nombre de archivo limpio y profesional para el usuario final
-        $ext = pathinfo($key, PATHINFO_EXTENSION) ?: 'zip';
+        $ext = pathinfo($parsedPath, PATHINFO_EXTENSION) ?: 'zip';
         $safeFileName = Str::slug($bios->system) . '.' . $ext;
 
-        // Medida de seguridad 2: Streaming Proxy sin exponer la URL pública de R2
-        if (Storage::disk('s3')->exists($key)) {
-            return Storage::disk('s3')->response(
-                $key,
-                $safeFileName,
-                [
-                    'Content-Type' => 'application/octet-stream',
-                    'Content-Disposition' => 'attachment; filename="' . $safeFileName . '"',
-                    'X-Content-Type-Options' => 'nosniff',
-                    'Cache-Control' => 'no-store, no-cache, must-revalidate',
-                    'Pragma' => 'no-cache',
-                ]
-            );
+        // Medida de seguridad 2: Proxy Streaming directo desde la Bóveda Privada
+        // Oculta completamente el dominio de R2 ante el navegador sin requerir credenciales de bucket en producción
+        if (str_starts_with($rawUrl, 'http://') || str_starts_with($rawUrl, 'https://')) {
+            try {
+                $streamUrl = str_replace(' ', '%20', $rawUrl);
+                $context = stream_context_create([
+                    'ssl' => [
+                        'verify_peer' => false,
+                        'verify_peer_name' => false,
+                    ],
+                    'http' => [
+                        'timeout' => 300,
+                        'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) VaultProxy/2.0',
+                    ],
+                ]);
+
+                $remoteStream = @fopen($streamUrl, 'rb', false, $context);
+
+                if ($remoteStream) {
+                    $headers = [
+                        'Content-Type' => 'application/octet-stream',
+                        'Content-Disposition' => 'attachment; filename="' . $safeFileName . '"',
+                        'X-Content-Type-Options' => 'nosniff',
+                        'Cache-Control' => 'no-store, no-cache, must-revalidate',
+                        'Pragma' => 'no-cache',
+                    ];
+
+                    if (isset($http_response_header)) {
+                        foreach ($http_response_header as $headerLine) {
+                            if (stripos($headerLine, 'Content-Length:') === 0) {
+                                $headers['Content-Length'] = trim(substr($headerLine, 15));
+                                break;
+                            }
+                        }
+                    }
+
+                    return response()->streamDownload(function () use ($remoteStream) {
+                        while (!feof($remoteStream)) {
+                            echo fread($remoteStream, 1024 * 64);
+                            if (ob_get_level() > 0) {
+                                ob_flush();
+                            }
+                            flush();
+                        }
+                        fclose($remoteStream);
+                    }, $safeFileName, $headers);
+                }
+            } catch (\Throwable) {
+                // Fallback seguro en caso de error de red
+            }
         }
 
-        // Fallback seguro si no está en la raíz del bucket S3
+        // Fallback seguro
         return redirect()->away($rawUrl);
     }
+
 
 
     /**
