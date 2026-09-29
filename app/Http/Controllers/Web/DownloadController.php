@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Models\DailyStat;
 use App\Models\Game;
 use App\Services\RomDownloadResolverService;
 use Illuminate\Http\Request;
@@ -34,6 +35,7 @@ class DownloadController extends Controller
 
         // Increment views count on download page
         $game->increment('views_count');
+        DailyStat::recordView();
 
         // Obtener juegos relacionados de la misma consola
         $relatedGames = Game::with('console')
@@ -54,6 +56,7 @@ class DownloadController extends Controller
     {
         $game = Game::where('slug', $slug)->firstOrFail();
         $game->increment('download_count');
+        DailyStat::recordDownload((int) $game->file_size_bytes, 'game', $game->id, $game->title, request()->ip());
 
         return response()->json([
             'success' => true,
@@ -79,6 +82,7 @@ class DownloadController extends Controller
 
         // Incrementar contador de descargas
         $game->increment('download_count');
+        DailyStat::recordDownload((int) $game->file_size_bytes, 'game', $game->id, $game->title, $request->ip());
 
         return response()->json([
             'success' => true,
@@ -101,6 +105,7 @@ class DownloadController extends Controller
 
         $resolvedUrl = $this->resolver->resolve($targetUrl);
         $game->increment('download_count');
+        DailyStat::recordDownload((int) $game->file_size_bytes, 'game', $game->id, $game->title, $request->ip());
 
         return redirect()->away($resolvedUrl);
     }

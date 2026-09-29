@@ -137,6 +137,14 @@ class PageController extends Controller
                         }
                     }
 
+                    \App\Models\DailyStat::recordDownload(
+                        0,
+                        'bios',
+                        $bios->id,
+                        $bios->system,
+                        $request->ip()
+                    );
+
                     return response()->streamDownload(function () use ($remoteStream) {
                         while (!feof($remoteStream)) {
                             echo fread($remoteStream, 1024 * 64);
@@ -154,6 +162,8 @@ class PageController extends Controller
         }
 
         // Fallback seguro
+        \App\Models\DailyStat::recordDownload(0, 'bios', $bios->id, $bios->system, $request->ip());
+
         return redirect()->away($rawUrl);
     }
 

@@ -359,11 +359,11 @@
             new Chart(downloadsCtx, {
                 type: 'line',
                 data: {
-                    labels: ['Hace 6d', 'Hace 5d', 'Hace 4d', 'Hace 3d', 'Hace 2d', 'Ayer', 'Hoy'],
+                    labels: {!! json_encode($downloadTrend['labels'] ?? ['Hace 6d', 'Hace 5d', 'Hace 4d', 'Hace 3d', 'Hace 2d', 'Ayer', 'Hoy']) !!},
                     datasets: [
                         {
                             label: 'Descargas',
-                            data: [0, 0, 0, 0, 0, 0, {{ (int) $totalDownloads }}],
+                            data: {!! json_encode($downloadTrend['downloads'] ?? [0, 0, 0, 0, 0, 0, (int) $totalDownloads]) !!},
                             borderColor: '#3B82F6',
                             backgroundColor: gradientBlue,
                             borderWidth: 2.5,
@@ -375,7 +375,7 @@
                         },
                         {
                             label: 'Visitas Únicas',
-                            data: [0, 0, 0, 0, 0, 0, 0],
+                            data: {!! json_encode($downloadTrend['views'] ?? [0, 0, 0, 0, 0, 0, 0]) !!},
                             borderColor: '#10B981',
                             backgroundColor: gradientEmerald,
                             borderWidth: 2,

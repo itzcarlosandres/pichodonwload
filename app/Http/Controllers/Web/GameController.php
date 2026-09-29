@@ -21,6 +21,7 @@ class GameController extends Controller
 
         // Increments views count
         $game->increment('views_count');
+        \App\Models\DailyStat::recordView();
 
         $console = $game->console;
 

@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Game;
 use App\Models\Console;
-use App\Models\User;
+use App\Models\DailyStat;
+use App\Models\Game;
 use App\Models\Review;
 use App\Models\Setting;
+use App\Models\User;
 use Illuminate\View\View;
 
 class AdminDashboardController extends Controller
@@ -27,6 +28,9 @@ class AdminDashboardController extends Controller
 
         // Top Consoles
         $topConsoles = Console::withCount('games')->orderByDesc('games_count')->take(6)->get();
+
+        // Tendencia real de los últimos 7 días (Descargas, Visitas y Ancho de banda)
+        $downloadTrend = DailyStat::getWeeklyTrend();
 
         // Calculate storage breakdown by manufacturer
         $sonyBytes = Game::whereHas('console', fn($q) => $q->where('manufacturer', 'Sony'))->sum('file_size_bytes');
@@ -52,7 +56,8 @@ class AdminDashboardController extends Controller
             'recentReviews',
             'topGames',
             'topConsoles',
-            'storageStats'
+            'storageStats',
+            'downloadTrend'
         ));
     }
 }
