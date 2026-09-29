@@ -300,5 +300,163 @@ class StorageService
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
+
+    /**
+     * Comprueba si un objeto ya existe en la bóveda Cloudflare R2
+     */
+    public function objectExists(string $key): bool
+    {
+        $endpoint = Setting::get('r2_endpoint') ?: config('filesystems.disks.s3.endpoint');
+        $bucket = Setting::get('r2_bucket') ?: config('filesystems.disks.s3.bucket');
+        $accessKey = Setting::get('r2_access_key_id') ?: Setting::get('r2_access_key') ?: config('filesystems.disks.s3.key');
+        $secretKey = Setting::get('r2_secret_access_key') ?: Setting::get('r2_secret_key') ?: config('filesystems.disks.s3.secret');
+
+        if (empty($endpoint) || empty($accessKey) || empty($secretKey) || empty($bucket)) {
+            return false;
+        }
+
+        try {
+            $s3Client = new S3Client([
+                'version' => 'latest',
+                'region'  => Setting::get('r2_region') ?: config('filesystems.disks.s3.region') ?: 'auto',
+                'endpoint' => $endpoint,
+                'use_path_style_endpoint' => false,
+                'http' => [
+                    'verify' => config('filesystems.disks.s3.http.verify', true),
+                ],
+                'credentials' => [
+                    'key'    => $accessKey,
+                    'secret' => $secretKey,
+                ],
+            ]);
+
+            return $s3Client->doesObjectExist($bucket, $key);
+        } catch (Exception) {
+            return false;
+        }
+    }
+
+    /**
+     * Descarga un archivo desde una URL remota de forma eficiente (streaming en disco temporal)
+     * y lo sube directamente al bucket de la Bóveda Privada Cloudflare R2.
+     *
+     * @param string $sourceUrl URL remota pública del archivo
+     * @param string $destinationKey Ruta relativa en el bucket (ej. 'vault/bios/ps2-bios.zip')
+     * @param string|null $contentType Tipo MIME opcional
+     * @return array
+     */
+    public function uploadFromUrl(string $sourceUrl, string $destinationKey, ?string $contentType = null): array
+    {
+        $endpoint = Setting::get('r2_endpoint') ?: config('filesystems.disks.s3.endpoint');
+        $bucket = Setting::get('r2_bucket') ?: config('filesystems.disks.s3.bucket');
+        $accessKey = Setting::get('r2_access_key_id') ?: Setting::get('r2_access_key') ?: config('filesystems.disks.s3.key');
+        $secretKey = Setting::get('r2_secret_access_key') ?: Setting::get('r2_secret_key') ?: config('filesystems.disks.s3.secret');
+        $publicDomain = Setting::get('r2_public_url') ?: Setting::get('r2_public_domain') ?: config('filesystems.disks.s3.url');
+
+        if (empty($endpoint) || empty($accessKey) || empty($secretKey) || empty($bucket)) {
+            throw new Exception('Faltan credenciales configuradas para la Bóveda de Almacenamiento.');
+        }
+
+        // Descargar usando un archivo temporal en disco para soportar archivos de cualquier tamaño sin saturar RAM
+        $tempDir = storage_path('app/temp_vault');
+        if (!file_exists($tempDir)) {
+            mkdir($tempDir, 0755, true);
+        }
+
+        $tempFilePath = $tempDir . '/' . uniqid('vault_download_', true) . '.tmp';
+
+        // Codificar espacios en la URL para evitar errores de URI malformada
+        $sourceUrl = str_replace(' ', '%20', $sourceUrl);
+
+        $streamContext = stream_context_create([
+            'http' => [
+                'follow_location' => 1,
+                'max_redirects' => 5,
+                'timeout' => 300,
+                'header' => "Referer: https://cdromance.org/bios-files/\r\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36\r\n",
+            ],
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+            ],
+        ]);
+
+        $remoteHandle = @fopen($sourceUrl, 'rb', false, $streamContext);
+
+        if (!$remoteHandle) {
+            throw new Exception("No se pudo conectar o descargar el archivo desde: {$sourceUrl}");
+        }
+
+        $localHandle = fopen($tempFilePath, 'wb');
+        if (!$localHandle) {
+            fclose($remoteHandle);
+            throw new Exception("No se pudo crear el archivo temporal en el servidor local.");
+        }
+
+        // Copia en streaming
+        $bytesCopied = stream_copy_to_stream($remoteHandle, $localHandle);
+        fclose($remoteHandle);
+        fclose($localHandle);
+
+        if ($bytesCopied === false || $bytesCopied <= 0) {
+            if (file_exists($tempFilePath)) {
+                @unlink($tempFilePath);
+            }
+            throw new Exception("La descarga remota falló o el archivo descargado tiene 0 bytes.");
+        }
+
+        // Calcular hash MD5 e info del archivo
+        $fileMd5 = md5_file($tempFilePath);
+        $fileSha1 = sha1_file($tempFilePath);
+        $formattedSize = $this->formatBytes($bytesCopied);
+
+        try {
+            $s3Client = new S3Client([
+                'version' => 'latest',
+                'region'  => Setting::get('r2_region') ?: config('filesystems.disks.s3.region') ?: 'auto',
+                'endpoint' => $endpoint,
+                'use_path_style_endpoint' => false,
+                'http' => [
+                    'verify' => config('filesystems.disks.s3.http.verify', true),
+                ],
+                'credentials' => [
+                    'key'    => $accessKey,
+                    'secret' => $secretKey,
+                ],
+            ]);
+
+            $s3Client->putObject([
+                'Bucket' => $bucket,
+                'Key' => $destinationKey,
+                'SourceFile' => $tempFilePath,
+                'ContentType' => $contentType ?: 'application/zip',
+            ]);
+
+            if (!empty($publicDomain)) {
+                $domain = rtrim($publicDomain, '/');
+                if (!str_starts_with($domain, 'http')) {
+                    $domain = 'https://' . $domain;
+                }
+                $downloadUrl = "{$domain}/{$destinationKey}";
+            } else {
+                $downloadUrl = rtrim($endpoint, '/') . "/{$bucket}/{$destinationKey}";
+            }
+
+            return [
+                'success' => true,
+                'url' => $downloadUrl,
+                'size' => $formattedSize,
+                'size_bytes' => $bytesCopied,
+                'md5' => $fileMd5,
+                'sha1' => $fileSha1,
+                'key' => $destinationKey,
+            ];
+        } finally {
+            if (file_exists($tempFilePath)) {
+                @unlink($tempFilePath);
+            }
+        }
+    }
 }
+
 

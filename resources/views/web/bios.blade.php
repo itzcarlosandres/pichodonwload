@@ -1,7 +1,7 @@
 @extends('layouts.web')
 
-@section('title', 'Descargar BIOS Oficiales y Verificadas para Emuladores — ' . \App\Models\Setting::get('site_name', 'ROMHUB'))
-@section('meta_description', 'Descarga directa de los 38 packs de BIOS oficiales (No-Intro y Redump) para PlayStation, Nintendo, Sega, Xbox y Arcade con hashes MD5 verificados.')
+@section('title', 'Bóveda Oficial de BIOS & Firmwares para Emuladores — ' . \App\Models\Setting::get('site_name', 'ROMHUB'))
+@section('meta_description', 'Descarga directa de los 38 packs de BIOS oficiales y verificados (No-Intro & Redump) para PlayStation, Nintendo, Sega, Xbox y Arcade. Sin publicidad y a máxima velocidad desde nuestro Servidor Privado Vault CDN.')
 
 @section('content')
 <main class="{{ \App\Models\Setting::get('container_max_width', 'max-w-[1200px]') }} mx-auto px-4 lg:px-6 py-8 space-y-8"
@@ -9,6 +9,13 @@
           search: '',
           selectedCategory: 'all',
           copiedMd5: null,
+          activeGuideEmu: 'pcsx2',
+          copiedPath: null,
+          copyText(text, id) {
+              navigator.clipboard.writeText(text);
+              this.copiedPath = id;
+              setTimeout(() => { if (this.copiedPath === id) this.copiedPath = null; }, 2000);
+          },
           copyHash(text, id) {
               navigator.clipboard.writeText(text);
               this.copiedMd5 = id;
@@ -46,23 +53,23 @@
     <nav class="flex items-center gap-2 text-xs font-mono text-gray-500">
         <a href="{{ route('home') }}" class="hover:text-[#CE2D2D] transition-colors font-medium">INICIO</a>
         <span class="text-gray-400">/</span>
-        <span class="text-[#CE2D2D] font-bold uppercase">ARCHIVOS BIOS & FIRMWARE</span>
+        <span class="text-[#CE2D2D] font-bold uppercase">BÓVEDA DE BIOS & FIRMWARES</span>
     </nav>
 
     <!-- Header Section -->
     <section class="space-y-4">
         <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#CE2D2D] text-white text-xs font-mono font-bold shadow-sm">
             <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
-            <span>Vault de Preservación • {{ count($biosList) }} Packs Verificados No-Intro & Redump</span>
+            <span>Vault de Preservación Digital • {{ count($biosList) }} Packs Verificados No-Intro & Redump</span>
         </div>
 
         <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-[#E5E0D8] pb-6">
-            <div class="space-y-2 max-w-2xl">
+            <div class="space-y-2.5 max-w-2xl">
                 <h1 class="text-3xl sm:text-5xl font-black text-[#18181B] tracking-tight font-sans">
-                    BIOS & Firmware para Emuladores
+                    BIOS & Firmwares Oficiales
                 </h1>
                 <p class="text-xs sm:text-sm text-gray-600 font-sans leading-relaxed">
-                    Descarga los archivos de arranque oficiales indispensables para ejecutar juegos en <strong>PCSX2, DuckStation, RPCS3, Dolphin, MelonDS, Flycast y RetroArch</strong>. Dumps limpios directos sin acortadores ni malware.
+                    Descarga directa de los archivos de arranque de sistema y firmware originales indispensables para emulación de bajo nivel (LLE) en <strong>PCSX2, DuckStation, RPCS3, Dolphin, Flycast, MelonDS y RetroArch</strong>. Dumps limpios 1:1, sin acortadores, sin contraseñas y servidos directamente desde nuestro <strong>Servidor Privado Vault CDN</strong> de alta velocidad.
                 </p>
             </div>
 
@@ -73,11 +80,54 @@
                 </div>
                 <div>
                     <span class="text-xs font-bold text-[#18181B] group-hover:text-[#CE2D2D] transition-colors block">¿Buscas Emuladores?</span>
-                    <span class="text-[10px] text-gray-500 block">Ver directorio de emuladores oficiales →</span>
+                    <span class="text-[10px] text-gray-500 block">Ver directorio de software oficial →</span>
                 </div>
             </a>
         </div>
     </section>
+
+    <!-- Trust & Quality Badges Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="bg-white border border-[#DDD6CB] rounded-2xl p-3.5 flex items-center gap-3 shadow-xs">
+            <div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                <i data-lucide="zap" class="w-4 h-4"></i>
+            </div>
+            <div>
+                <span class="text-xs font-black text-[#18181B] block">Servidor Vault CDN</span>
+                <span class="text-[10px] text-gray-500 block">Descarga directa sin esperas</span>
+            </div>
+        </div>
+
+        <div class="bg-white border border-[#DDD6CB] rounded-2xl p-3.5 flex items-center gap-3 shadow-xs">
+            <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                <i data-lucide="shield-check" class="w-4 h-4"></i>
+            </div>
+            <div>
+                <span class="text-xs font-black text-[#18181B] block">Redump & No-Intro</span>
+                <span class="text-[10px] text-gray-500 block">Dumps verificados 100% limpios</span>
+            </div>
+        </div>
+
+        <div class="bg-white border border-[#DDD6CB] rounded-2xl p-3.5 flex items-center gap-3 shadow-xs">
+            <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                <i data-lucide="lock-open" class="w-4 h-4"></i>
+            </div>
+            <div>
+                <span class="text-xs font-black text-[#18181B] block">Sin Contraseñas</span>
+                <span class="text-[10px] text-gray-500 block">Descomprime y juega al instante</span>
+            </div>
+        </div>
+
+        <div class="bg-white border border-[#DDD6CB] rounded-2xl p-3.5 flex items-center gap-3 shadow-xs">
+            <div class="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                <i data-lucide="hash" class="w-4 h-4"></i>
+            </div>
+            <div>
+                <span class="text-xs font-black text-[#18181B] block">Hashes Públicos</span>
+                <span class="text-[10px] text-gray-500 block">MD5 verificable con 1 clic</span>
+            </div>
+        </div>
+    </div>
 
     <!-- Search Bar & Filters -->
     <div class="space-y-3">
@@ -88,7 +138,7 @@
             </div>
             <input type="text"
                    x-model="search"
-                   placeholder="Buscar BIOS por consola, nombre de archivo (ej. SCPH-1001, bios7.bin) o emulador..."
+                   placeholder="Buscar BIOS por consola, nombre de archivo (ej. SCPH-1001, bios7.bin) o emulador (ej. PCSX2, DuckStation)..."
                    class="w-full pl-10 pr-10 py-3 rounded-2xl bg-white border-2 border-[#1E1E1E] focus:border-[#CE2D2D] focus:ring-2 focus:ring-[#CE2D2D]/20 text-sm font-sans placeholder-gray-400 text-[#18181B] outline-none shadow-sm transition-all">
             <button x-show="search.length > 0"
                     @click="search = ''"
@@ -143,18 +193,126 @@
         </div>
     </div>
 
-    <!-- Instructions Banner -->
-    <div class="bg-white border-2 border-[#1E1E1E] rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
-        <div class="flex items-center gap-3.5">
-            <div class="w-10 h-10 rounded-xl bg-[#FAF7F2] border border-[#DDD6CB] text-[#CE2D2D] flex items-center justify-center shrink-0">
-                <i data-lucide="help-circle" class="w-5 h-5"></i>
+    <!-- Interactive Installation Paths Widget -->
+    <section class="bg-white border-2 border-[#1E1E1E] rounded-3xl p-5 sm:p-6 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-[#E5E0D8] pb-3">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-[#FDF2F2] text-[#CE2D2D] flex items-center justify-center font-bold">
+                    <i data-lucide="folder-cog" class="w-4.5 h-4.5"></i>
+                </div>
+                <div>
+                    <h2 class="text-sm font-black text-[#18181B] font-sans">Guía Rápida: Dónde Colocar los Archivos BIOS</h2>
+                    <p class="text-[11px] text-gray-500 font-sans">Selecciona tu emulador para ver las rutas predeterminadas de instalación</p>
+                </div>
             </div>
-            <div>
-                <h3 class="text-xs font-bold font-mono text-[#18181B] uppercase">¿Cómo instalar los archivos BIOS?</h3>
-                <p class="text-xs text-gray-600 font-sans mt-0.5">Descarga el archivo comprimido (.zip / .7z), descomprímelo si es necesario y copia los archivos (.bin / .rom) en la carpeta <code class="text-xs font-mono font-bold bg-[#FAF7F2] px-1 py-0.5 rounded border border-[#DDD6CB]">/bios</code> de tu emulador favorito.</p>
+            <span class="text-[10px] font-mono font-bold bg-[#FAF7F2] border border-[#DDD6CB] px-2.5 py-1 rounded-lg text-gray-700 hidden sm:inline-block">
+                Copiar con 1 Clic
+            </span>
+        </div>
+
+        <!-- Emulator Selector Chips -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs font-mono">
+            <button @click="activeGuideEmu = 'pcsx2'"
+                    :class="activeGuideEmu === 'pcsx2' ? 'bg-[#18181B] text-white' : 'bg-[#FAF7F2] text-gray-700 hover:bg-[#EDE7DE]'"
+                    class="px-3 py-1.5 rounded-xl border border-[#DDD6CB] font-bold transition-all shrink-0">
+                PCSX2 (PS2)
+            </button>
+            <button @click="activeGuideEmu = 'duckstation'"
+                    :class="activeGuideEmu === 'duckstation' ? 'bg-[#18181B] text-white' : 'bg-[#FAF7F2] text-gray-700 hover:bg-[#EDE7DE]'"
+                    class="px-3 py-1.5 rounded-xl border border-[#DDD6CB] font-bold transition-all shrink-0">
+                DuckStation (PS1)
+            </button>
+            <button @click="activeGuideEmu = 'rpcs3'"
+                    :class="activeGuideEmu === 'rpcs3' ? 'bg-[#18181B] text-white' : 'bg-[#FAF7F2] text-gray-700 hover:bg-[#EDE7DE]'"
+                    class="px-3 py-1.5 rounded-xl border border-[#DDD6CB] font-bold transition-all shrink-0">
+                RPCS3 (PS3)
+            </button>
+            <button @click="activeGuideEmu = 'flycast'"
+                    :class="activeGuideEmu === 'flycast' ? 'bg-[#18181B] text-white' : 'bg-[#FAF7F2] text-gray-700 hover:bg-[#EDE7DE]'"
+                    class="px-3 py-1.5 rounded-xl border border-[#DDD6CB] font-bold transition-all shrink-0">
+                Flycast (Dreamcast)
+            </button>
+            <button @click="activeGuideEmu = 'retroarch'"
+                    :class="activeGuideEmu === 'retroarch' ? 'bg-[#18181B] text-white' : 'bg-[#FAF7F2] text-gray-700 hover:bg-[#EDE7DE]'"
+                    class="px-3 py-1.5 rounded-xl border border-[#DDD6CB] font-bold transition-all shrink-0">
+                RetroArch (Todos)
+            </button>
+        </div>
+
+        <!-- Dynamic Guide Content by Emulator -->
+        <div class="bg-[#FAF7F2] border border-[#DDD6CB] rounded-2xl p-4 text-xs font-sans space-y-3">
+            <!-- PCSX2 -->
+            <div x-show="activeGuideEmu === 'pcsx2'" class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-[#18181B]">Ruta en Windows (PCSX2):</span>
+                    <button @click="copyText('%USERPROFILE%\\Documents\\PCSX2\\bios\\', 'pcsx2-win')" class="font-mono text-[10px] text-[#CE2D2D] hover:underline font-bold flex items-center gap-1">
+                        <span x-text="copiedPath === 'pcsx2-win' ? '¡Copiado!' : 'Copiar Ruta'"></span>
+                        <i data-lucide="copy" class="w-3 h-3"></i>
+                    </button>
+                </div>
+                <code class="block bg-white p-2 rounded-xl border border-[#DDD6CB] font-mono text-[11px] text-gray-800 select-all">
+                    %USERPROFILE%\Documents\PCSX2\bios\ (o la carpeta portable \bios\ junto al .exe)
+                </code>
+                <p class="text-gray-600 text-[11px]">En <strong>Android (NetherSX2)</strong>: Crea una carpeta llamada <code class="font-mono bg-white px-1 py-0.5 rounded border border-[#DDD6CB]">/BIOS/</code> en el almacenamiento interno y vincúlala en <em>Ajustes de Sistema > Directorio de BIOS</em>.</p>
+            </div>
+
+            <!-- DuckStation -->
+            <div x-show="activeGuideEmu === 'duckstation'" class="space-y-2" style="display: none;">
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-[#18181B]">Ruta en Windows (DuckStation):</span>
+                    <button @click="copyText('%USERPROFILE%\\Documents\\DuckStation\\bios\\', 'duck-win')" class="font-mono text-[10px] text-[#CE2D2D] hover:underline font-bold flex items-center gap-1">
+                        <span x-text="copiedPath === 'duck-win' ? '¡Copiado!' : 'Copiar Ruta'"></span>
+                        <i data-lucide="copy" class="w-3 h-3"></i>
+                    </button>
+                </div>
+                <code class="block bg-white p-2 rounded-xl border border-[#DDD6CB] font-mono text-[11px] text-gray-800 select-all">
+                    %USERPROFILE%\Documents\DuckStation\bios\ (Recomendado: SCPH-1001.bin o SCPH-5502.bin)
+                </code>
+                <p class="text-gray-600 text-[11px]">Abre DuckStation, ve a <em>Configuración > Ajustes de BIOS</em> y haz clic en <strong>Buscar en directorio</strong> para autodetectar la BIOS de todas las regiones.</p>
+            </div>
+
+            <!-- RPCS3 -->
+            <div x-show="activeGuideEmu === 'rpcs3'" class="space-y-2" style="display: none;">
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-[#18181B]">Instalación de Firmware en RPCS3:</span>
+                </div>
+                <code class="block bg-white p-2 rounded-xl border border-[#DDD6CB] font-mono text-[11px] text-gray-800">
+                    Arrastra el archivo PS3UPDAT.PUP descargado directamente a la ventana principal de RPCS3
+                </code>
+                <p class="text-gray-600 text-[11px]">También puedes ir al menú superior: <em>File > Install Firmware</em> y seleccionar el archivo <code class="font-mono bg-white px-1 py-0.5 rounded border border-[#DDD6CB]">PS3UPDAT.PUP</code>. RPCS3 compilará los módulos PPU/SPU automáticamente.</p>
+            </div>
+
+            <!-- Flycast -->
+            <div x-show="activeGuideEmu === 'flycast'" class="space-y-2" style="display: none;">
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-[#18181B]">Ruta de Dreamcast (Flycast / Redream):</span>
+                    <button @click="copyText('%APPDATA%\\Flycast\\data\\', 'flycast-win')" class="font-mono text-[10px] text-[#CE2D2D] hover:underline font-bold flex items-center gap-1">
+                        <span x-text="copiedPath === 'flycast-win' ? '¡Copiado!' : 'Copiar Ruta'"></span>
+                        <i data-lucide="copy" class="w-3 h-3"></i>
+                    </button>
+                </div>
+                <code class="block bg-white p-2 rounded-xl border border-[#DDD6CB] font-mono text-[11px] text-gray-800 select-all">
+                    %APPDATA%\Flycast\data\ (Colocar: dc_boot.bin y dc_flash.bin)
+                </code>
+                <p class="text-gray-600 text-[11px]">Esto habilita el arranque original con la espiral naranja/azul de Sega y permite formatear las tarjetas de memoria virtual (VMU).</p>
+            </div>
+
+            <!-- RetroArch -->
+            <div x-show="activeGuideEmu === 'retroarch'" class="space-y-2" style="display: none;">
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-[#18181B]">Ruta Universal en RetroArch:</span>
+                    <button @click="copyText('RetroArch\\system\\', 'ra-win')" class="font-mono text-[10px] text-[#CE2D2D] hover:underline font-bold flex items-center gap-1">
+                        <span x-text="copiedPath === 'ra-win' ? '¡Copiado!' : 'Copiar Ruta'"></span>
+                        <i data-lucide="copy" class="w-3 h-3"></i>
+                    </button>
+                </div>
+                <code class="block bg-white p-2 rounded-xl border border-[#DDD6CB] font-mono text-[11px] text-gray-800 select-all">
+                    Carpeta principal de RetroArch > system\
+                </code>
+                <p class="text-gray-600 text-[11px]">En Android o Steam Deck, copia los archivos sueltos (.bin, .rom) directamente dentro del directorio <code class="font-mono bg-white px-1 py-0.5 rounded border border-[#DDD6CB]">system/</code>. Todos los núcleos (Beetle PSX, Genesis Plus GX, Snes9x) los detectarán automáticamente.</p>
             </div>
         </div>
-    </div>
+    </section>
 
     <!-- BIOS Cards Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -167,16 +325,34 @@
                     'emulator' => $bios->emulator,
                     'description' => $bios->description,
                 ]);
+
+                // Detect Region
+                $sysLower = strtolower($bios->system . ' ' . $bios->version);
+                $regionBadge = 'Todas las Regiones';
+                $regionColor = 'bg-gray-100 text-gray-800 border-gray-200';
+                if (str_contains($sysLower, 'all regions') || str_contains($sysLower, 'complete') || str_contains($sysLower, 'pack')) {
+                    $regionBadge = 'Colección Multi-Región (USA / EUR / JPN)';
+                    $regionColor = 'bg-blue-50 text-blue-700 border-blue-200';
+                } elseif (str_contains($sysLower, 'japan') || str_contains($sysLower, 'jp')) {
+                    $regionBadge = 'NTSC-J (Japón)';
+                    $regionColor = 'bg-rose-50 text-rose-700 border-rose-200';
+                } elseif (str_contains($sysLower, 'europe') || str_contains($sysLower, 'pal')) {
+                    $regionBadge = 'PAL (Europa 50Hz)';
+                    $regionColor = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                } elseif (str_contains($sysLower, 'usa') || str_contains($sysLower, 'us')) {
+                    $regionBadge = 'NTSC-U (América 60Hz)';
+                    $regionColor = 'bg-amber-50 text-amber-700 border-amber-200';
+                }
             @endphp
             <div x-show="matches({{ $biosJson }})"
-                 class="bg-white border-2 border-[#1E1E1E] rounded-2xl p-5 flex flex-col justify-between space-y-4 hover:shadow-md transition-all group">
+                 class="bg-white border-2 border-[#1E1E1E] rounded-3xl p-5 flex flex-col justify-between space-y-4 hover:shadow-md transition-all group">
                 
-                <div class="space-y-3">
+                <div class="space-y-3.5">
                     <!-- Top header -->
-                    <div class="flex items-center justify-between border-b border-[#E5E0D8] pb-3">
-                        <div class="flex items-center gap-2.5">
-                            <div class="w-9 h-9 rounded-xl bg-[#FAF7F2] border border-[#DDD6CB] group-hover:bg-[#FDF2F2] group-hover:border-[#FCA5A5] flex items-center justify-center text-[#18181B] group-hover:text-[#CE2D2D] transition-colors shrink-0">
-                                <i data-lucide="binary" class="w-4.5 h-4.5"></i>
+                    <div class="flex items-start justify-between border-b border-[#E5E0D8] pb-3 gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-2xl bg-[#FAF7F2] border border-[#DDD6CB] group-hover:bg-[#FDF2F2] group-hover:border-[#FCA5A5] flex items-center justify-center text-[#18181B] group-hover:text-[#CE2D2D] transition-colors shrink-0">
+                                <i data-lucide="binary" class="w-5 h-5"></i>
                             </div>
                             <div>
                                 <h2 class="text-sm sm:text-base font-black text-[#18181B] group-hover:text-[#CE2D2D] transition-colors font-sans">
@@ -185,8 +361,22 @@
                                 <span class="text-[10px] font-mono text-gray-500 block">{{ $bios->version }}</span>
                             </div>
                         </div>
-                        <span class="px-2.5 py-1 rounded-lg bg-[#FAF7F2] text-[#CE2D2D] border border-[#DDD6CB] text-[10px] font-mono font-black shrink-0">
+                        <span class="px-2.5 py-1 rounded-xl bg-[#FAF7F2] text-[#CE2D2D] border border-[#DDD6CB] text-[10px] font-mono font-black shrink-0">
                             {{ $bios->size }}
+                        </span>
+                    </div>
+
+                    <!-- Region and Quality Pills -->
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <span class="px-2.5 py-0.5 rounded-lg border text-[10px] font-mono font-bold {{ $regionColor }}">
+                            {{ $regionBadge }}
+                        </span>
+                        <span class="px-2 py-0.5 rounded-lg border border-[#DDD6CB] bg-[#FAF7F2] text-[10px] font-mono text-gray-600 flex items-center gap-1">
+                            <i data-lucide="zap" class="w-3 h-3 text-amber-500"></i>
+                            <span>Servidor Vault CDN</span>
+                        </span>
+                        <span class="px-2 py-0.5 rounded-lg border border-emerald-200 bg-emerald-50 text-[10px] font-mono text-emerald-700 font-bold">
+                            ✓ Redump OK
                         </span>
                     </div>
 
@@ -196,30 +386,30 @@
                     </p>
 
                     <!-- Technical Matrix -->
-                    <div class="bg-[#FAF7F2] border border-[#DDD6CB] rounded-xl p-3 space-y-1.5 font-mono text-[11px]">
+                    <div class="bg-[#FAF7F2] border border-[#DDD6CB] rounded-2xl p-3.5 space-y-2 font-mono text-[11px]">
                         @if($bios->files)
                         <div class="flex items-center justify-between gap-2">
-                            <span class="text-gray-500 shrink-0">Archivos:</span>
+                            <span class="text-gray-500 shrink-0 font-bold">Archivos:</span>
                             <strong class="text-[#18181B] truncate text-right text-[10px]" title="{{ $bios->files }}">{{ $bios->files }}</strong>
                         </div>
                         @endif
                         @if($bios->emulator)
                         <div class="flex items-center justify-between gap-2">
-                            <span class="text-gray-500 shrink-0">Emulador:</span>
+                            <span class="text-gray-500 shrink-0 font-bold">Emuladores:</span>
                             <span class="text-[#CE2D2D] font-bold truncate text-right text-[10px]" title="{{ $bios->emulator }}">{{ $bios->emulator }}</span>
                         </div>
                         @endif
                         @if($bios->md5)
-                        <div class="flex items-center justify-between pt-1 border-t border-[#E5E0D8] text-[10px]">
-                            <span class="text-gray-400">MD5:</span>
+                        <div class="flex items-center justify-between pt-1.5 border-t border-[#E5E0D8] text-[10px]">
+                            <span class="text-gray-400 font-bold">MD5 Checksum:</span>
                             <div class="flex items-center gap-1.5">
-                                <code class="text-gray-600 font-mono select-all">{{ $bios->md5 }}</code>
+                                <code class="text-gray-700 font-mono select-all bg-white px-1.5 py-0.5 rounded border border-[#DDD6CB]">{{ $bios->md5 }}</code>
                                 <button type="button"
                                         @click="copyHash('{{ $bios->md5 }}', {{ $bios->id }})"
-                                        class="text-gray-400 hover:text-[#CE2D2D] transition-colors"
+                                        class="text-gray-400 hover:text-[#CE2D2D] transition-colors p-1"
                                         title="Copiar hash MD5">
                                     <span x-show="copiedMd5 !== {{ $bios->id }}">
-                                        <i data-lucide="copy" class="w-3 h-3"></i>
+                                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
                                     </span>
                                     <span x-show="copiedMd5 === {{ $bios->id }}" class="text-green-600 text-[9px] font-bold">
                                         ¡Copiado!
@@ -236,9 +426,9 @@
                     <a href="{{ $bios->download_url }}" 
                        target="_blank"
                        rel="noopener noreferrer"
-                       class="w-full py-2.5 rounded-xl bg-[#CE2D2D] hover:bg-[#B71C1C] text-white border border-[#1E1E1E] font-black text-xs font-sans uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md shadow-red-500/20 active:scale-95">
+                       class="w-full py-3 rounded-2xl bg-[#CE2D2D] hover:bg-[#B71C1C] text-white border-2 border-[#1E1E1E] font-black text-xs font-sans uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md shadow-red-500/20 active:scale-95 group-hover:border-black">
                         <i data-lucide="download" class="w-4 h-4"></i>
-                        <span>Descargar BIOS Directa ({{ $bios->size }})</span>
+                        <span>Descargar desde Servidor Vault CDN ({{ $bios->size }})</span>
                     </a>
                 </div>
 
