@@ -14,7 +14,9 @@ class SyncBiosEmulatorsCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'app:sync-bios-emulators {--force : Sobrescribir datos sin confirmación}';
+    protected $signature = 'app:sync-bios-emulators 
+                            {--force : Sobrescribir datos sin confirmación}
+                            {--upload-vault : Subir y transferir automáticamente los packs a la Bóveda Privada CDN}';
 
     /**
      * The console command description.
@@ -45,7 +47,16 @@ class SyncBiosEmulatorsCommand extends Command
             ]
         );
 
+        if ($this->option('upload-vault')) {
+            $this->newLine();
+            $this->info('🛡️ Ejecutando subida automática a la Bóveda Privada CDN...');
+            $this->call('vault:sync-bios-r2');
+        } else {
+            $this->line('💡 <comment>Tip:</comment> Para transferir los archivos a la Bóveda Privada ejecuta: <info>php artisan vault:sync-bios-r2</info>');
+        }
+
         $this->info('✨ ¡Sincronización completada con éxito!');
         return Command::SUCCESS;
     }
 }
+
