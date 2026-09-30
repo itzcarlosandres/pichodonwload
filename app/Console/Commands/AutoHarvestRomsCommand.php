@@ -319,13 +319,32 @@ class AutoHarvestRomsCommand extends Command
                                 $slug .= '-' . ($slugCount + 1);
                             }
 
+                            $harvestDl = $scrape['direct_download_url'] ?? ($scrape['download_url'] ?? null);
+                            if ($harvestDl && (str_contains($harvestDl, 'romsemu.com') || str_contains($harvestDl, 'cdromance.org') || str_contains($harvestDl, 'romspedia.com'))) {
+                                $harvestDl = null;
+                            }
+
+                            $cleanHarvestLinks = [];
+                            if (!empty($scrape['download_links']) && is_array($scrape['download_links'])) {
+                                foreach ($scrape['download_links'] as $link) {
+                                    if (!empty($link['url']) && !str_contains($link['url'], 'romsemu.com') && !str_contains($link['url'], 'cdromance.org') && !str_contains($link['url'], 'romspedia.com')) {
+                                        $cleanHarvestLinks[] = [
+                                            'server' => !empty($link['server']) ? $link['server'] : '1Fichier',
+                                            'url' => $link['url'],
+                                            'name' => $link['name'] ?? null,
+                                            'size' => $link['size'] ?? null,
+                                        ];
+                                    }
+                                }
+                            }
+
                             $game = Game::create([
                                 'title' => $title,
                                 'slug' => $slug,
                                 'console_id' => $consoleId,
                                 'cover_url' => $coverUrl,
                                 'cover_thumb_url' => $thumbUrl,
-                                'download_url' => $scrape['download_url'] ?? $sourceUrl,
+                                'download_url' => $harvestDl,
                                 'file_size' => $scrape['file_size'] ?? '1.0 GB',
                                 'file_format' => $scrape['file_format'] ?? 'ZIP',
                                 'release_year' => !empty($scrape['release_year']) ? (int)$scrape['release_year'] : null,
@@ -337,7 +356,7 @@ class AutoHarvestRomsCommand extends Command
                                 'description' => $description,
                                 'meta_title' => $metaTitle,
                                 'meta_description' => $metaDescription,
-                                'download_links' => $scrape['download_links'] ?? null,
+                                'download_links' => !empty($cleanHarvestLinks) ? $cleanHarvestLinks : null,
                                 'status' => 'DRAFT', // EN COLA PARA EL DRIP PUBLISHER
                                 'download_count' => 0,
                                 'views_count' => 0,

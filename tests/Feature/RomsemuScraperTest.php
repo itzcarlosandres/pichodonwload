@@ -24,7 +24,13 @@ class RomsemuScraperTest extends TestCase
         $this->assertEquals('nintendo-switch', $result['platform_slug']);
         $this->assertNotEmpty($result['title']);
         $this->assertNotEmpty($result['download_url']);
+        // NUNCA debe contener URLs intermedias de romsemu.com
+        $this->assertStringNotContainsString('romsemu.com', $result['download_url']);
         $this->assertIsArray($result['download_links']);
+        foreach ($result['download_links'] as $link) {
+            $this->assertStringNotContainsString('romsemu.com', $link['url']);
+            $this->assertContains($link['server'], ['1Fichier', 'Mega', 'MediaFire', 'Google Drive', 'PixelDrain', 'Torrent', 'Descarga Alternativa']);
+        }
     }
 
     /**

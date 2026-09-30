@@ -159,20 +159,39 @@ class AdminScraperDemoController extends Controller
         $languages = $request->input('languages', 'English');
         $publisher = $request->input('publisher');
 
+        $downloadUrl = $request->input('download_url');
+        if ($downloadUrl && (str_contains($downloadUrl, 'romsemu.com') || str_contains($downloadUrl, 'romspedia.com') || str_contains($downloadUrl, 'cdromance.org'))) {
+            $downloadUrl = null;
+        }
+
+        $cleanDownloadLinks = [];
+        if ($request->filled('download_links') && is_array($request->input('download_links'))) {
+            foreach ($request->input('download_links') as $link) {
+                if (!empty($link['url']) && !str_contains($link['url'], 'romsemu.com') && !str_contains($link['url'], 'cdromance.org') && !str_contains($link['url'], 'romspedia.com')) {
+                    $cleanDownloadLinks[] = [
+                        'server' => !empty($link['server']) ? $link['server'] : '1Fichier',
+                        'url' => $link['url'],
+                        'name' => $link['name'] ?? null,
+                        'size' => $link['size'] ?? null,
+                    ];
+                }
+            }
+        }
+
         $game = Game::create([
             'title' => $title,
             'slug' => $slug,
             'console_id' => $request->input('console_id'),
             'cover_url' => $coverUrl,
             'cover_thumb_url' => $thumbUrl,
-            'download_url' => $request->input('download_url'),
+            'download_url' => $downloadUrl,
             'file_size' => $request->input('file_size') ?: '1.0 GB',
             'file_format' => $request->input('file_format') ?: 'ZIP',
             'release_year' => $releaseYear,
             'region' => $region,
             'languages' => $languages,
             'publisher' => $publisher,
-            'download_links' => $request->input('download_links'),
+            'download_links' => !empty($cleanDownloadLinks) ? $cleanDownloadLinks : null,
             'status' => $status,
             'description' => 'Pendiente de generar con IA.',
             'download_count' => 0,
@@ -348,20 +367,39 @@ class AdminScraperDemoController extends Controller
             }
         }
 
+        $directDl = $scrape['direct_download_url'] ?? null;
+        if ($directDl && (str_contains($directDl, 'romsemu.com') || str_contains($directDl, 'romspedia.com') || str_contains($directDl, 'cdromance.org'))) {
+            $directDl = null;
+        }
+
+        $cleanQuickLinks = [];
+        if (!empty($scrape['download_links']) && is_array($scrape['download_links'])) {
+            foreach ($scrape['download_links'] as $link) {
+                if (!empty($link['url']) && !str_contains($link['url'], 'romsemu.com') && !str_contains($link['url'], 'cdromance.org') && !str_contains($link['url'], 'romspedia.com')) {
+                    $cleanQuickLinks[] = [
+                        'server' => !empty($link['server']) ? $link['server'] : '1Fichier',
+                        'url' => $link['url'],
+                        'name' => $link['name'] ?? null,
+                        'size' => $link['size'] ?? null,
+                    ];
+                }
+            }
+        }
+
         $game = Game::create([
             'title' => $title,
             'slug' => $slug,
             'console_id' => $console->id,
             'cover_url' => $coverUrl,
             'cover_thumb_url' => $thumbUrl,
-            'download_url' => $scrape['direct_download_url'] ?: $url,
+            'download_url' => $directDl,
             'file_size' => $scrape['file_size'] ?: '1.0 GB',
             'file_format' => $scrape['file_format'] ?: 'ZIP',
             'release_year' => $scrape['release_year'] ?? null,
             'region' => $scrape['region'] ?? 'USA',
             'languages' => $scrape['languages'] ?? 'English',
             'publisher' => $scrape['publisher'] ?? null,
-            'download_links' => $scrape['download_links'] ?? null,
+            'download_links' => !empty($cleanQuickLinks) ? $cleanQuickLinks : null,
             'status' => $status,
             'description' => $description,
             'meta_title' => $metaTitle,

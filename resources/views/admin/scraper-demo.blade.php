@@ -347,6 +347,39 @@
                                 <i data-lucide="download" class="w-3.5 h-3.5"></i> Probar Descarga
                             </a>
                         </div>
+
+                        <!-- Additional Mirrors / Files List -->
+                        <template x-if="result?.download_links && result.download_links.length > 0">
+                            <div class="pt-3 border-t border-[#232936] space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[11px] font-mono font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                                        <i data-lucide="server" class="w-3.5 h-3.5 text-purple-400"></i> Servidores & Mirrors Directos (<span x-text="result.download_links.length"></span>)
+                                    </span>
+                                    <span class="text-[10px] font-mono text-gray-500">100% directos sin enlaces intermedios</span>
+                                </div>
+                                <div class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                                    <template x-for="(mirror, mIdx) in result.download_links" :key="mIdx">
+                                        <div class="p-2.5 rounded-lg bg-[#11141A] border border-[#232936] flex items-center justify-between gap-3 text-xs">
+                                            <div class="flex items-center gap-2 min-w-0">
+                                                <span class="px-2 py-0.5 rounded font-mono font-bold text-[10px] shrink-0"
+                                                      :class="mirror.server === '1Fichier' ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30' : (mirror.server === 'Mega' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-purple-500/20 text-purple-300 border border-purple-500/30')"
+                                                      x-text="mirror.server || 'Mirror'"></span>
+                                                <span class="truncate text-gray-200 font-sans font-medium" x-text="mirror.name || mirror.url"></span>
+                                                <template x-if="mirror.size">
+                                                    <span class="text-[10px] font-mono text-gray-400 shrink-0" x-text="'(' + mirror.size + ')'"></span>
+                                                </template>
+                                            </div>
+                                            <div class="flex items-center gap-2 shrink-0">
+                                                <a :href="mirror.url" target="_blank" class="text-blue-400 hover:text-blue-300 text-[11px] font-mono underline flex items-center gap-1">
+                                                    <span>Probar</span>
+                                                    <i data-lucide="external-link" class="w-3 h-3"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
                     </div>
 
                     <!-- Import Options & Actions Box -->
@@ -742,6 +775,7 @@ function scraperDemoApp() {
                         publisher: this.result.publisher,
                         status: this.saveStatus,
                         optimize_cover: this.optimizeCover,
+                        download_links: this.result.download_links || [],
                     })
                 });
 

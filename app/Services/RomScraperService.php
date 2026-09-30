@@ -676,29 +676,44 @@ class RomScraperService
             }
         }
 
-        // Selección de opción principal (juego base en XCI o de mayor tamaño)
-        $primaryOption = null;
+        // Resolver enlace directo externo de cada opción disponible
+        $resolvedOptions = [];
         foreach ($downloadOptions as $opt) {
+            $optRes = $this->safety->safeFetch($opt['url'], 'romsemu');
+            if (!$optRes['success'] || empty($optRes['html'])) {
+                continue;
+            }
+
+            $directExtUrl = $this->extractRomsemuDirectDownloadUrl($optRes['html']);
+            // Requisito estricto: SI NO ES ENLACE DIRECTO REAL EXTERNO, NO SE EXTRAE
+            if ($directExtUrl && $this->isRealExternalDirectLink($directExtUrl)) {
+                $server = $this->detectMirrorServer($directExtUrl);
+                $resolvedOptions[] = [
+                    'title' => $opt['title'],
+                    'url' => $directExtUrl,
+                    'server' => $server,
+                    'size' => $opt['size'],
+                    'is_update' => $opt['is_update'],
+                ];
+            }
+        }
+
+        // Selección de opción principal (preferir juego base completo no-update, o la primera válida)
+        $primaryOption = null;
+        foreach ($resolvedOptions as $opt) {
             if (!$opt['is_update']) {
                 $primaryOption = $opt;
                 break;
             }
         }
-        if (!$primaryOption && !empty($downloadOptions)) {
-            $primaryOption = $downloadOptions[0];
+        if (!$primaryOption && !empty($resolvedOptions)) {
+            $primaryOption = $resolvedOptions[0];
         }
 
-        // Resolver enlace directo de la opción principal
         if ($primaryOption) {
-            $targetDlRes = $this->safety->safeFetch($primaryOption['url'], 'romsemu');
-            if ($targetDlRes['success'] && !empty($targetDlRes['html'])) {
-                if (preg_match('/<div[^>]*id=["\']download["\'][^>]*>[\s\S]*?<a[^>]+href=["\']([^"\']+)["\']/is', $targetDlRes['html'], $extMatch)) {
-                    $directDownloadUrl = $extMatch[1];
-                } elseif (preg_match('/<a[^>]+href=["\'](https?:\/\/(?:1fichier\.com|mega\.nz|drive\.google\.com|mediafire\.com)[^"\']+)["\']/i', $targetDlRes['html'], $extMatch)) {
-                    $directDownloadUrl = $extMatch[1];
-                }
-            }
-            if ($primaryOption['size']) {
+            $directDownloadUrl = $primaryOption['url'];
+            $isDownloadAvailable = true;
+            if (!empty($primaryOption['size'])) {
                 $fileSize = $primaryOption['size'];
             }
             if (preg_match('/(xci|nsp|cia|zip|7z|rar)/i', $primaryOption['title'], $fmtMatch)) {
@@ -706,25 +721,19 @@ class RomScraperService
             }
         }
 
-        if ($directDownloadUrl) {
-            $isDownloadAvailable = true;
-        }
-
         $fileSizeBytes = $this->parseSizeBytes($fileSize);
 
-        // Construir download_links estructurado
+        // Construir download_links (mirrors adicionales: actualizaciones, DLCs, servidores alternativos)
+        // Excluir la opción que ya se usa como enlace principal
         $downloadLinks = [];
-        foreach ($downloadOptions as $opt) {
-            $isPrimary = ($primaryOption && $opt['url'] === $primaryOption['url']);
-            $optUrl = $isPrimary && $directDownloadUrl ? $directDownloadUrl : $opt['url'];
-            $serverName = $isPrimary && $directDownloadUrl 
-                ? (str_contains($directDownloadUrl, '1fichier') ? '1Fichier' : 'Servidor Directo') 
-                : 'Romsemu';
-
+        foreach ($resolvedOptions as $opt) {
+            if ($primaryOption && $opt['url'] === $primaryOption['url']) {
+                continue;
+            }
             $downloadLinks[] = [
                 'name' => $opt['title'],
-                'url' => $optUrl,
-                'server' => $serverName,
+                'server' => $opt['server'],
+                'url' => $opt['url'],
                 'size' => $opt['size'],
                 'is_update' => $opt['is_update'],
             ];
@@ -749,7 +758,7 @@ class RomScraperService
             'publisher' => 'Nintendo',
             'developer' => null,
             'source_url' => $cleanUrl,
-            'download_url' => $directDownloadUrl ?: $downloadPageUrl,
+            'download_url' => $directDownloadUrl, // NUNCA devolver URL intermedia de romsemu
             'download_page_url' => $downloadPageUrl,
             'direct_download_url' => $directDownloadUrl,
             'download_links' => $downloadLinks,
@@ -1054,4 +1063,78 @@ class RomScraperService
 
         return $bestCandidate;
     }
+
+    /**
+     * Extrae el enlace de descarga directo del HTML de una subpágina de Romsemu
+     */
+    protected function extractRomsemuDirectDownloadUrl(string $html): ?string
+    {
+        if (empty($html)) {
+            return null;
+        }
+
+        // 1. Selector principal de Romsemu: div#download con botón a enlace externo
+        if (preg_match('/<div[^>]*id=["\']download["\'][^>]*>[\s\S]*?<a[^>]+href=["\']([^"\']+)["\']/is', $html, $m)) {
+            $link = trim(html_entity_decode($m[1]));
+            if ($this->isRealExternalDirectLink($link)) {
+                return $link;
+            }
+        }
+
+        // 2. Coincidencia directa con hosters reconocidos en cualquier botón/enlace de la página
+        if (preg_match('/<a[^>]+href=["\'](https?:\/\/(?:[a-z0-9\.\-]+\.)?(?:1fichier\.com|mega\.nz|mega\.io|mediafire\.com|drive\.google\.com|pixeldrain\.com)[^"\']*)["\']/i', $html, $m)) {
+            $link = trim(html_entity_decode($m[1]));
+            if ($this->isRealExternalDirectLink($link)) {
+                return $link;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Valida que una URL sea realmente un enlace directo externo
+     * y NO una página interna intermedia o enlace basura/social
+     */
+    protected function isRealExternalDirectLink(?string $url): bool
+    {
+        if (empty($url) || !preg_match('/^https?:\/\//i', $url)) {
+            return false;
+        }
+
+        // Prohibir terminantemente URLs intermedias de los propios scrapers o redes sociales
+        if (preg_match('/(?:romsemu\.com|cdromance\.org|romspedia\.com|facebook\.com|twitter\.com|x\.com|youtube\.com|instagram\.com|linkedin\.com|t\.me|schema\.org|w3\.org|wp\.com|gravatar|rankmath|dmca\.com)/i', $url)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Detecta el nombre del servidor compatible con las opciones de selección del admin
+     */
+    protected function detectMirrorServer(string $url): string
+    {
+        if (str_contains($url, '1fichier.com')) {
+            return '1Fichier';
+        }
+        if (preg_match('/mega\.(?:nz|io)/i', $url)) {
+            return 'Mega';
+        }
+        if (str_contains($url, 'mediafire.com')) {
+            return 'MediaFire';
+        }
+        if (str_contains($url, 'drive.google.com')) {
+            return 'Google Drive';
+        }
+        if (str_contains($url, 'pixeldrain.com')) {
+            return 'PixelDrain';
+        }
+        if (preg_match('/torrent|magnet:\?/i', $url)) {
+            return 'Torrent';
+        }
+
+        return 'Descarga Alternativa';
+    }
 }
+
