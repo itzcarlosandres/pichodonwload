@@ -36,6 +36,7 @@ class ScraperSafetyService
         $target = strtolower($providerOrUrl);
         if (str_contains($target, 'cdromance')) return 'cdromance';
         if (str_contains($target, 'romspedia')) return 'romspedia';
+        if (str_contains($target, 'romsemu')) return 'romsemu';
         return 'general';
     }
 

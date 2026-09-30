@@ -20,7 +20,7 @@ class AutoHarvestRomsCommand extends Command
      * @var string
      */
     protected $signature = 'roms:auto-harvest 
-                            {--provider= : Proveedor a rastrear: cdromance, romspedia o all} 
+                            {--provider= : Proveedor a rastrear: cdromance, romspedia, romsemu o all} 
                             {--console=all : Consola a explorar (ej: ps2), "random" para una aleatoria, o lista separada por comas (ej: ps2,psp,gba)} 
                             {--limit= : Límite de nuevos juegos a guardar en cola DRAFT} 
                             {--page= : Página específica para iniciar el rastreo o "random"} 
@@ -33,7 +33,7 @@ class AutoHarvestRomsCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Rastrea CDRomance y Romspedia de forma autónoma, descarta duplicados y encola juegos en DRAFT';
+    protected $description = 'Rastrea Romsemu, CDRomance y Romspedia de forma autónoma, descarta duplicados y encola juegos en DRAFT';
 
     /**
      * Normalización de slugs de consola a IDs locales
@@ -52,6 +52,8 @@ class AutoHarvestRomsCommand extends Command
         'game-boy-advance' => 'game-boy-advance',
         'nds' => 'nintendo-ds',
         'nintendo-ds' => 'nintendo-ds',
+        '3ds' => 'nintendo-3ds',
+        'nintendo-3ds' => 'nintendo-3ds',
         'snes' => 'super-nintendo',
         'super-nintendo' => 'super-nintendo',
         'n64' => 'nintendo-64',
@@ -60,6 +62,10 @@ class AutoHarvestRomsCommand extends Command
         'dc' => 'dreamcast',
         'genesis' => 'sega-genesis',
         'sega-genesis' => 'sega-genesis',
+        'switch' => 'nintendo-switch',
+        'nintendo-switch' => 'nintendo-switch',
+        'ps4' => 'playstation-4',
+        'playstation-4' => 'playstation-4',
     ];
 
     public function handle(
@@ -79,7 +85,7 @@ class AutoHarvestRomsCommand extends Command
         $isRandomPage = (bool) $this->option('random-page') || strtolower((string) $userPageInput) === 'random';
 
         $providers = $providerInput === 'all' 
-            ? config('roms.providers', ['cdromance', 'romspedia']) 
+            ? config('roms.providers', ['cdromance', 'romspedia', 'romsemu']) 
             : [$providerInput];
 
         $supportedConsoles = [
@@ -89,6 +95,8 @@ class AutoHarvestRomsCommand extends Command
             'gamecube', 
             'game-boy-advance', 
             'nintendo-ds', 
+            'nintendo-3ds',
+            'nintendo-switch',
             'super-nintendo', 
             'nintendo-64'
         ];
@@ -213,7 +221,8 @@ class AutoHarvestRomsCommand extends Command
                             continue;
                         }
 
-                        $this->info("   ✨ <info>[NUEVO CANDIDATO]</info> {$title} ({$localConsole->name}) -> Extrayendo detalles...");
+                        $consoleName = $localConsole ? $localConsole->name : ($candidate['console_badge'] ?? $targetConsoleSlug);
+                        $this->info("   ✨ <info>[NUEVO CANDIDATO]</info> {$title} ({$consoleName}) -> Extrayendo detalles...");
 
                         if ($dryRun) {
                             $this->comment("      [DRY-RUN] Simulado: se habría guardado en cola DRAFT.");
@@ -328,6 +337,7 @@ class AutoHarvestRomsCommand extends Command
                                 'description' => $description,
                                 'meta_title' => $metaTitle,
                                 'meta_description' => $metaDescription,
+                                'download_links' => $scrape['download_links'] ?? null,
                                 'status' => 'DRAFT', // EN COLA PARA EL DRIP PUBLISHER
                                 'download_count' => 0,
                                 'views_count' => 0,

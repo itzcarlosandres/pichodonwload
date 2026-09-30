@@ -17,13 +17,13 @@
             </div>
             <h1 class="text-2xl font-black text-white tracking-tight font-heading flex flex-wrap items-center gap-2.5">
                 <span class="p-2 rounded-xl transition-all"
-                      :class="activeProvider === 'romspedia' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'">
+                      :class="activeProvider === 'romspedia' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : (activeProvider === 'romsemu' ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-blue-500/20 text-blue-400 border border-blue-500/30')">
                     <i data-lucide="sparkles" class="w-5 h-5"></i>
                 </span>
                 <span>Extractor Multi-Proveedor</span>
                 <span class="text-xs px-2.5 py-1 rounded-full font-mono uppercase tracking-wider font-bold transition-all"
-                      :class="activeProvider === 'romspedia' ? 'bg-purple-500/15 text-purple-300 border border-purple-500/30' : 'bg-blue-500/15 text-blue-300 border border-blue-500/30'"
-                      x-text="activeProvider === 'romspedia' ? 'Modo: Romspedia.com' : 'Modo: CDRomance.org'">
+                      :class="activeProvider === 'romspedia' ? 'bg-purple-500/15 text-purple-300 border border-purple-500/30' : (activeProvider === 'romsemu' ? 'bg-red-500/15 text-red-300 border border-red-500/30' : 'bg-blue-500/15 text-blue-300 border border-blue-500/30')"
+                      x-text="activeProvider === 'romspedia' ? 'Modo: Romspedia.com' : (activeProvider === 'romsemu' ? 'Modo: Romsemu.com' : 'Modo: CDRomance.org')">
                 </span>
             </h1>
         </div>
@@ -55,7 +55,7 @@
             <span>Selecciona el Proveedor Web:</span>
         </label>
         
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <!-- Romspedia Provider Card -->
             <button type="button" 
                     @click="setProvider('romspedia')" 
@@ -121,6 +121,40 @@
                 </div>
                 <p class="text-xs text-gray-400 leading-relaxed font-sans mt-2">
                     Extracción de juegos traducidos al español, mods comunitarios y enlaces directos de servidores CDN en formato <span class="text-blue-300 font-mono font-bold">.7Z</span>.
+                </p>
+            </button>
+
+            <!-- Romsemu Provider Card -->
+            <button type="button" 
+                    @click="setProvider('romsemu')" 
+                    class="p-4 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden group shadow-md"
+                    :class="activeProvider === 'romsemu' 
+                        ? 'bg-red-950/30 border-red-500/60 shadow-lg shadow-red-900/20 ring-2 ring-red-500/50' 
+                        : 'bg-[#11141A] border-[#232936] hover:border-gray-600 opacity-60 hover:opacity-100'">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-3">
+                        <span class="p-2.5 rounded-xl transition-all"
+                              :class="activeProvider === 'romsemu' ? 'bg-red-600 text-white shadow-md shadow-red-600/30' : 'bg-[#171B22] text-gray-400 group-hover:text-red-300'">
+                            <i data-lucide="cpu" class="w-5 h-5"></i>
+                        </span>
+                        <div>
+                            <div class="text-sm font-bold text-white flex items-center gap-2">
+                                Romsemu.com
+                                <span class="text-[9px] px-1.5 py-0.5 rounded font-mono font-bold"
+                                      :class="activeProvider === 'romsemu' ? 'bg-red-500/30 text-red-200 border border-red-400/40' : 'bg-[#171B22] text-gray-500'">
+                                    Switch / 3DS
+                                </span>
+                            </div>
+                            <div class="text-[11px] text-gray-400 font-mono">Descargas en .XCI / .NSP</div>
+                        </div>
+                    </div>
+                    <div class="w-5 h-5 rounded-full border flex items-center justify-center transition-all"
+                         :class="activeProvider === 'romsemu' ? 'border-red-400 bg-red-600 text-white' : 'border-gray-600 bg-transparent'">
+                        <i data-lucide="check" class="w-3 h-3" x-show="activeProvider === 'romsemu'"></i>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-400 leading-relaxed font-sans mt-2">
+                    Extracción de juegos modernos de Nintendo Switch y 3DS, actualizaciones (.NSP) y servidores 1Fichier en formato <span class="text-red-300 font-mono font-bold">.XCI</span>.
                 </p>
             </button>
         </div>
@@ -531,6 +565,8 @@ function scraperDemoApp() {
                 this.url = 'https://www.romspedia.com/roms/playstation-portable/god-of-war-ghost-of-sparta-original';
             } else if (provider === 'cdromance') {
                 this.url = 'https://cdromance.org/psp/atv-offroad-fury-blazin-trails/';
+            } else if (provider === 'romsemu') {
+                this.url = 'https://romsemu.com/nintendo-switch/super-mario-odyssey/';
             }
             this.$nextTick(() => {
                 if (window.lucide) window.lucide.createIcons();
@@ -544,6 +580,8 @@ function scraperDemoApp() {
                 this.activeProvider = 'cdromance';
             } else if (u.includes('romspedia.com')) {
                 this.activeProvider = 'romspedia';
+            } else if (u.includes('romsemu.com')) {
+                this.activeProvider = 'romsemu';
             }
         },
 
@@ -598,10 +636,13 @@ function scraperDemoApp() {
                     this.result = data;
 
                     if (data.source_provider) {
-                        if (data.source_provider.toLowerCase().includes('cdromance')) {
+                        const sp = data.source_provider.toLowerCase();
+                        if (sp.includes('cdromance')) {
                             this.activeProvider = 'cdromance';
-                        } else if (data.source_provider.toLowerCase().includes('romspedia')) {
+                        } else if (sp.includes('romspedia')) {
                             this.activeProvider = 'romspedia';
+                        } else if (sp.includes('romsemu')) {
+                            this.activeProvider = 'romsemu';
                         }
                     }
 

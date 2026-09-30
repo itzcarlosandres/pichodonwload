@@ -33,11 +33,13 @@ class RomScraperService
             return $this->scrapeRomspedia($url);
         } elseif (str_contains($host, 'cdromance.org')) {
             return $this->scrapeCdromance($url);
+        } elseif (str_contains($host, 'romsemu.com')) {
+            return $this->scrapeRomsemu($url);
         }
 
         return [
             'success' => false,
-            'message' => 'El dominio no está soportado. Actualmente puedes usar URLs de romspedia.com o cdromance.org',
+            'message' => 'El dominio no está soportado. Actualmente puedes usar URLs de romspedia.com, cdromance.org o romsemu.com',
         ];
     }
 
@@ -515,6 +517,254 @@ class RomScraperService
     }
 
     /**
+     * Scraper especializado para Romsemu.com
+     */
+    protected function scrapeRomsemu(string $url): array
+    {
+        $startTime = microtime(true);
+
+        // 0. Si viene con /download o /download/3, normalizar a la URL base de la ficha
+        $cleanUrl = preg_replace('/\/download(?:\/\d+)?\/?$/i', '/', $url);
+
+        // 1. Comprobar pausa preventiva
+        $cooldown = $this->safety->checkCooldown('romsemu');
+        if ($cooldown) {
+            return [
+                'success' => false,
+                'cooldown' => true,
+                'remaining_seconds' => $cooldown['remaining_seconds'],
+                'message' => $cooldown['message'],
+            ];
+        }
+
+        $this->safety->applyPoliteThrottle('romsemu');
+
+        // 2. Descargar la página principal del juego
+        $res = $this->safety->safeFetch($cleanUrl, 'romsemu');
+        if (!$res['success']) {
+            return [
+                'success' => false,
+                'cooldown' => $res['cooldown'] ?? false,
+                'remaining_seconds' => $res['remaining_seconds'] ?? null,
+                'message' => $res['message'] ?? 'No se pudo conectar o descargar la información desde Romsemu.',
+            ];
+        }
+
+        $html = $res['html'];
+        $httpCode = $res['http_code'] ?? 200;
+
+        // Título limpio
+        $title = '';
+        if (preg_match('/<h1[^>]*>(.*?)<\/h1>/is', $html, $m)) {
+            $title = trim(strip_tags($m[1]));
+        }
+        $title = preg_replace('/\s+(?:Nintendo\s+Switch|Switch|ROM|ISO|NSP|XCI|Download).*$/i', '', $title);
+        $title = trim($title);
+
+        // Portada ultra-robusta
+        $coverUrl = '';
+        if (preg_match('/property=["\']og:image["\']\s+content=["\']([^"\']+)["\']/i', $html, $m)) {
+            $coverUrl = trim($m[1]);
+        } elseif (preg_match('/name=["\']twitter:image["\']\s+content=["\']([^"\']+)["\']/i', $html, $m)) {
+            $coverUrl = trim($m[1]);
+        } elseif (preg_match('/<img[^>]+class=["\'][^"\']*wp-post-image[^"\']*["\'][^>]+(?:data-src|src)=["\']([^"\']+)["\']/is', $html, $m)) {
+            $coverUrl = trim($m[1]);
+        }
+
+        if ($this->isSiteLogoOrInvalid($coverUrl)) {
+            $coverUrl = '';
+        }
+
+        // Metadatos de la tabla
+        $details = [];
+        if (preg_match_all('/<tr[^>]*>\s*<t[dh][^>]*>(.*?)<\/t[dh]>\s*<t[dh][^>]*>(.*?)<\/t[dh]>\s*<\/tr>/is', $html, $matches)) {
+            for ($i = 0; $i < count($matches[1]); $i++) {
+                $rawKey = strtolower(trim(strip_tags($matches[1][$i])));
+                $rawVal = trim(strip_tags($matches[2][$i]));
+                if (str_contains($rawKey, 'file size')) $details['file_size'] = $rawVal;
+                elseif (str_contains($rawKey, 'console')) $details['console'] = $rawVal;
+                elseif (str_contains($rawKey, 'genre')) $details['genre'] = $rawVal;
+                elseif (str_contains($rawKey, 'region')) $details['region'] = $rawVal;
+                elseif (str_contains($rawKey, 'released')) $details['released'] = $rawVal;
+                elseif (str_contains($rawKey, 'downloads')) $details['downloads'] = $rawVal;
+                elseif (str_contains($rawKey, 'full name')) $details['full_name'] = $rawVal;
+            }
+        }
+
+        // Plataforma
+        $rawConsole = $details['console'] ?? '';
+        if (!$rawConsole && preg_match('/romsemu\.com\/([a-z0-9\-]+)\//i', $cleanUrl, $pm)) {
+            $rawConsole = $pm[1];
+        }
+        $platformData = $this->mapPlatform($rawConsole ?: 'nintendo-switch');
+        $platform = $platformData['name'];
+        $platformSlug = $platformData['slug'];
+
+        // Géneros / Categorías
+        $rawGenre = $details['genre'] ?? 'Action, Adventure';
+        $categoryMapping = $this->mapCategories($rawGenre);
+
+        // Fecha de lanzamiento
+        $releaseYear = null;
+        $releaseDate = null;
+        if (!empty($details['released'])) {
+            $timestamp = strtotime($details['released']);
+            if ($timestamp) {
+                $releaseDate = date('Y-m-d', $timestamp);
+                $releaseYear = (int) date('Y', $timestamp);
+            } elseif (preg_match('/([0-9]{4})/', $details['released'], $ym)) {
+                $releaseYear = (int) $ym[1];
+            }
+        }
+        $region = $details['region'] ?? 'WorldWide';
+
+        // Descripción
+        $description = '';
+        if (preg_match('/<div[^>]*class=["\'][^"\']*(?:entry-content|post-content)[^"\']*["\'][^>]*>([\s\S]*?)<\/div>/i', $html, $cm)) {
+            $contentHtml = $cm[1];
+            $contentHtml = preg_replace('/<table[\s\S]*?<\/table>/is', '', $contentHtml);
+            $contentHtml = preg_replace('/<div[^>]*class=["\'][^"\']*(?:download|wp-block-buttons|sharedaddy|ad-|banner)[\s\S]*?<\/div>/is', '', $contentHtml);
+            $contentHtml = preg_replace('/<script[\s\S]*?<\/script>/is', '', $contentHtml);
+            $description = trim(strip_tags($contentHtml, '<p><br><strong><b><i><em><ul><ol><li>'));
+            $description = preg_replace('/(<br\s*\/?>\s*){3,}/i', '<br><br>', $description);
+        }
+
+        // Resolución de descargas
+        $downloadPageUrl = rtrim($cleanUrl, '/') . '/download';
+        if (preg_match('/<a[^>]+href=["\']([^"\']*(?:download)[^"\']*)["\'][^>]*>/i', $html, $dm)) {
+            $foundDl = $dm[1];
+            if (str_starts_with($foundDl, 'http')) {
+                $downloadPageUrl = $foundDl;
+            } elseif (str_starts_with($foundDl, '/')) {
+                $downloadPageUrl = 'https://romsemu.com' . $foundDl;
+            }
+        }
+
+        $dlRes = $this->safety->safeFetch($downloadPageUrl, 'romsemu');
+        $dlHtml = $dlRes['html'] ?? '';
+
+        $downloadOptions = [];
+        $directDownloadUrl = '';
+        $fileSize = $details['file_size'] ?? 'Pendiente';
+        $fileFormat = 'XCI';
+        $isDownloadAvailable = false;
+
+        if ($dlHtml) {
+            if (preg_match_all('/<tr[^>]*>([\s\S]*?)<\/tr>/is', $dlHtml, $rows)) {
+                foreach ($rows[0] as $row) {
+                    if (preg_match('/<a[^>]+href=["\']([^"\']+\/download\/\d+[\/]?)["\'][^>]*>(.*?)<\/a>/is', $row, $lm)) {
+                        $optionUrl = $lm[1];
+                        $optionText = trim(strip_tags($lm[2]));
+                        $optSize = '';
+                        if (preg_match_all('/<td[^>]*>(.*?)<\/td>/is', $row, $cols)) {
+                            foreach ($cols[1] as $colText) {
+                                $ct = trim(strip_tags($colText));
+                                if (preg_match('/[0-9.]+\s*(?:GB|MB|KB)/i', $ct)) {
+                                    $optSize = $ct;
+                                    break;
+                                }
+                            }
+                        }
+                        $downloadOptions[] = [
+                            'url' => $optionUrl,
+                            'title' => $optionText ?: 'Descargar Archivo',
+                            'size' => $optSize,
+                            'is_update' => (bool) preg_match('/update|dlc|patch|guide/i', $optionText),
+                        ];
+                    }
+                }
+            }
+        }
+
+        // Selección de opción principal (juego base en XCI o de mayor tamaño)
+        $primaryOption = null;
+        foreach ($downloadOptions as $opt) {
+            if (!$opt['is_update']) {
+                $primaryOption = $opt;
+                break;
+            }
+        }
+        if (!$primaryOption && !empty($downloadOptions)) {
+            $primaryOption = $downloadOptions[0];
+        }
+
+        // Resolver enlace directo de la opción principal
+        if ($primaryOption) {
+            $targetDlRes = $this->safety->safeFetch($primaryOption['url'], 'romsemu');
+            if ($targetDlRes['success'] && !empty($targetDlRes['html'])) {
+                if (preg_match('/<div[^>]*id=["\']download["\'][^>]*>[\s\S]*?<a[^>]+href=["\']([^"\']+)["\']/is', $targetDlRes['html'], $extMatch)) {
+                    $directDownloadUrl = $extMatch[1];
+                } elseif (preg_match('/<a[^>]+href=["\'](https?:\/\/(?:1fichier\.com|mega\.nz|drive\.google\.com|mediafire\.com)[^"\']+)["\']/i', $targetDlRes['html'], $extMatch)) {
+                    $directDownloadUrl = $extMatch[1];
+                }
+            }
+            if ($primaryOption['size']) {
+                $fileSize = $primaryOption['size'];
+            }
+            if (preg_match('/(xci|nsp|cia|zip|7z|rar)/i', $primaryOption['title'], $fmtMatch)) {
+                $fileFormat = strtoupper($fmtMatch[1]);
+            }
+        }
+
+        if ($directDownloadUrl) {
+            $isDownloadAvailable = true;
+        }
+
+        $fileSizeBytes = $this->parseSizeBytes($fileSize);
+
+        // Construir download_links estructurado
+        $downloadLinks = [];
+        foreach ($downloadOptions as $opt) {
+            $isPrimary = ($primaryOption && $opt['url'] === $primaryOption['url']);
+            $optUrl = $isPrimary && $directDownloadUrl ? $directDownloadUrl : $opt['url'];
+            $serverName = $isPrimary && $directDownloadUrl 
+                ? (str_contains($directDownloadUrl, '1fichier') ? '1Fichier' : 'Servidor Directo') 
+                : 'Romsemu';
+
+            $downloadLinks[] = [
+                'name' => $opt['title'],
+                'url' => $optUrl,
+                'server' => $serverName,
+                'size' => $opt['size'],
+                'is_update' => $opt['is_update'],
+            ];
+        }
+
+        $duration = round((microtime(true) - $startTime) * 1000);
+
+        return [
+            'success' => true,
+            'source_provider' => 'Romsemu',
+            'title' => $title ?: ($details['full_name'] ?? 'Título Desconocido'),
+            'cover_url' => $coverUrl,
+            'platform' => $platform,
+            'platform_slug' => $platformSlug,
+            'raw_genre' => $rawGenre,
+            'category_ids' => $categoryMapping['ids'],
+            'category_names' => $categoryMapping['names'],
+            'release_year' => $releaseYear,
+            'release_date' => $releaseDate,
+            'region' => $region,
+            'languages' => 'Multilenguaje',
+            'publisher' => 'Nintendo',
+            'developer' => null,
+            'source_url' => $cleanUrl,
+            'download_url' => $directDownloadUrl ?: $downloadPageUrl,
+            'download_page_url' => $downloadPageUrl,
+            'direct_download_url' => $directDownloadUrl,
+            'download_links' => $downloadLinks,
+            'is_download_available' => $isDownloadAvailable,
+            'file_size' => $fileSize,
+            'file_size_bytes' => $fileSizeBytes,
+            'file_format' => $fileFormat,
+            'description' => $description,
+            'screenshots' => [],
+            'http_status' => $httpCode,
+            'latency_ms' => $duration,
+        ];
+    }
+
+    /**
      * Mapea un texto de género a las categorías locales de la base de datos.
      * Si el género no existe, lo crea automáticamente con slug, color e icono.
      */
@@ -612,7 +862,7 @@ class RomScraperService
      */
     protected function mapPlatform(string $slug): array
     {
-        $slug = strtolower(trim($slug));
+        $slug = str_replace([' ', '_'], '-', strtolower(trim($slug)));
 
         $map = [
             'psp' => ['name' => 'PlayStation Portable (PSP)', 'slug' => 'psp'],
@@ -704,6 +954,26 @@ class RomScraperService
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
         $i = floor(log($bytes, 1024));
         return round($bytes / pow(1024, $i), 2) . ' ' . $units[$i];
+    }
+
+    /**
+     * Parsea un string de tamaño formateado (ej. "7.99 GB", "397.30 MB") a bytes enteros
+     */
+    protected function parseSizeBytes(string $formatted): int
+    {
+        $formatted = trim($formatted);
+        if (preg_match('/([0-9.]+)\s*(GB|MB|KB|B)/i', $formatted, $m)) {
+            $num = (float)$m[1];
+            $unit = strtoupper($m[2]);
+            return match ($unit) {
+                'GB' => (int)($num * 1024 * 1024 * 1024),
+                'MB' => (int)($num * 1024 * 1024),
+                'KB' => (int)($num * 1024),
+                default => (int)$num,
+            };
+        }
+
+        return 0;
     }
 
     /**

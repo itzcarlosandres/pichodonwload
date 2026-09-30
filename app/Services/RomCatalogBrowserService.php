@@ -31,6 +31,12 @@ class RomCatalogBrowserService
             'super-nintendo' => 'snes-rom',
             'nintendo-64' => 'n64-roms',
         ],
+        'romsemu' => [
+            'nintendo-switch' => 'nintendo-switch',
+            'nintendo-3ds' => 'nintendo-3ds',
+            'playstation-4' => 'playstation-4',
+            'sega-genesis' => 'sega-sg-1000',
+        ],
     ];
 
     protected ScraperSafetyService $safety;
@@ -48,6 +54,8 @@ class RomCatalogBrowserService
         $provider = strtolower($provider);
         if ($provider === 'cdromance') {
             return $this->browseCdromance($consoleSlug, $page);
+        } elseif ($provider === 'romsemu') {
+            return $this->browseRomsemu($consoleSlug, $page);
         }
 
         return $this->browseRomspedia($consoleSlug, $page);
@@ -285,6 +293,69 @@ class RomCatalogBrowserService
             'current_page' => $page,
             'has_next' => $hasNext,
             'provider' => 'romspedia',
+            'console' => $consoleSlug,
+            'total_in_page' => count($games),
+        ];
+    }
+
+    /**
+     * Listado desde Romsemu.com
+     */
+    protected function browseRomsemu(string $consoleSlug, int $page): array
+    {
+        $platformPath = $this->platformMap['romsemu'][$consoleSlug] ?? 'nintendo-switch';
+        $url = $page > 1 
+            ? "https://romsemu.com/roms/{$platformPath}/page/{$page}/"
+            : "https://romsemu.com/roms/{$platformPath}/";
+
+        $fetchRes = $this->safety->safeFetch($url, 'romsemu', [], true, 900);
+        if (!$fetchRes['success']) {
+            return [
+                'success' => false,
+                'cooldown' => $fetchRes['cooldown'] ?? false,
+                'remaining_seconds' => $fetchRes['remaining_seconds'] ?? null,
+                'message' => $fetchRes['message'] ?? 'No se pudo conectar con el catálogo de Romsemu.',
+                'games' => [],
+                'current_page' => $page,
+                'has_next' => false,
+                'provider' => 'romsemu',
+                'console' => $consoleSlug,
+                'total_in_page' => 0,
+            ];
+        }
+
+        $html = $fetchRes['html'];
+        $games = [];
+
+        if (preg_match_all('/<a[^>]+href=["\'](https:\/\/romsemu\.com\/[^\/]+\/[^"\'\/]+\/)["\'][^>]*>.*?<img[^>]+(?:data-src|src)=["\']([^"\']+)["\'][^>]*>.*?<span class="site-box-title">([^<]+)<\/span>/is', $html, $matches)) {
+            for ($i = 0; $i < count($matches[1]); $i++) {
+                $gameUrl = $matches[1][$i];
+                $coverUrl = $matches[2][$i];
+                $rawTitle = html_entity_decode(strip_tags($matches[3][$i]), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                $cleanTitle = trim(preg_replace('/\s+(?:Nintendo\s+Switch|Switch|ROM|ISO|NSP|XCI|Download).*$/i', '', $rawTitle));
+                $slug = Str::slug($cleanTitle);
+
+                $games[] = [
+                    'title' => $cleanTitle,
+                    'slug' => $slug,
+                    'url' => $gameUrl,
+                    'cover_thumb' => $coverUrl,
+                    'provider' => 'Romsemu',
+                    'console_slug' => $consoleSlug,
+                    'console_badge' => strtoupper(str_replace('-', ' ', $consoleSlug)),
+                ];
+            }
+        }
+
+        $games = $this->attachExistingStatus($games);
+        $hasNext = str_contains($html, "/page/" . ($page + 1) . "/");
+
+        return [
+            'success' => true,
+            'games' => $games,
+            'current_page' => $page,
+            'has_next' => $hasNext,
+            'provider' => 'romsemu',
             'console' => $consoleSlug,
             'total_in_page' => count($games),
         ];

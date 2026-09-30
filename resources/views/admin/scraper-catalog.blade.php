@@ -125,6 +125,13 @@
                         <i data-lucide="disc" class="w-3.5 h-3.5"></i>
                         <span>CDRomance</span>
                     </button>
+                    <button type="button" 
+                            @click="setProvider('romsemu')" 
+                            class="px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                            :class="provider === 'romsemu' ? 'bg-red-600 text-white shadow-md shadow-red-600/30' : 'text-gray-400 hover:text-white'">
+                        <i data-lucide="cpu" class="w-3.5 h-3.5"></i>
+                        <span>Romsemu</span>
+                    </button>
                 </div>
 
                 <!-- Console Selector Dropdown -->
@@ -133,6 +140,8 @@
                             @change="page = 1; loadCatalog()"
                             class="w-full bg-[#0A0C0F] border border-[#232936] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500 font-mono transition-colors">
                         <option value="all" style="background-color: #11141A;" :selected="provider === 'cdromance'">⭐ Todos los Sistemas (Últimos Agregados)</option>
+                        <option value="nintendo-switch" style="background-color: #11141A;">Nintendo Switch</option>
+                        <option value="nintendo-3ds" style="background-color: #11141A;">Nintendo 3DS</option>
                         <option value="psp" style="background-color: #11141A;">PlayStation Portable (PSP)</option>
                         <option value="playstation-2" style="background-color: #11141A;">PlayStation 2 (PS2)</option>
                         <option value="playstation" style="background-color: #11141A;">PlayStation 1 (PSX)</option>
@@ -472,6 +481,8 @@ function scraperCatalogApp() {
             this.page = 1;
             if (this.provider === 'romspedia' && this.consoleSlug === 'all') {
                 this.consoleSlug = 'psp';
+            } else if (this.provider === 'romsemu') {
+                this.consoleSlug = 'nintendo-switch';
             }
             this.loadCatalog();
         },
