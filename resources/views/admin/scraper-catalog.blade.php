@@ -3,45 +3,57 @@
 @section('title', 'Explorador de Catálogo & Importador 1-Clic — ROMHUB')
 
 @section('content')
-<div class="space-y-6 max-w-7xl mx-auto" x-data="scraperCatalogApp()" x-init="loadCatalog()">
+<div class="space-y-6 max-w-7xl mx-auto pb-12" x-data="scraperCatalogApp()" x-init="loadCatalog()">
 
-    <!-- Top Breadcrumb & Mode Switcher -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#232936] pb-4">
+    <!-- Top Breadcrumb & Luxury Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#1E2536] pb-5">
         <div>
-            <div class="flex items-center gap-2 text-xs font-mono text-gray-500 mb-1">
-                <a href="{{ route('admin.dashboard') }}" class="hover:text-gray-300">Admin</a>
-                <span>/</span>
+            <!-- Breadcrumbs -->
+            <nav class="flex items-center gap-2 text-xs font-mono text-gray-500 mb-2">
+                <a href="{{ route('admin.dashboard') }}" class="hover:text-gray-300 transition-colors">Admin</a>
+                <i data-lucide="chevron-right" class="w-3 h-3 text-gray-600"></i>
                 <span class="text-purple-400 font-semibold">Laboratorio</span>
-                <span>/</span>
+                <i data-lucide="chevron-right" class="w-3 h-3 text-gray-600"></i>
                 <span class="text-gray-300">Catálogo 1-Clic</span>
+            </nav>
+
+            <!-- Main Heading -->
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-purple-500/25 via-[#161B28] to-indigo-500/15 border border-purple-500/30 flex items-center justify-center shadow-lg shadow-purple-500/10">
+                    <i data-lucide="layers" class="w-5 h-5 text-purple-400"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl lg:text-3xl font-black text-white tracking-tight font-heading flex items-center gap-2.5">
+                        <span>Catálogo en 1 Clic</span>
+                        <span class="text-[10px] uppercase font-mono tracking-widest font-extrabold px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                            Ultra Rápido
+                        </span>
+                    </h1>
+                    <p class="text-xs text-gray-400 font-sans mt-0.5">Explora catálogos en vivo, descarta duplicados y publica con IA en segundos.</p>
+                </div>
             </div>
-            <h1 class="text-2xl font-black text-white tracking-tight font-heading flex flex-wrap items-center gap-2.5">
-                <span class="p-2 rounded-xl bg-purple-500/20 text-purple-400 border border-purple-500/30">
-                    <i data-lucide="layers" class="w-5 h-5"></i>
-                </span>
-                <span>Catálogo en 1 Clic</span>
-                <span class="text-xs px-2.5 py-1 rounded-full font-mono uppercase tracking-wider font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                    Importación Ultrarrápida
-                </span>
-            </h1>
         </div>
 
         <!-- Mode Navigation Tabs & Safety Badge -->
-        <div class="flex flex-wrap items-center gap-2">
-            <div class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 text-xs font-mono shadow-sm">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>Anti-Bloqueo:</span>
-                <span class="font-bold text-white">Activo (Cola Segura & Rate Limiting)</span>
+        <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+            <div class="hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-2xl bg-[#0B0E14] border border-[#1E2536] text-xs font-mono shadow-sm">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span class="text-gray-400">Anti-Bloqueo:</span>
+                <span class="font-bold text-emerald-400">Activo</span>
             </div>
 
-            <div class="flex items-center gap-1.5 p-1 bg-[#11141A] border border-[#232936] rounded-xl shadow-md">
+            <!-- Segmented Mode Switcher -->
+            <div class="inline-flex p-1 bg-[#090C12] border border-[#1E2536] rounded-2xl shadow-inner">
                 <a href="{{ route('admin.scraper.catalog') }}" 
-                   class="px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold bg-purple-600 text-white shadow-md shadow-purple-600/30 flex items-center gap-1.5">
+                   class="px-4 py-2 rounded-xl text-xs font-mono font-bold bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-600/25 flex items-center gap-1.5 transition-all">
                     <i data-lucide="layers" class="w-3.5 h-3.5"></i>
                     <span>Catálogo 1-Clic</span>
                 </a>
                 <a href="{{ route('admin.scraper.demo') }}" 
-                   class="px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold text-gray-400 hover:text-white hover:bg-[#171B22] flex items-center gap-1.5 transition-colors">
+                   class="px-4 py-2 rounded-xl text-xs font-mono font-bold text-gray-400 hover:text-white hover:bg-[#141824] flex items-center gap-1.5 transition-colors">
                     <i data-lucide="zap" class="w-3.5 h-3.5 text-purple-400"></i>
                     <span>Extractor por URL</span>
                 </a>
@@ -49,50 +61,68 @@
         </div>
     </div>
  
-    <!-- Autopilot & Drip-Feed SEO Control Banner -->
-    <div class="bg-gradient-to-r from-[#171B26] via-[#121620] to-[#171B26] border border-purple-500/25 rounded-2xl p-5 shadow-2xl relative overflow-hidden">
-        <div class="absolute -right-10 -bottom-10 w-44 h-44 bg-purple-600/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-5 relative z-10">
-            <div class="space-y-1.5">
-                <div class="flex flex-wrap items-center gap-2.5">
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+    <!-- Autopilot Executive Control Hub (HUD Panel) -->
+    <div class="relative rounded-3xl p-6 bg-gradient-to-br from-[#121622] via-[#0E121A] to-[#141926] border border-purple-500/20 shadow-2xl overflow-hidden">
+        <!-- Ambient Blur Glows -->
+        <div class="absolute -right-16 -top-16 w-56 h-56 bg-purple-600/15 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -left-16 -bottom-16 w-56 h-56 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+            <!-- Left Info Section -->
+            <div class="space-y-3 max-w-3xl">
+                <div class="flex flex-wrap items-center gap-2">
+                    <!-- Status Pulse Pill -->
+                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                        <span class="relative flex h-2 w-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                        </span>
                         Piloto Automático Activo
                     </span>
-                    <span class="text-xs font-mono text-gray-300">
-                        Publicando <strong class="text-white font-bold">{{ config('roms.posts_per_batch', 4) }} juegos</strong> cada <strong class="text-purple-400">{{ config('roms.batch_interval_hours', 2) }} horas</strong>
+
+                    <!-- Cadence Chip -->
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono bg-[#141924] border border-[#232B3E] text-gray-300">
+                        <i data-lucide="clock" class="w-3 h-3 text-purple-400"></i>
+                        <span>Publicando <strong class="text-white font-bold">{{ config('roms.posts_per_batch', 4) }} juegos</strong> / <strong class="text-purple-300 font-bold">{{ config('roms.batch_interval_hours', 2) }}h</strong></span>
                     </span>
-                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-blue-500/15 text-blue-300 border border-blue-500/30">
-                        <i data-lucide="shield-check" class="w-3 h-3"></i>
-                        Anti-Duplicados Estricto (Google Safe)
+
+                    <!-- Google Safe Chip -->
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono bg-blue-500/10 border border-blue-500/25 text-blue-300">
+                        <i data-lucide="shield-check" class="w-3 h-3 text-blue-400"></i>
+                        <span>Anti-Duplicados Estricto</span>
                     </span>
                 </div>
-                <p class="text-xs text-gray-400 leading-relaxed max-w-3xl">
-                    Los juegos extraídos desde <strong>CDRomance</strong> y <strong>Romspedia</strong> se filtran para descartar duplicados y se encolan en <code>DRAFT</code>. El cron automático los publica gradualmente para simular crecimiento orgánico y evitar penalizaciones de Google.
+
+                <!-- Explanation Text -->
+                <p class="text-xs text-gray-300 leading-relaxed font-sans">
+                    Los juegos explorados desde <strong class="text-red-400 font-bold">Romsemu</strong>, <strong class="text-blue-400 font-bold">CDRomance</strong> y <strong class="text-purple-400 font-bold">Romspedia</strong> se verifican contra duplicados y se almacenan en cola <code class="text-amber-300 bg-amber-950/40 px-1.5 py-0.5 rounded border border-amber-500/30">DRAFT</code>. El cron automático los publica progresivamente con sinopsis enriquecidas por IA para generar tráfico orgánico natural.
                 </p>
             </div>
 
-            <!-- Quick Action & Counter -->
-            <div class="flex flex-wrap items-center gap-3 shrink-0">
-                <div class="px-4 py-2 bg-[#0A0C0F] border border-[#232936] rounded-xl text-center">
-                    <div class="text-[10px] uppercase font-mono text-gray-500">En Cola DRAFT</div>
-                    <div class="text-lg font-black text-amber-400 font-mono" x-text="autopilotQueueCount">
+            <!-- Right Actions & Counters -->
+            <div class="flex items-center gap-3 shrink-0">
+                <!-- Draft Queue Widget -->
+                <div class="px-5 py-3 bg-[#080B10]/80 border border-[#1E2536] rounded-2xl text-center min-w-[120px] shadow-inner">
+                    <div class="text-[10px] uppercase font-mono tracking-wider text-gray-500 font-bold">En Cola DRAFT</div>
+                    <div class="text-2xl font-black text-amber-400 font-mono tracking-tight" x-text="autopilotQueueCount">
                         {{ \App\Models\Game::where('status', 'DRAFT')->count() }}
                     </div>
+                    <div class="text-[9px] text-gray-400 font-mono">Listos para goteo</div>
                 </div>
 
+                <!-- Publish Button -->
                 <button type="button"
                         @click="triggerDripNow()"
                         :disabled="dripLoading"
-                        class="px-4 py-2.5 rounded-xl text-xs font-mono font-bold bg-purple-600 hover:bg-purple-500 active:scale-95 text-white shadow-lg shadow-purple-600/30 flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50">
-                    <i data-lucide="send" class="w-3.5 h-3.5" :class="{'animate-spin': dripLoading}"></i>
+                        class="px-5 py-3.5 rounded-2xl text-xs font-mono font-bold bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 active:scale-95 text-white shadow-xl shadow-purple-600/30 flex items-center gap-2.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i data-lucide="send" class="w-4 h-4" :class="{'animate-spin': dripLoading}"></i>
                     <span x-text="dripLoading ? 'Publicando...' : 'Publicar 4 Ahora'"></span>
                 </button>
             </div>
         </div>
 
         <!-- Alert Notification for Drip -->
-        <div x-show="dripNotice" x-transition class="mt-4 p-3.5 rounded-xl text-xs font-mono flex items-center justify-between gap-3 border shadow-lg"
+        <div x-show="dripNotice" x-transition class="mt-4 p-3.5 rounded-2xl text-xs font-mono flex items-center justify-between gap-3 border shadow-lg"
              :class="dripNoticeSuccess ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300' : 'bg-amber-950/80 border-amber-500/40 text-amber-300'">
             <div class="flex items-center gap-2.5">
                 <i data-lucide="info" class="w-4 h-4 shrink-0"></i>
@@ -102,104 +132,125 @@
         </div>
     </div>
 
-    <!-- Filters & Settings Bar -->
-    <div class="bg-[#11141A] border border-[#232936] rounded-2xl p-5 shadow-xl space-y-4">
+    <!-- Command Center Bar (Organized Filter & Tools Dock) -->
+    <div class="rounded-3xl p-5 bg-[#0D111A] border border-[#1E2536] shadow-2xl space-y-4">
+        
+        <!-- Tier 1: Fuente (Provider) & Selector de Consola -->
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             
-            <!-- Left: Provider Tabs & Console Select -->
-            <div class="flex flex-wrap items-center gap-3">
-                
-                <!-- Provider Selector -->
-                <div class="flex items-center gap-1 bg-[#0A0C0F] p-1 rounded-xl border border-[#232936]">
-                    <button type="button" 
-                            @click="setProvider('romspedia')" 
-                            class="px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer"
-                            :class="provider === 'romspedia' ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30' : 'text-gray-400 hover:text-white'">
-                        <i data-lucide="gamepad" class="w-3.5 h-3.5"></i>
-                        <span>Romspedia</span>
-                    </button>
-                    <button type="button" 
-                            @click="setProvider('cdromance')" 
-                            class="px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer"
-                            :class="provider === 'cdromance' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30' : 'text-gray-400 hover:text-white'">
-                        <i data-lucide="disc" class="w-3.5 h-3.5"></i>
-                        <span>CDRomance</span>
-                    </button>
-                    <button type="button" 
-                            @click="setProvider('romsemu')" 
-                            class="px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer"
-                            :class="provider === 'romsemu' ? 'bg-red-600 text-white shadow-md shadow-red-600/30' : 'text-gray-400 hover:text-white'">
-                        <i data-lucide="cpu" class="w-3.5 h-3.5"></i>
-                        <span>Romsemu</span>
-                    </button>
-                </div>
+            <!-- Left: Provider Tabs Switcher -->
+            <div class="inline-flex p-1.5 rounded-2xl bg-[#07090F] border border-[#1E2536] shadow-inner gap-1.5 shrink-0">
+                <!-- Romspedia Button -->
+                <button type="button" 
+                        @click="setProvider('romspedia')" 
+                        class="px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-2 cursor-pointer"
+                        :class="provider === 'romspedia' ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30 border border-purple-400/40' : 'text-gray-400 hover:text-white hover:bg-[#141824]'">
+                    <i data-lucide="gamepad-2" class="w-3.5 h-3.5"></i>
+                    <span>Romspedia</span>
+                    <span class="w-1.5 h-1.5 rounded-full" :class="provider === 'romspedia' ? 'bg-white' : 'bg-transparent'"></span>
+                </button>
 
-                <!-- Console Selector Dropdown -->
-                <div class="relative min-w-[240px]">
+                <!-- CDRomance Button -->
+                <button type="button" 
+                        @click="setProvider('cdromance')" 
+                        class="px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-2 cursor-pointer"
+                        :class="provider === 'cdromance' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30 border border-blue-400/40' : 'text-gray-400 hover:text-white hover:bg-[#141824]'">
+                    <i data-lucide="disc-3" class="w-3.5 h-3.5"></i>
+                    <span>CDRomance</span>
+                    <span class="w-1.5 h-1.5 rounded-full" :class="provider === 'cdromance' ? 'bg-white' : 'bg-transparent'"></span>
+                </button>
+
+                <!-- Romsemu Button -->
+                <button type="button" 
+                        @click="setProvider('romsemu')" 
+                        class="px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-2 cursor-pointer"
+                        :class="provider === 'romsemu' ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/30 border border-rose-400/40' : 'text-gray-400 hover:text-white hover:bg-[#141824]'">
+                    <i data-lucide="cpu" class="w-3.5 h-3.5"></i>
+                    <span>Romsemu</span>
+                    <span class="text-[9px] px-1 py-0.2 rounded font-mono font-bold" :class="provider === 'romsemu' ? 'bg-white/20 text-white' : 'bg-[#141824] text-gray-500'">6 Consolas</span>
+                    <span class="w-1.5 h-1.5 rounded-full" :class="provider === 'romsemu' ? 'bg-white' : 'bg-transparent'"></span>
+                </button>
+            </div>
+
+            <!-- Right: Console Dropdown & Refresh Button Unified -->
+            <div class="flex items-center gap-2.5 flex-1 lg:max-w-md w-full">
+                <!-- Styled Console Dropdown -->
+                <div class="relative flex-1">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-500">
+                        <i data-lucide="tv" class="w-4 h-4"></i>
+                    </div>
                     <select x-model="consoleSlug" 
                             @change="page = 1; loadCatalog()"
-                            class="w-full bg-[#0A0C0F] border border-[#232936] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500 font-mono transition-colors">
-                        <option value="all" style="background-color: #11141A;" :selected="provider === 'cdromance'">⭐ Todos los Sistemas (Últimos Agregados)</option>
-                        <option value="nintendo-switch" style="background-color: #11141A;">Nintendo Switch</option>
-                        <option value="nintendo-3ds" style="background-color: #11141A;">Nintendo 3DS</option>
-                        <option value="psp" style="background-color: #11141A;">PlayStation Portable (PSP)</option>
-                        <option value="playstation-2" style="background-color: #11141A;">PlayStation 2 (PS2)</option>
-                        <option value="playstation" style="background-color: #11141A;">PlayStation 1 (PSX)</option>
-                        <option value="gamecube" style="background-color: #11141A;">Nintendo GameCube</option>
-                        <option value="game-boy-advance" style="background-color: #11141A;">Game Boy Advance (GBA)</option>
-                        <option value="nintendo-ds" style="background-color: #11141A;">Nintendo DS (NDS)</option>
-                        <option value="super-nintendo" style="background-color: #11141A;">Super Nintendo (SNES)</option>
-                        <option value="nintendo-64" style="background-color: #11141A;">Nintendo 64 (N64)</option>
+                            class="w-full bg-[#07090F] border border-[#1E2536] rounded-2xl pl-10 pr-9 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500 font-mono transition-all appearance-none cursor-pointer shadow-inner">
+                        <template x-for="item in currentConsoles" :key="item.slug">
+                            <option :value="item.slug" x-text="item.name" :selected="item.slug === consoleSlug" style="background-color: #0E121A; color: #FFFFFF;"></option>
+                        </template>
                     </select>
+                    <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-gray-500">
+                        <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                    </div>
                 </div>
 
-                <!-- Refresh Button -->
+                <!-- Refresh Button Locked Beside Dropdown -->
                 <button type="button" 
                         @click="loadCatalog()" 
                         :disabled="loading"
-                        class="p-2 rounded-xl bg-[#171B22] hover:bg-[#232936] border border-[#232936] text-gray-300 hover:text-white transition-colors cursor-pointer disabled:opacity-50"
+                        class="p-2.5 rounded-2xl bg-[#07090F] hover:bg-[#141824] border border-[#1E2536] hover:border-gray-600 text-gray-300 hover:text-white transition-all cursor-pointer disabled:opacity-50 shrink-0 shadow-sm"
                         title="Refrescar catálogo">
                     <i data-lucide="refresh-cw" class="w-4 h-4" :class="loading ? 'animate-spin text-purple-400' : ''"></i>
                 </button>
             </div>
 
-            <!-- Right: Quick Import Options (Status, AI Auto-Pilot & Local Optimization) -->
-            <div class="flex flex-wrap items-center gap-3 text-xs font-mono">
-                <!-- Piloto Automático IA Toggle -->
-                <label class="flex items-center gap-1.5 cursor-pointer text-purple-300 hover:text-purple-200 select-none bg-purple-950/40 border border-purple-500/30 px-2.5 py-1.5 rounded-xl transition-colors shadow-sm"
-                       title="Genera automáticamente la sinopsis enriquecida (~200 palabras) y meta tags SEO con Gemini IA">
-                    <input type="checkbox" x-model="generateAi" class="rounded bg-[#0A0C0F] border-purple-500 text-purple-600 focus:ring-purple-500 cursor-pointer">
-                    <span class="flex items-center gap-1 font-bold">
-                        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-purple-400"></i>
-                        <span>Piloto Automático IA</span>
-                    </span>
+        </div>
+
+        <!-- Tier 2: Barra de Herramientas de Importación Rápida -->
+        <div class="pt-3.5 border-t border-[#191F2D] flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+            <div class="flex items-center gap-2 text-gray-400">
+                <i data-lucide="sliders" class="w-3.5 h-3.5 text-purple-400"></i>
+                <span class="font-bold text-gray-300">Ajustes de 1-Clic:</span>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3">
+                <!-- Toggle Piloto Automático IA -->
+                <label class="flex items-center gap-2 cursor-pointer px-3.5 py-1.5 rounded-2xl border transition-all select-none shadow-sm"
+                       :class="generateAi ? 'bg-purple-950/40 border-purple-500/50 text-purple-200 ring-1 ring-purple-500/30' : 'bg-[#07090F] border-[#1E2536] text-gray-400 hover:text-gray-200'"
+                       title="Redacta sinopsis enriquecida (~200 palabras) y tags SEO con Gemini IA">
+                    <input type="checkbox" x-model="generateAi" class="hidden">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5" :class="generateAi ? 'text-purple-400' : 'text-gray-500'"></i>
+                    <span class="font-bold">Piloto Automático IA</span>
+                    <span class="w-2 h-2 rounded-full transition-colors" :class="generateAi ? 'bg-purple-400 shadow-sm shadow-purple-400' : 'bg-gray-600'"></span>
                 </label>
 
-                <!-- Estado Selector -->
-                <div class="flex items-center gap-2">
+                <!-- Estado Selector Pill -->
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-[#07090F] border border-[#1E2536]">
+                    <i data-lucide="tag" class="w-3.5 h-3.5 text-gray-500"></i>
                     <span class="text-gray-400 font-bold">Estado:</span>
-                    <select x-model="importStatus" class="bg-[#0A0C0F] border border-[#232936] rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none">
-                        <option value="DRAFT" style="background-color: #11141A;">Borrador (DRAFT)</option>
-                        <option value="PUBLISHED" style="background-color: #11141A;">Publicado (PUBLISHED)</option>
+                    <select x-model="importStatus" class="bg-transparent text-white font-mono text-xs focus:outline-none cursor-pointer">
+                        <option value="DRAFT" style="background-color: #0E121A;">Borrador (DRAFT)</option>
+                        <option value="PUBLISHED" style="background-color: #0E121A;">Publicado (PUBLISHED)</option>
                     </select>
                 </div>
 
-                <!-- WebP Convert Checkbox -->
-                <label class="flex items-center gap-1.5 cursor-pointer text-gray-300 select-none bg-[#0A0C0F] border border-[#232936] px-2.5 py-1.5 rounded-xl">
-                    <input type="checkbox" x-model="optimizeCover" class="rounded bg-[#0A0C0F] border-[#232936] text-purple-600 focus:ring-purple-500 cursor-pointer">
-                    <span>WebP local</span>
+                <!-- WebP Convert Checkbox Pill -->
+                <label class="flex items-center gap-2 cursor-pointer px-3.5 py-1.5 rounded-2xl border transition-all select-none shadow-sm"
+                       :class="optimizeCover ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-200 ring-1 ring-emerald-500/30' : 'bg-[#07090F] border-[#1E2536] text-gray-400 hover:text-gray-200'"
+                       title="Convierte la carátula local a formato WebP optimizado">
+                    <input type="checkbox" x-model="optimizeCover" class="hidden">
+                    <i data-lucide="image" class="w-3.5 h-3.5" :class="optimizeCover ? 'text-emerald-400' : 'text-gray-500'"></i>
+                    <span>WebP Local</span>
+                    <span class="w-2 h-2 rounded-full transition-colors" :class="optimizeCover ? 'bg-emerald-400 shadow-sm shadow-emerald-400' : 'bg-gray-600'"></span>
                 </label>
             </div>
-
         </div>
+
     </div>
 
     <!-- Feedback Message Banner -->
-    <div x-show="feedbackMessage" x-cloak class="p-4 rounded-xl border text-xs flex items-center justify-between gap-3 shadow-lg"
-         :class="feedbackSuccess ? 'bg-emerald-950/70 border-emerald-500/40 text-emerald-300' : 'bg-rose-950/70 border-rose-500/40 text-rose-300'">
-        <div class="flex items-center gap-2">
+    <div x-show="feedbackMessage" x-cloak class="p-4 rounded-2xl border text-xs flex items-center justify-between gap-3 shadow-lg"
+         :class="feedbackSuccess ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300' : 'bg-rose-950/80 border-rose-500/40 text-rose-300'">
+        <div class="flex items-center gap-2.5">
             <i :data-lucide="feedbackSuccess ? 'check-circle-2' : 'alert-circle'" class="w-4 h-4 shrink-0"></i>
-            <span x-text="feedbackMessage"></span>
+            <span x-text="feedbackMessage" class="font-medium"></span>
         </div>
         <template x-if="lastImportedEditUrl">
             <a :href="lastImportedEditUrl" target="_blank" rel="noopener noreferrer" class="font-bold underline text-white hover:text-emerald-200 shrink-0 flex items-center gap-1 font-mono">
@@ -210,7 +261,7 @@
     </div>
 
     <!-- Cooldown / Anti-Ban Safety Alert Banner -->
-    <div x-show="cooldownActive" x-cloak class="p-4 rounded-xl border border-amber-500/40 bg-amber-950/70 text-amber-200 text-xs flex flex-wrap items-center justify-between gap-3 shadow-lg">
+    <div x-show="cooldownActive" x-cloak class="p-4 rounded-2xl border border-amber-500/40 bg-amber-950/70 text-amber-200 text-xs flex flex-wrap items-center justify-between gap-3 shadow-lg">
         <div class="flex items-center gap-3">
             <i data-lucide="shield-alert" class="w-5 h-5 text-amber-400 shrink-0"></i>
             <div>
@@ -226,29 +277,47 @@
         </div>
     </div>
 
-    <!-- Status / Order Mode Bar -->
+    <!-- Status / Context & Provider Mode Ribbon -->
     <div class="flex flex-wrap items-center justify-between gap-3 px-1 py-1 text-xs font-mono">
-        <div class="flex items-center gap-2">
-            <span class="flex h-2 w-2 relative">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <template x-if="provider === 'cdromance'">
-                <span class="text-blue-300">
-                    <strong class="text-white">CDRomance:</strong> 
-                    <span x-show="consoleSlug === 'all'" class="text-emerald-400 font-bold">⭐ Últimos Agregados Recientes (Todos los Sistemas)</span>
-                    <span x-show="consoleSlug !== 'all'">⭐ Novedades y Últimos Agregados de <span class="text-white font-bold" x-text="consoleSlug.toUpperCase()"></span></span>
-                </span>
+        <div class="flex items-center gap-2.5">
+            <!-- Romsemu Ribbon -->
+            <template x-if="provider === 'romsemu'">
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-300">
+                    <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                    <strong class="text-white">Romsemu:</strong>
+                    <span x-show="consoleSlug === 'all'" class="text-rose-300 font-bold">⭐ Últimos Agregados (Todos los Sistemas en Vivo)</span>
+                    <span x-show="consoleSlug !== 'all'">🎮 Catálogo Oficial de <strong class="text-white" x-text="getConsoleName(consoleSlug)"></strong></span>
+                </div>
             </template>
+
+            <!-- CDRomance Ribbon -->
+            <template x-if="provider === 'cdromance'">
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-950/40 border border-blue-500/30 text-blue-300">
+                    <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                    <strong class="text-white">CDRomance:</strong>
+                    <span x-show="consoleSlug === 'all'" class="text-blue-300 font-bold">⭐ Últimos Agregados Recientes (Todos los Sistemas)</span>
+                    <span x-show="consoleSlug !== 'all'">⭐ Novedades de <strong class="text-white" x-text="getConsoleName(consoleSlug)"></strong></span>
+                </div>
+            </template>
+
+            <!-- Romspedia Ribbon -->
             <template x-if="provider === 'romspedia'">
-                <span class="text-purple-300">
-                    <strong class="text-white">Romspedia:</strong> 
-                    <span>🏆 Top Populares & Más Descargados (<span class="text-white font-bold" x-text="consoleSlug.toUpperCase()"></span>)</span>
-                </span>
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-purple-950/40 border border-purple-500/30 text-purple-300">
+                    <span class="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span>
+                    <strong class="text-white">Romspedia:</strong>
+                    <span>🏆 Top Populares & Más Descargados (<strong class="text-white" x-text="getConsoleName(consoleSlug)"></strong>)</span>
+                </div>
             </template>
         </div>
-        <div class="text-gray-400 text-[11px]" x-show="!loading && games.length > 0">
-            <span class="text-white font-bold" x-text="games.length"></span> títulos en esta página
+
+        <div class="flex items-center gap-3 text-gray-400 text-[11px]" x-show="!loading && games.length > 0">
+            <span class="px-2.5 py-1 rounded-xl bg-[#090C12] border border-[#1E2536] text-gray-300">
+                <strong class="text-white font-bold" x-text="games.length"></strong> juegos en página
+            </span>
+            <span class="hidden sm:inline-flex items-center gap-1 text-emerald-400">
+                <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+                <span>Anti-Duplicados</span>
+            </span>
         </div>
     </div>
 
@@ -256,26 +325,32 @@
     <div class="space-y-6">
         
         <!-- Loading Skeletons -->
-        <div x-show="loading" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        <div x-show="loading" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5">
             <template x-for="i in 12" :key="i">
-                <div class="bg-[#11141A] border border-[#232936] rounded-2xl p-2.5 space-y-2.5 animate-pulse">
-                    <div class="aspect-[3/4] bg-[#171B22] rounded-xl w-full"></div>
-                    <div class="h-3 bg-[#171B22] rounded w-3/4"></div>
-                    <div class="h-7 bg-[#171B22] rounded-xl w-full"></div>
+                <div class="bg-[#0D111A] border border-[#1E2536] rounded-2xl p-3 space-y-3 animate-pulse">
+                    <div class="aspect-[3/4] bg-[#141926] rounded-xl w-full"></div>
+                    <div class="h-3.5 bg-[#141926] rounded w-3/4"></div>
+                    <div class="h-8 bg-[#141926] rounded-xl w-full"></div>
                 </div>
             </template>
         </div>
 
         <!-- Games Cards List -->
-        <div x-show="!loading && games.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        <div x-show="!loading && games.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5">
             <template x-for="(game, idx) in games" :key="game.url">
-                <div class="border rounded-2xl p-2.5 flex flex-col justify-between transition-all group relative overflow-hidden shadow-lg"
-                     :class="game.already_imported ? 'bg-[#0A1211] border-emerald-500/40 shadow-emerald-950/20 ring-1 ring-emerald-500/20' : 'bg-[#11141A] border-[#232936] hover:border-gray-600'">
+                <div class="rounded-2xl p-3 flex flex-col justify-between transition-all duration-300 group relative overflow-hidden shadow-lg"
+                     :class="game.already_imported 
+                        ? 'bg-[#091211] border border-emerald-500/40 shadow-emerald-950/20 ring-1 ring-emerald-500/20' 
+                        : (provider === 'romsemu' 
+                            ? 'bg-[#0D111A] border border-[#1E2536] hover:border-rose-500/50 hover:shadow-rose-950/30 hover:-translate-y-1' 
+                            : (provider === 'cdromance'
+                                ? 'bg-[#0D111A] border border-[#1E2536] hover:border-blue-500/50 hover:shadow-blue-950/30 hover:-translate-y-1'
+                                : 'bg-[#0D111A] border border-[#1E2536] hover:border-purple-500/50 hover:shadow-purple-950/30 hover:-translate-y-1'))">
                     
                     <!-- Top: Cover & Thumbnail -->
                     <div class="space-y-2.5">
-                        <div class="aspect-[3/4] w-full rounded-xl overflow-hidden bg-[#0A0C0F] border relative"
-                             :class="game.already_imported ? 'border-emerald-500/30' : 'border-[#232936]'">
+                        <div class="aspect-[3/4] w-full rounded-xl overflow-hidden bg-[#07090E] border relative"
+                             :class="game.already_imported ? 'border-emerald-500/30' : 'border-[#1E2536]'">
                             <img :src="game.cover_thumb" 
                                  :alt="game.title" 
                                  loading="lazy"
@@ -284,7 +359,7 @@
                             <!-- Status Badge Overlay: Anti-Duplicates -->
                             <div class="absolute top-1.5 right-1.5">
                                 <template x-if="game.already_imported">
-                                    <span class="px-2 py-0.5 rounded-md bg-emerald-950/90 border border-emerald-500/50 text-emerald-300 text-[9px] font-mono font-bold flex items-center gap-1 shadow-md backdrop-blur-sm">
+                                    <span class="px-2 py-0.5 rounded-md bg-emerald-950/90 border border-emerald-500/50 text-emerald-300 text-[9px] font-mono font-bold flex items-center gap-1 shadow-md backdrop-blur-md">
                                         <i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-400"></i>
                                         <span>En Catálogo</span>
                                     </span>
@@ -295,12 +370,17 @@
                         <!-- Game Info -->
                         <div>
                             <h3 class="text-xs font-bold font-sans line-clamp-2 leading-snug transition-colors"
-                                :class="game.already_imported ? 'text-emerald-100 group-hover:text-emerald-300' : 'text-white group-hover:text-purple-300'"
+                                :class="game.already_imported ? 'text-emerald-100 group-hover:text-emerald-300' : (provider === 'romsemu' ? 'text-white group-hover:text-rose-300' : (provider === 'cdromance' ? 'text-white group-hover:text-blue-300' : 'text-white group-hover:text-purple-300'))"
                                 :title="game.title"
                                 x-text="game.title"></h3>
-                            <div class="flex items-center gap-1.5 mt-1">
-                                <span class="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded font-bold"
-                                      :class="provider === 'romspedia' ? 'bg-purple-950/60 text-purple-300 border border-purple-500/20' : 'bg-blue-950/60 text-blue-300 border border-blue-500/20'"
+                            
+                            <div class="flex items-center gap-1.5 mt-1.5">
+                                <span class="text-[9px] font-mono uppercase px-2 py-0.5 rounded-md font-bold"
+                                      :class="provider === 'romsemu' 
+                                        ? 'bg-rose-950/60 text-rose-300 border border-rose-500/25' 
+                                        : (provider === 'cdromance' 
+                                            ? 'bg-blue-950/60 text-blue-300 border border-blue-500/25' 
+                                            : 'bg-purple-950/60 text-purple-300 border border-purple-500/25')"
                                       x-text="game.console_badge || game.console_slug">
                                 </span>
                             </div>
@@ -309,7 +389,7 @@
 
                     <!-- Bottom Action Buttons -->
                     <div class="pt-3 mt-2 border-t"
-                         :class="game.already_imported ? 'border-emerald-500/20' : 'border-[#232936]'">
+                         :class="game.already_imported ? 'border-emerald-500/20' : 'border-[#1E2536]'">
                         
                         <!-- If already in DB: Edit + Public View links -->
                         <template x-if="game.already_imported">
@@ -326,7 +406,7 @@
                                     <a :href="game.view_url" 
                                        target="_blank" 
                                        rel="noopener noreferrer"
-                                       class="p-1.5 rounded-xl bg-[#171B22] hover:bg-[#232936] border border-[#232936] text-gray-300 hover:text-white text-xs font-mono transition-all flex items-center justify-center shadow-sm"
+                                       class="p-1.5 rounded-xl bg-[#090C12] hover:bg-[#141824] border border-[#1E2536] text-gray-300 hover:text-white text-xs font-mono transition-all flex items-center justify-center shadow-sm"
                                        title="Ver ficha pública del juego">
                                         <i data-lucide="external-link" class="w-3 h-3"></i>
                                     </a>
@@ -340,7 +420,11 @@
                                     @click="enqueueImport(game)"
                                     :disabled="isGameQueuedOrImporting(game.url)"
                                     class="w-full py-2 rounded-xl text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-wait"
-                                    :class="provider === 'romspedia' ? 'bg-purple-600 hover:bg-purple-500 shadow-purple-600/20' : 'bg-blue-600 hover:bg-blue-500 shadow-blue-600/20'">
+                                    :class="provider === 'romsemu' 
+                                        ? 'bg-rose-600 hover:bg-rose-500 shadow-rose-600/30' 
+                                        : (provider === 'cdromance' 
+                                            ? 'bg-blue-600 hover:bg-blue-500 shadow-blue-600/30' 
+                                            : 'bg-purple-600 hover:bg-purple-500 shadow-purple-600/30')">
                                 <i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin" x-show="activeImportUrl === game.url"></i>
                                 <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-300" x-show="importQueue.includes(game.url)"></i>
                                 <i data-lucide="zap" class="w-3.5 h-3.5" x-show="!isGameQueuedOrImporting(game.url)"></i>
@@ -355,31 +439,33 @@
         </div>
 
         <!-- Empty State -->
-        <div x-show="!loading && games.length === 0" class="p-12 text-center bg-[#11141A] border border-[#232936] rounded-2xl space-y-3">
-            <i data-lucide="inbox" class="w-10 h-10 text-gray-500 mx-auto"></i>
+        <div x-show="!loading && games.length === 0" class="p-16 text-center bg-[#0D111A] border border-[#1E2536] rounded-3xl space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-[#141824] border border-[#1E2536] flex items-center justify-center mx-auto text-gray-500">
+                <i data-lucide="inbox" class="w-6 h-6"></i>
+            </div>
             <h3 class="text-sm font-bold text-white">No se encontraron títulos en esta página</h3>
-            <p class="text-xs text-gray-400 font-mono">Prueba cambiando de consola o verificando la conexión.</p>
+            <p class="text-xs text-gray-400 font-mono max-w-sm mx-auto">Prueba cambiando de consola o verificando la disponibilidad del proveedor.</p>
         </div>
 
         <!-- Pagination Controls -->
-        <div class="flex items-center justify-between border-t border-[#232936] pt-4">
+        <div class="flex items-center justify-between border-t border-[#1E2536] pt-5">
             <button type="button" 
                     @click="prevPage()" 
                     :disabled="page <= 1 || loading"
-                    class="px-4 py-2 rounded-xl bg-[#11141A] hover:bg-[#171B22] border border-[#232936] text-xs font-mono text-gray-300 hover:text-white transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+                    class="px-4 py-2.5 rounded-2xl bg-[#0D111A] hover:bg-[#141824] border border-[#1E2536] text-xs font-mono text-gray-300 hover:text-white transition-all flex items-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-sm">
                 <i data-lucide="chevron-left" class="w-4 h-4"></i>
                 <span>Página Anterior</span>
             </button>
 
             <div class="text-xs font-mono text-gray-400 flex items-center gap-2">
                 <span>Página</span>
-                <span class="px-2.5 py-1 rounded-lg bg-[#0A0C0F] border border-[#232936] text-purple-400 font-bold" x-text="page"></span>
+                <span class="px-3 py-1 rounded-xl bg-[#07090F] border border-[#1E2536] text-white font-bold font-mono shadow-inner" x-text="page"></span>
             </div>
 
             <button type="button" 
                     @click="nextPage()" 
                     :disabled="!hasNext || loading"
-                    class="px-4 py-2 rounded-xl bg-[#11141A] hover:bg-[#171B22] border border-[#232936] text-xs font-mono text-gray-300 hover:text-white transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+                    class="px-4 py-2.5 rounded-2xl bg-[#0D111A] hover:bg-[#141824] border border-[#1E2536] text-xs font-mono text-gray-300 hover:text-white transition-all flex items-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-sm">
                 <span>Página Siguiente</span>
                 <i data-lucide="chevron-right" class="w-4 h-4"></i>
             </button>
@@ -395,6 +481,48 @@ function scraperCatalogApp() {
         provider: 'romspedia',
         consoleSlug: 'psp',
         page: 1,
+        consolesByProvider: {
+            romsemu: [
+                { slug: 'all', name: '⭐ Todos los Sistemas (Últimos Agregados)' },
+                { slug: 'nintendo-3ds', name: 'Nintendo 3DS' },
+                { slug: 'nintendo-switch', name: 'Nintendo Switch' },
+                { slug: 'sega-sg-1000', name: 'Sega SG-1000' },
+                { slug: 'sega-32x', name: 'Sega 32X' },
+                { slug: 'playstation-4', name: 'PlayStation 4' },
+                { slug: 'playstation-vita', name: 'PlayStation Vita' },
+            ],
+            cdromance: [
+                { slug: 'all', name: '⭐ Todos los Sistemas (Últimos Agregados)' },
+                { slug: 'psp', name: 'PlayStation Portable (PSP)' },
+                { slug: 'playstation-2', name: 'PlayStation 2 (PS2)' },
+                { slug: 'playstation', name: 'PlayStation 1 (PSX)' },
+                { slug: 'gamecube', name: 'Nintendo GameCube' },
+                { slug: 'game-boy-advance', name: 'Game Boy Advance (GBA)' },
+                { slug: 'nintendo-ds', name: 'Nintendo DS (NDS)' },
+                { slug: 'super-nintendo', name: 'Super Nintendo (SNES)' },
+                { slug: 'nintendo-64', name: 'Nintendo 64 (N64)' },
+            ],
+            romspedia: [
+                { slug: 'psp', name: 'PlayStation Portable (PSP)' },
+                { slug: 'playstation-2', name: 'PlayStation 2 (PS2)' },
+                { slug: 'playstation', name: 'PlayStation 1 (PSX)' },
+                { slug: 'gamecube', name: 'Nintendo GameCube' },
+                { slug: 'game-boy-advance', name: 'Game Boy Advance (GBA)' },
+                { slug: 'nintendo-ds', name: 'Nintendo DS (NDS)' },
+                { slug: 'super-nintendo', name: 'Super Nintendo (SNES)' },
+                { slug: 'nintendo-64', name: 'Nintendo 64 (N64)' },
+            ],
+        },
+
+        get currentConsoles() {
+            return this.consolesByProvider[this.provider] || [];
+        },
+
+        getConsoleName(slug) {
+            if (slug === 'all') return 'Todos los Sistemas';
+            const found = this.currentConsoles.find(c => c.slug === slug);
+            return found ? found.name : slug.replace(/-/g, ' ').toUpperCase();
+        },
         games: [],
         loading: false,
         hasNext: true,
@@ -479,10 +607,15 @@ function scraperCatalogApp() {
             if (this.provider === newProvider) return;
             this.provider = newProvider;
             this.page = 1;
-            if (this.provider === 'romspedia' && this.consoleSlug === 'all') {
-                this.consoleSlug = 'psp';
-            } else if (this.provider === 'romsemu') {
-                this.consoleSlug = 'nintendo-switch';
+
+            const available = this.consolesByProvider[newProvider] || [];
+            const exists = available.some(c => c.slug === this.consoleSlug);
+            if (!exists) {
+                if (newProvider === 'romspedia') {
+                    this.consoleSlug = 'psp';
+                } else {
+                    this.consoleSlug = 'all';
+                }
             }
             this.loadCatalog();
         },

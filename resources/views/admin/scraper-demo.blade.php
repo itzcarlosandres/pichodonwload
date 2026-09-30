@@ -142,10 +142,10 @@
                                 Romsemu.com
                                 <span class="text-[9px] px-1.5 py-0.5 rounded font-mono font-bold"
                                       :class="activeProvider === 'romsemu' ? 'bg-red-500/30 text-red-200 border border-red-400/40' : 'bg-[#171B22] text-gray-500'">
-                                    Switch / 3DS
+                                    6 Consolas (Switch, 3DS, PS4...)
                                 </span>
                             </div>
-                            <div class="text-[11px] text-gray-400 font-mono">Descargas en .XCI / .NSP</div>
+                            <div class="text-[11px] text-gray-400 font-mono">Descargas en .XCI / .NSP / .PKG</div>
                         </div>
                     </div>
                     <div class="w-5 h-5 rounded-full border flex items-center justify-center transition-all"
@@ -154,7 +154,7 @@
                     </div>
                 </div>
                 <p class="text-xs text-gray-400 leading-relaxed font-sans mt-2">
-                    Extracción de juegos modernos de Nintendo Switch y 3DS, actualizaciones (.NSP) y servidores 1Fichier en formato <span class="text-red-300 font-mono font-bold">.XCI</span>.
+                    Extracción de Switch, 3DS, PS4, PS Vita, Sega SG-1000 y 32X con enlaces directos a 1Fichier, Mega, PixelDrain y MediaFire.
                 </p>
             </button>
         </div>
@@ -162,14 +162,14 @@
 
     <!-- Main Input Card -->
     <div class="bg-[#11141A] border border-[#232936] rounded-2xl p-6 shadow-xl space-y-4 transition-colors"
-         :class="activeProvider === 'romspedia' ? 'focus-within:border-purple-500/60' : 'focus-within:border-blue-500/60'">
+         :class="activeProvider === 'romspedia' ? 'focus-within:border-purple-500/60' : (activeProvider === 'romsemu' ? 'focus-within:border-red-500/60' : 'focus-within:border-blue-500/60')">
         <div>
             <div class="flex items-center justify-between mb-2">
                 <label class="block text-xs font-mono uppercase tracking-wider text-gray-300 font-bold flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full" :class="activeProvider === 'romspedia' ? 'bg-purple-400' : 'bg-blue-400'"></span>
-                    <span x-text="activeProvider === 'romspedia' ? 'URL de Romspedia.com' : 'URL de CDRomance.org'"></span>
+                    <span class="w-2 h-2 rounded-full" :class="activeProvider === 'romspedia' ? 'bg-purple-400' : (activeProvider === 'romsemu' ? 'bg-red-400' : 'bg-blue-400')"></span>
+                    <span x-text="activeProvider === 'romspedia' ? 'URL de Romspedia.com' : (activeProvider === 'romsemu' ? 'URL de Romsemu.com' : 'URL de CDRomance.org')"></span>
                 </label>
-                <span class="text-[11px] font-mono text-gray-500" x-text="activeProvider === 'romspedia' ? 'Soporta descargas directas ZIP' : 'Soporta descargas 7Z & Fan-Translations'"></span>
+                <span class="text-[11px] font-mono text-gray-500" x-text="activeProvider === 'romspedia' ? 'Soporta descargas directas ZIP' : (activeProvider === 'romsemu' ? 'Soporta Switch, 3DS, PS4, PS Vita, SG-1000, 32X' : 'Soporta descargas 7Z & Fan-Translations')"></span>
             </div>
 
             <div class="flex flex-col sm:flex-row gap-3">
@@ -182,15 +182,15 @@
                            @input="detectProviderFromUrl()"
                            @paste="$nextTick(() => detectProviderFromUrl())"
                            @keydown.enter.prevent="extractData()"
-                           :placeholder="activeProvider === 'romspedia' ? 'https://www.romspedia.com/roms/playstation-portable/god-of-war-ghost-of-sparta-original' : 'https://cdromance.org/psp/atv-offroad-fury-blazin-trails/'" 
+                           :placeholder="activeProvider === 'romspedia' ? 'https://www.romspedia.com/roms/playstation-portable/god-of-war-ghost-of-sparta-original' : (activeProvider === 'romsemu' ? 'https://romsemu.com/nintendo-switch/super-mario-odyssey/' : 'https://cdromance.org/psp/atv-offroad-fury-blazin-trails/')" 
                            class="w-full bg-[#0A0C0F] border border-[#232936] rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:outline-none font-mono transition-colors"
-                           :class="activeProvider === 'romspedia' ? 'focus:border-purple-500' : 'focus:border-blue-500'">
+                           :class="activeProvider === 'romspedia' ? 'focus:border-purple-500' : (activeProvider === 'romsemu' ? 'focus:border-red-500' : 'focus:border-blue-500')">
                 </div>
                 <button type="button" 
                         @click="extractData()" 
                         :disabled="loading || !url"
                         class="px-6 py-3 rounded-xl text-white font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
-                        :class="activeProvider === 'romspedia' ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-purple-600/20' : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 shadow-blue-600/20'">
+                        :class="activeProvider === 'romspedia' ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-purple-600/20' : (activeProvider === 'romsemu' ? 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 shadow-red-600/20' : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 shadow-blue-600/20')">
                     <i data-lucide="loader-2" class="w-4 h-4 animate-spin" x-show="loading"></i>
                     <i data-lucide="zap" class="w-4 h-4" x-show="!loading"></i>
                     <span x-text="loading ? 'Extrayendo Datos...' : 'Extraer Información'"></span>
@@ -235,6 +235,26 @@
                     @click="setUrl('https://cdromance.org/psp/sonic-r-port-psp/')"
                     class="px-2.5 py-1 rounded-lg bg-[#171B22] hover:bg-[#232936] border border-[#232936] text-[11px] font-mono text-blue-300 hover:text-white transition-colors cursor-pointer">
                 🦔 Sonic R Port (PSP)
+            </button>
+        </div>
+
+        <!-- Quick Demo Links for Romsemu -->
+        <div x-show="activeProvider === 'romsemu'" class="pt-1 flex flex-wrap items-center gap-2">
+            <span class="text-xs font-mono text-gray-500">Ejemplos Romsemu:</span>
+            <button type="button" 
+                    @click="setUrl('https://romsemu.com/nintendo-switch/super-mario-odyssey/')"
+                    class="px-2.5 py-1 rounded-lg bg-[#171B22] hover:bg-[#232936] border border-[#232936] text-[11px] font-mono text-red-300 hover:text-white transition-colors cursor-pointer">
+                🍄 Super Mario Odyssey (Switch)
+            </button>
+            <button type="button" 
+                    @click="setUrl('https://romsemu.com/playstation-4/marvels-spider-man/')"
+                    class="px-2.5 py-1 rounded-lg bg-[#171B22] hover:bg-[#232936] border border-[#232936] text-[11px] font-mono text-red-300 hover:text-white transition-colors cursor-pointer">
+                🕷️ Marvel's Spider-Man (PS4)
+            </button>
+            <button type="button" 
+                    @click="setUrl('https://romsemu.com/playstation-vita/mortal-kombat/')"
+                    class="px-2.5 py-1 rounded-lg bg-[#171B22] hover:bg-[#232936] border border-[#232936] text-[11px] font-mono text-red-300 hover:text-white transition-colors cursor-pointer">
+                🐉 Mortal Kombat (PS Vita)
             </button>
         </div>
 

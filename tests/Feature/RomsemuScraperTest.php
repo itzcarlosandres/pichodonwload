@@ -50,6 +50,23 @@ class RomsemuScraperTest extends TestCase
     }
 
     /**
+     * Verifica que el explorador de Romsemu soporte 'all' (Últimos Agregados de la Portada)
+     */
+    public function test_romsemu_catalog_browser_returns_all_systems_latest_roms(): void
+    {
+        $browser = app(RomCatalogBrowserService::class);
+        $result = $browser->browse('romsemu', 'all', 1);
+
+        $this->assertTrue($result['success']);
+        $this->assertEquals('romsemu', $result['provider']);
+        $this->assertIsArray($result['games']);
+        $this->assertNotEmpty($result['games']);
+        $this->assertArrayHasKey('title', $result['games'][0]);
+        $this->assertArrayHasKey('url', $result['games'][0]);
+        $this->assertArrayHasKey('console_badge', $result['games'][0]);
+    }
+
+    /**
      * Verifica que el comando de auto-cosecha acepte el proveedor romsemu
      */
     public function test_auto_harvest_accepts_romsemu_provider(): void

@@ -35,7 +35,10 @@ class RomCatalogBrowserService
             'nintendo-switch' => 'nintendo-switch',
             'nintendo-3ds' => 'nintendo-3ds',
             'playstation-4' => 'playstation-4',
-            'sega-genesis' => 'sega-sg-1000',
+            'playstation-vita' => 'playstation-vita',
+            'psvita' => 'playstation-vita',
+            'sega-sg-1000' => 'sega-sg-1000',
+            'sega-32x' => 'sega-32x',
         ],
     ];
 
@@ -303,10 +306,16 @@ class RomCatalogBrowserService
      */
     protected function browseRomsemu(string $consoleSlug, int $page): array
     {
-        $platformPath = $this->platformMap['romsemu'][$consoleSlug] ?? 'nintendo-switch';
-        $url = $page > 1 
-            ? "https://romsemu.com/roms/{$platformPath}/page/{$page}/"
-            : "https://romsemu.com/roms/{$platformPath}/";
+        $isAll = in_array(strtolower($consoleSlug), ['all', 'latest', '']);
+
+        if ($isAll) {
+            $url = 'https://romsemu.com/';
+        } else {
+            $platformPath = $this->platformMap['romsemu'][$consoleSlug] ?? $consoleSlug;
+            $url = $page > 1 
+                ? "https://romsemu.com/roms/{$platformPath}/page/{$page}/"
+                : "https://romsemu.com/roms/{$platformPath}/";
+        }
 
         $fetchRes = $this->safety->safeFetch($url, 'romsemu', [], true, 900);
         if (!$fetchRes['success']) {
@@ -327,28 +336,57 @@ class RomCatalogBrowserService
         $html = $fetchRes['html'];
         $games = [];
 
-        if (preg_match_all('/<a[^>]+href=["\'](https:\/\/romsemu\.com\/[^\/]+\/[^"\'\/]+\/)["\'][^>]*>.*?<img[^>]+(?:data-src|src)=["\']([^"\']+)["\'][^>]*>.*?<span class="site-box-title">([^<]+)<\/span>/is', $html, $matches)) {
-            for ($i = 0; $i < count($matches[1]); $i++) {
-                $gameUrl = $matches[1][$i];
-                $coverUrl = $matches[2][$i];
-                $rawTitle = html_entity_decode(strip_tags($matches[3][$i]), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-                $cleanTitle = trim(preg_replace('/\s+(?:Nintendo\s+Switch|Switch|ROM|ISO|NSP|XCI|Download).*$/i', '', $rawTitle));
-                $slug = Str::slug($cleanTitle);
+        if ($isAll) {
+            // Extraer juegos de la sección 'Latest ROMs' de la portada
+            if (preg_match('/Latest ROMs<\/h2>(.*?)(?:What are Video Game ROMs|Explore the Best Emulators|$)/is', $html, $sec)) {
+                $sectionHtml = $sec[1];
+                if (preg_match_all('/<div[^>]*class="[^"]*col-archive-rom[^"]*"[^>]*>.*?<a[^>]+href=["\'](https:\/\/romsemu\.com\/[^\/]+\/[^"\'\/]+\/)["\'][^>]*>.*?<img[^>]+(?:data-lazy-src|data-src|src)=["\']([^"\']+)["\'][^>]*>.*?<h3[^>]*>\s*([^<]+)\s*<\/h3>.*?<a[^>]+href=["\']https:\/\/romsemu\.com\/roms\/([^"\'\/]+)\/["\'][^>]*>([^<]+)<\/a>/is', $sectionHtml, $matches)) {
+                    for ($i = 0; $i < count($matches[1]); $i++) {
+                        $gameUrl = $matches[1][$i];
+                        $coverUrl = $matches[2][$i];
+                        $rawTitle = html_entity_decode(strip_tags($matches[3][$i]), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                        $cleanTitle = trim(preg_replace('/\s+(?:Nintendo\s+Switch|Switch|ROM|ISO|NSP|XCI|Download|PS4|PlayStation\s+4|PS\s+Vita|PlayStation\s+Vita|Sega\s+32X|SG-1000).*$/i', '', $rawTitle));
+                        $cSlug = $matches[4][$i];
+                        $cName = trim(strip_tags($matches[5][$i]));
 
-                $games[] = [
-                    'title' => $cleanTitle,
-                    'slug' => $slug,
-                    'url' => $gameUrl,
-                    'cover_thumb' => $coverUrl,
-                    'provider' => 'Romsemu',
-                    'console_slug' => $consoleSlug,
-                    'console_badge' => strtoupper(str_replace('-', ' ', $consoleSlug)),
-                ];
+                        $games[] = [
+                            'title' => $cleanTitle,
+                            'slug' => Str::slug($cleanTitle),
+                            'url' => $gameUrl,
+                            'cover_thumb' => $coverUrl,
+                            'provider' => 'Romsemu',
+                            'console_slug' => $cSlug,
+                            'console_badge' => strtoupper($cName),
+                        ];
+                    }
+                }
             }
+            $hasNext = false;
+        } else {
+            // Listado de consola específica
+            if (preg_match_all('/<a[^>]+href=["\'](https:\/\/romsemu\.com\/[^\/]+\/[^"\'\/]+\/)["\'][^>]*>.*?<img[^>]+(?:data-lazy-src|data-src|src)=["\']([^"\']+)["\'][^>]*>.*?<span class="site-box-title">([^<]+)<\/span>/is', $html, $matches)) {
+                for ($i = 0; $i < count($matches[1]); $i++) {
+                    $gameUrl = $matches[1][$i];
+                    $coverUrl = $matches[2][$i];
+                    $rawTitle = html_entity_decode(strip_tags($matches[3][$i]), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                    $cleanTitle = trim(preg_replace('/\s+(?:Nintendo\s+Switch|Switch|ROM|ISO|NSP|XCI|Download|PS4|PlayStation\s+4|PS\s+Vita|PlayStation\s+Vita|Sega\s+32X|SG-1000).*$/i', '', $rawTitle));
+                    $slug = Str::slug($cleanTitle);
+
+                    $games[] = [
+                        'title' => $cleanTitle,
+                        'slug' => $slug,
+                        'url' => $gameUrl,
+                        'cover_thumb' => $coverUrl,
+                        'provider' => 'Romsemu',
+                        'console_slug' => $consoleSlug,
+                        'console_badge' => $this->getConsoleBadgeName($consoleSlug),
+                    ];
+                }
+            }
+            $hasNext = str_contains($html, "/page/" . ($page + 1) . "/");
         }
 
         $games = $this->attachExistingStatus($games);
-        $hasNext = str_contains($html, "/page/" . ($page + 1) . "/");
 
         return [
             'success' => true,
@@ -359,6 +397,32 @@ class RomCatalogBrowserService
             'console' => $consoleSlug,
             'total_in_page' => count($games),
         ];
+    }
+
+    /**
+     * Nombre legible para el badge de la consola
+     */
+    protected function getConsoleBadgeName(string $slug): string
+    {
+        $names = [
+            'nintendo-switch' => 'Nintendo Switch',
+            'nintendo-3ds' => 'Nintendo 3DS',
+            'playstation-4' => 'PlayStation 4',
+            'playstation-vita' => 'PlayStation Vita',
+            'psvita' => 'PlayStation Vita',
+            'sega-sg-1000' => 'Sega SG-1000',
+            'sega-32x' => 'Sega 32X',
+            'psp' => 'PSP',
+            'playstation-2' => 'PS2',
+            'playstation' => 'PS1',
+            'gamecube' => 'GameCube',
+            'game-boy-advance' => 'GBA',
+            'nintendo-ds' => 'NDS',
+            'super-nintendo' => 'SNES',
+            'nintendo-64' => 'N64',
+        ];
+
+        return strtoupper($names[$slug] ?? str_replace('-', ' ', $slug));
     }
 
     /**

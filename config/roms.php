@@ -27,5 +27,5 @@ return [
     'auto_harvest_limit' => (int) env('ROMS_AUTO_HARVEST_LIMIT', 15),
 
     // Proveedores activos para auto-recolección
-    'providers' => ['cdromance', 'romspedia'],
+    'providers' => ['cdromance', 'romspedia', 'romsemu'],
 ];

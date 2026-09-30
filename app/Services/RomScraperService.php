@@ -911,6 +911,15 @@ class RomScraperService
             'wii-iso' => ['name' => 'Nintendo Wii', 'slug' => 'wii'],
             'switch' => ['name' => 'Nintendo Switch', 'slug' => 'nintendo-switch'],
             'nintendo-switch' => ['name' => 'Nintendo Switch', 'slug' => 'nintendo-switch'],
+            'ps4' => ['name' => 'PlayStation 4', 'slug' => 'playstation-4'],
+            'playstation-4' => ['name' => 'PlayStation 4', 'slug' => 'playstation-4'],
+            'psvita' => ['name' => 'PlayStation Vita', 'slug' => 'psvita'],
+            'ps-vita' => ['name' => 'PlayStation Vita', 'slug' => 'psvita'],
+            'playstation-vita' => ['name' => 'PlayStation Vita', 'slug' => 'psvita'],
+            'sega-sg-1000' => ['name' => 'Sega SG-1000', 'slug' => 'sega-sg-1000'],
+            'sg-1000' => ['name' => 'Sega SG-1000', 'slug' => 'sega-sg-1000'],
+            'sega-32x' => ['name' => 'Sega 32X', 'slug' => 'sega-32x'],
+            '32x' => ['name' => 'Sega 32X', 'slug' => 'sega-32x'],
         ];
 
         return $map[$slug] ?? [

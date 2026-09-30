@@ -66,6 +66,14 @@ class AutoHarvestRomsCommand extends Command
         'nintendo-switch' => 'nintendo-switch',
         'ps4' => 'playstation-4',
         'playstation-4' => 'playstation-4',
+        'psvita' => 'psvita',
+        'ps-vita' => 'psvita',
+        'playstation-vita' => 'psvita',
+        'vita' => 'psvita',
+        'sega-sg-1000' => 'sega-sg-1000',
+        'sg-1000' => 'sega-sg-1000',
+        'sega-32x' => 'sega-32x',
+        '32x' => 'sega-32x',
     ];
 
     public function handle(
@@ -97,6 +105,10 @@ class AutoHarvestRomsCommand extends Command
             'nintendo-ds', 
             'nintendo-3ds',
             'nintendo-switch',
+            'playstation-4',
+            'psvita',
+            'sega-sg-1000',
+            'sega-32x',
             'super-nintendo', 
             'nintendo-64'
         ];
