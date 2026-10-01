@@ -48,14 +48,29 @@
             <span class="text-[10px] font-mono text-gray-400 bg-[#0A0C0F] px-2 py-0.5 rounded border border-[#232936]">{{ \App\Models\Game::count() }}</span>
         </a>
 
-        <!-- Consolas -->
-        <a href="{{ route('admin.consoles.index') }}" 
-           class="w-full px-3 py-2 rounded-xl flex items-center justify-between transition-all {{ request()->routeIs('admin.consoles.*') ? 'bg-blue-600/15 text-blue-400 border border-blue-500/30 font-semibold shadow-sm shadow-blue-500/10' : 'text-gray-400 hover:bg-[#171B22] hover:text-white border border-transparent' }}">
-            <span class="flex items-center gap-2.5">
-                <i data-lucide="tv" class="w-4 h-4"></i> Consolas (20)
-            </span>
-            <span class="text-[10px] font-mono text-gray-400 bg-[#0A0C0F] px-2 py-0.5 rounded border border-[#232936]">20</span>
-        </a>
+        <!-- Ecosistemas & Consolas (Agregar y Eliminar) -->
+        <div class="space-y-1">
+            <a href="{{ route('admin.consoles.index') }}" 
+               class="w-full px-3 py-2 rounded-xl flex items-center justify-between transition-all {{ request()->routeIs('admin.consoles.*') && request('action') !== 'create' ? 'bg-blue-600/15 text-blue-400 border border-blue-500/30 font-semibold shadow-sm shadow-blue-500/10' : 'text-gray-400 hover:bg-[#171B22] hover:text-white border border-transparent' }}">
+                <span class="flex items-center gap-2.5">
+                    <i data-lucide="tv" class="w-4 h-4 text-blue-400"></i> Ecosistemas / Consolas
+                </span>
+                <span class="text-[10px] font-mono text-gray-400 bg-[#0A0C0F] px-2 py-0.5 rounded border border-[#232936]">{{ \App\Models\Console::count() }}</span>
+            </a>
+            <div class="pl-8 pr-2 py-0.5 flex items-center justify-between text-[11px] font-mono text-gray-400">
+                <a href="{{ route('admin.consoles.index', ['action' => 'create']) }}" 
+                   class="hover:text-blue-400 flex items-center gap-1 transition-colors py-0.5 {{ request('action') === 'create' ? 'text-blue-400 font-bold' : '' }}">
+                    <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-blue-400"></i>
+                    <span>+ Agregar</span>
+                </a>
+                <span class="text-gray-700">|</span>
+                <a href="{{ route('admin.consoles.index') }}" 
+                   class="hover:text-rose-400 flex items-center gap-1 transition-colors py-0.5">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5 text-rose-400"></i>
+                    <span>Eliminar</span>
+                </a>
+            </div>
+        </div>
 
         <!-- Sagas & Franquicias -->
         <a href="{{ route('admin.franchises.index') }}" 
@@ -130,15 +145,6 @@
             @else
                 <span class="text-[10px] font-mono text-gray-500 bg-[#0A0C0F] px-2 py-0.5 rounded border border-[#232936]">{{ \App\Models\Review::count() }}</span>
             @endif
-        </a>
-
-        <!-- Usuarios -->
-        <a href="{{ route('admin.users.index') }}" 
-           class="w-full px-3 py-2 rounded-xl flex items-center justify-between transition-all {{ request()->routeIs('admin.users.*') ? 'bg-blue-600/15 text-blue-400 border border-blue-500/30 font-semibold shadow-sm shadow-blue-500/10' : 'text-gray-400 hover:bg-[#171B22] hover:text-white border border-transparent' }}">
-            <span class="flex items-center gap-2.5">
-                <i data-lucide="users" class="w-4 h-4"></i> Usuarios & Roles
-            </span>
-            <span class="text-[10px] font-mono text-gray-400 bg-[#0A0C0F] px-2 py-0.5 rounded border border-[#232936]">{{ \App\Models\User::count() }}</span>
         </a>
     </div>
 

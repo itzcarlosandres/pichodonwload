@@ -34,15 +34,15 @@ class PublishDripGamesCommand extends Command
         AiContentService $aiService,
         \App\Services\CategorySyncService $categoryService
     ): int {
-        $autopilot = config('roms.autopilot_enabled', true);
+        $autopilot = \App\Models\Setting::get('roms_autopilot_enabled', config('roms.autopilot_enabled', true));
         if (!$autopilot && !$this->option('force')) {
-            $this->warn('⏸️ El piloto automático está pausado en config/roms.php (ROMS_AUTOPILOT_ENABLED=false). Usa --force para forzar la ejecución manual.');
+            $this->warn('⏸️ El piloto automático está pausado en configuración (roms_autopilot_enabled=false). Usa --force para forzar la ejecución manual.');
             return self::SUCCESS;
         }
 
-        $count = (int) ($this->option('count') ?: config('roms.posts_per_batch', 4));
+        $count = (int) ($this->option('count') ?: \App\Models\Setting::get('roms_posts_per_batch', config('roms.posts_per_batch', 4)));
         $dryRun = (bool) $this->option('dry-run');
-        $withAi = (bool) $this->option('with-ai') || config('roms.auto_ai_enrich', true);
+        $withAi = (bool) $this->option('with-ai') || \App\Models\Setting::get('roms_auto_ai_enrich', config('roms.auto_ai_enrich', true));
 
         $this->info("🔍 Buscando juegos en cola (DRAFT) para publicar (Lote: {$count} juegos)...");
 

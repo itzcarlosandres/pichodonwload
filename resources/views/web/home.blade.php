@@ -5,201 +5,70 @@
 @section('content')
 <main class="{{ \App\Models\Setting::get('container_max_width', 'max-w-[1200px]') }} mx-auto px-4 lg:px-6 py-8 space-y-14">
 
-    <!-- 1. HERO SECTION & SEARCH (Retro Clean Aesthetic RomsRetro) -->
-    <section class="text-center space-y-6 max-w-3xl mx-auto pt-4">
-        
-        <!-- Retro Red Announcement Pill -->
-        @if($badge = \App\Models\Setting::get('home_hero_badge', 'ROM VAULT • 20 RETRO SYSTEMS • 100% CLEAN DUMPS'))
-        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#CE2D2D] text-white text-xs font-mono font-bold shadow-md shadow-red-500/20">
-            <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
-            <span>{{ $badge }}</span>
-        </div>
-        @endif
+    <!-- ================= HERO DESIGN DEMO ENGINE (5 EXCLUSIVE DESIGNS) ================= -->
+    <div x-data="{
+        activeHero: (new URLSearchParams(window.location.search).get('hero')) || '{{ \App\Models\Setting::get('home_hero_style', '1') }}',
+        setHero(num) {
+            this.activeHero = String(num);
+            localStorage.setItem('romhub_hero_variant', String(num));
+            const url = new URL(window.location);
+            url.searchParams.set('hero', String(num));
+            window.history.replaceState({}, '', url);
+            this.$nextTick(() => {
+                if (window.lucide) { lucide.createIcons(); }
+            });
+        }
+    }" class="space-y-4">
 
-        <!-- Hero Headline with Red Word Accent -->
-        <div class="space-y-3">
-            <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black text-[#18181B] tracking-tight font-sans leading-[1.15]">
-                {{ \App\Models\Setting::get('home_hero_title_prefix', 'Retro ROMs & Emulators for') }} <br class="hidden sm:inline">
-                <span class="text-[#CE2D2D]">{{ \App\Models\Setting::get('home_hero_title_highlight', 'every classic console.') }}</span>
-            </h1>
-            @if($description = \App\Models\Setting::get('home_hero_description', 'Descarga videojuegos retro verificados (No-Intro / Redump), archivos BIOS y emuladores para PlayStation, Nintendo, Sega, Xbox y más de 15 sistemas clásicos.'))
-            <p class="text-xs sm:text-base text-gray-600 max-w-2xl mx-auto font-sans leading-relaxed">
-                {{ $description }}
-            </p>
-            @endif
-        </div>
+        <!-- Live Demo Floating Switcher -->
+        @include('web.heroes.switcher')
 
-        <!-- Center Retro Pill Search Form with Dark Border & Red Button & LIVE AUTOCOMPLETE -->
-        <div class="relative max-w-2xl mx-auto text-left"
-             x-data="{
-                 query: '',
-                 results: [],
-                 loading: false,
-                 open: false,
-                 timeout: null,
-                 onInput() {
-                     clearTimeout(this.timeout);
-                     if (this.query.trim().length < 2) {
-                         this.results = [];
-                         this.open = false;
-                         this.loading = false;
-                         return;
-                     }
-                     this.loading = true;
-                     this.open = true;
-                     this.timeout = setTimeout(() => {
-                         fetch(`{{ route('search.live') }}?q=${encodeURIComponent(this.query)}`)
-                             .then(res => res.json())
-                             .then(data => {
-                                 this.results = data;
-                                 this.loading = false;
-                                 $nextTick(() => { if (window.lucide) { lucide.createIcons(); } });
-                             })
-                             .catch(() => {
-                                 this.loading = false;
-                             });
-                     }, 250);
-                 },
-                 onFocus() {
-                     if (this.query.trim().length >= 2 && this.results.length > 0) {
-                         this.open = true;
-                         $nextTick(() => { if (window.lucide) { lucide.createIcons(); } });
-                     }
-                 },
-                 close() {
-                     this.open = false;
-                 }
-             }"
-             @click.outside="close()"
-             @keydown.escape.window="close()">
-            
-            <form action="{{ route('search') }}" method="GET" class="p-1.5 sm:p-2 rounded-2xl bg-white border-2 border-[#1E1E1E] shadow-[0_10px_30px_rgba(0,0,0,0.06)] flex flex-col sm:flex-row items-center gap-2 transition-all relative z-30">
-                
-                <!-- Search Text Input -->
-                <div class="relative flex-1 w-full flex items-center pl-3">
-                    <i data-lucide="search" class="w-4 h-4 text-gray-400 shrink-0"></i>
-                    <input 
-                        type="text" 
-                        name="q" 
-                        x-model="query"
-                        @input="onInput()"
-                        @focus="onFocus()"
-                        autocomplete="off"
-                        placeholder="{{ \App\Models\Setting::get('home_hero_search_placeholder', 'Buscar juego, consola o BIOS...') }}" 
-                        class="w-full bg-transparent border-0 px-3 py-2 text-xs sm:text-sm text-[#18181B] placeholder-gray-400 focus:outline-none font-sans font-medium"
-                    >
-                    <!-- Clear button & Spinner -->
-                    <div class="flex items-center pr-2 gap-1.5">
-                        <template x-if="loading">
-                            <div class="w-4 h-4 border-2 border-[#CE2D2D] border-t-transparent rounded-full animate-spin"></div>
-                        </template>
-                        <template x-if="query.length > 0 && !loading">
-                            <button type="button" @click="query = ''; results = []; open = false" class="p-1 text-gray-400 hover:text-black">
-                                <i data-lucide="x" class="w-3.5 h-3.5"></i>
-                            </button>
-                        </template>
-                    </div>
-                </div>
-
-                <!-- Red Search Action Button -->
-                <button type="submit" class="w-full sm:w-auto px-7 py-3 rounded-xl bg-[#CE2D2D] hover:bg-[#B71C1C] text-white font-black text-xs uppercase tracking-wider font-sans flex items-center justify-center gap-2 transition-all shadow-md shadow-red-500/25 shrink-0 cursor-pointer">
-                    <span>{{ \App\Models\Setting::get('home_hero_search_button', 'Buscar') }}</span>
-                    <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-                </button>
-            </form>
-
-            <!-- LIVE SEARCH RESULTS DROPDOWN -->
-            <div x-show="open" 
-                 x-cloak
-                 x-transition:enter="transition ease-out duration-150"
-                 x-transition:enter-start="opacity-0 translate-y-2 scale-98"
-                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-                 x-transition:leave="transition ease-in duration-100"
-                 x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-                 x-transition:leave-end="opacity-0 translate-y-2 scale-98"
-                 class="absolute left-0 right-0 top-full mt-2 bg-white border-2 border-[#1E1E1E] rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.15)] overflow-hidden z-50">
-                
-                <!-- Top header banner in dropdown -->
-                <div class="px-4 py-2.5 bg-[#FAF7F2] border-b border-[#E5E0D8] flex items-center justify-between text-xs font-mono">
-                    <span class="font-bold text-[#18181B] flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-[#CE2D2D] animate-pulse"></span>
-                        <span x-text="loading ? 'Buscando títulos...' : (results.length > 0 ? 'Resultados instantáneos (' + results.length + ')' : 'Sin resultados')"></span>
-                    </span>
-                    <span class="text-gray-500 text-[11px] font-sans" x-show="results.length > 0">Presiona Enter para ver todos</span>
-                </div>
-
-                <!-- Results list -->
-                <div class="max-h-[360px] overflow-y-auto divide-y divide-[#E5E0D8]">
-                    <template x-for="item in results" :key="item.id">
-                        <a :href="item.url" 
-                           class="flex items-center gap-3.5 p-3 hover:bg-[#FAF7F2] transition-colors group">
-                            <!-- Cover thumb -->
-                            <div class="w-11 h-14 bg-[#EDE7DE] rounded-lg border border-[#DDD6CB] overflow-hidden shrink-0 flex items-center justify-center">
-                                <img :src="item.cover_url" :alt="item.title" onerror="this.onerror=null; this.src='{{ asset('images/placeholder-cover.svg') }}';" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
-                            </div>
-
-                            <!-- Info -->
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#F5EFE6] text-[#CE2D2D] border border-[#DDD6CB]" x-text="item.console"></span>
-                                    <template x-if="item.region">
-                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-gray-100 text-gray-600 uppercase" x-text="item.region"></span>
-                                    </template>
-                                </div>
-                                <h4 class="text-xs sm:text-sm font-bold text-[#18181B] group-hover:text-[#CE2D2D] truncate transition-colors font-sans" x-text="item.title"></h4>
-                                <div class="flex items-center gap-3 text-[11px] font-mono text-gray-500 mt-1">
-                                    <span class="flex items-center gap-1">
-                                        <i data-lucide="hard-drive" class="w-3 h-3 text-gray-400"></i>
-                                        <span x-text="item.formatted_size"></span>
-                                    </span>
-                                    <template x-if="item.rating">
-                                        <span class="flex items-center gap-1 text-amber-600 font-bold">
-                                            <i data-lucide="star" class="w-3 h-3 fill-amber-400 text-amber-400"></i>
-                                            <span x-text="item.rating"></span>
-                                        </span>
-                                    </template>
-                                    <template x-if="item.downloads && item.downloads !== '0'">
-                                        <span class="hidden sm:flex items-center gap-1">
-                                            <i data-lucide="download" class="w-3 h-3 text-gray-400"></i>
-                                            <span x-text="item.downloads"></span>
-                                        </span>
-                                    </template>
-                                </div>
-                            </div>
-
-                            <!-- Action button icon -->
-                            <div class="w-8 h-8 rounded-lg bg-[#FAF7F2] group-hover:bg-[#CE2D2D] group-hover:text-white border border-[#DDD6CB] group-hover:border-[#CE2D2D] flex items-center justify-center text-gray-500 transition-all shrink-0">
-                                <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-0.5 transition-transform"></i>
-                            </div>
-                        </a>
-                    </template>
-
-                    <!-- Empty state -->
-                    <template x-if="!loading && results.length === 0 && query.trim().length >= 2">
-                        <div class="p-6 text-center space-y-2">
-                            <div class="w-10 h-10 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center mx-auto">
-                                <i data-lucide="search-x" class="w-5 h-5"></i>
-                            </div>
-                            <p class="text-xs font-bold text-[#18181B] font-sans">No encontramos títulos para "<span x-text="query"></span>"</p>
-                            <p class="text-[11px] text-gray-500 font-sans">Prueba con otra palabra clave o pulsa Enter para buscar en todo el catálogo.</p>
-                        </div>
-                    </template>
-                </div>
-
-                <!-- Footer with Explore full link -->
-                <div class="p-2.5 bg-[#FAF7F2] border-t border-[#E5E0D8] text-center">
-                    <a :href="'{{ route('search') }}?q=' + encodeURIComponent(query)" 
-                       class="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-[#CE2D2D] hover:underline">
-                        <span>Ver todos los resultados en el Explorador</span>
-                        <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-                    </a>
-                </div>
-
-            </div>
-
+        <!-- Variant 1: Cyber-Minimal Vault -->
+        <div x-show="activeHero === '1'" 
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 translate-y-3"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-cloak>
+            @include('web.heroes.variant-1')
         </div>
 
-    </section>
+        <!-- Variant 2: Split Hardware Showcase -->
+        <div x-show="activeHero === '2'" 
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 translate-y-3"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-cloak>
+            @include('web.heroes.variant-2')
+        </div>
+
+        <!-- Variant 3: Swiss Editorial Catalog -->
+        <div x-show="activeHero === '3'" 
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 translate-y-3"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-cloak>
+            @include('web.heroes.variant-3')
+        </div>
+
+        <!-- Variant 4: Neo-Terminal Command Deck -->
+        <div x-show="activeHero === '4'" 
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 translate-y-3"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-cloak>
+            @include('web.heroes.variant-4')
+        </div>
+
+        <!-- Variant 5: Immersive Spotlight Showcase -->
+        <div x-show="activeHero === '5'" 
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 translate-y-3"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-cloak>
+            @include('web.heroes.variant-5')
+        </div>
+
+    </div>
 
     <!-- 2. CONSOLES SECTION (Horizontal Smooth Slider with Autoplay, Mouse Drag & Mobile Optimization) -->
     <section class="space-y-3 sm:space-y-4" x-data="{

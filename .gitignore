@@ -31,4 +31,5 @@ Thumbs.db
 **/*.md
 /.agents/
 /boost.json
+/scratch/
 

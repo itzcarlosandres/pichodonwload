@@ -319,6 +319,36 @@
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 font-mono text-xs">
+                    <!-- Selector de Diseño / Estilo del Hero -->
+                    <div class="sm:col-span-2">
+                        <label class="block text-gray-300 mb-1 font-bold flex items-center justify-between">
+                            <span class="flex items-center gap-1.5">
+                                <i data-lucide="palette" class="w-4 h-4 text-red-400"></i>
+                                <span>Estilo de Diseño del Hero (Portada)</span>
+                            </span>
+                            <span class="text-[10px] text-emerald-400 font-mono">5 Variantes</span>
+                        </label>
+                        <select name="home_hero_style" 
+                                class="w-full bg-[#0A0C0F] border border-[#232936] rounded-lg p-2.5 text-white font-mono focus:border-blue-500 cursor-pointer">
+                            <option value="1" {{ ($settings['home_hero_style'] ?? '1') === '1' ? 'selected' : '' }}>
+                                1. Cyber-Minimal (Limpio, Alta Precisión & Mobile-First — Recomendado)
+                            </option>
+                            <option value="2" {{ ($settings['home_hero_style'] ?? '1') === '2' ? 'selected' : '' }}>
+                                2. Split Studio & Hardware (Asimétrico con Dock de Consolas)
+                            </option>
+                            <option value="3" {{ ($settings['home_hero_style'] ?? '1') === '3' ? 'selected' : '' }}>
+                                3. Swiss Catalog Archive (Monospace y Filtro de Consola Integrado)
+                            </option>
+                            <option value="4" {{ ($settings['home_hero_style'] ?? '1') === '4' ? 'selected' : '' }}>
+                                4. Neo-Terminal Command Deck (Retro Tech HUD)
+                            </option>
+                            <option value="5" {{ ($settings['home_hero_style'] ?? '1') === '5' ? 'selected' : '' }}>
+                                5. Spotlight Showcase (Inmersivo con Carátulas Flotantes)
+                            </option>
+                        </select>
+                        <span class="text-[10px] text-gray-500 font-sans mt-1 block">Selecciona cuál de los 5 diseños será el predeterminado para todos los visitantes de la web.</span>
+                    </div>
+
                     <!-- Insignia / Píldora Superior -->
                     <div class="sm:col-span-2">
                         <label class="block text-gray-300 mb-1 font-bold flex items-center gap-1.5">

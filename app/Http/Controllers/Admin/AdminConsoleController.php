@@ -19,6 +19,14 @@ class AdminConsoleController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        if ($request->filled('generation')) {
+            $genClean = intval(preg_replace('/[^0-9]/', '', (string)$request->input('generation')));
+            $request->merge(['generation' => $genClean > 0 ? $genClean : null]);
+        }
+        if ($request->input('manufacturer') === 'Otro') {
+            $request->merge(['manufacturer' => 'Other']);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:consoles,slug',
@@ -36,13 +44,24 @@ class AdminConsoleController extends Controller
             $validated['slug'] = Str::slug($validated['name']);
         }
 
+        $validated['is_featured'] = $request->boolean('is_featured');
+        $validated['order'] = $validated['order'] ?? ((int) Console::max('order') + 1);
+
         Console::create($validated);
 
-        return redirect()->route('admin.consoles.index')->with('success', 'Consola registrada exitosamente.');
+        return redirect()->route('admin.consoles.index')->with('success', "Ecosistema / Consola '{$validated['name']}' registrado exitosamente.");
     }
 
     public function update(Request $request, Console $console): RedirectResponse
     {
+        if ($request->filled('generation')) {
+            $genClean = intval(preg_replace('/[^0-9]/', '', (string)$request->input('generation')));
+            $request->merge(['generation' => $genClean > 0 ? $genClean : null]);
+        }
+        if ($request->input('manufacturer') === 'Otro') {
+            $request->merge(['manufacturer' => 'Other']);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:consoles,slug,' . $console->id,
@@ -56,9 +75,11 @@ class AdminConsoleController extends Controller
             'is_featured' => 'boolean',
         ]);
 
+        $validated['is_featured'] = $request->boolean('is_featured');
+
         $console->update($validated);
 
-        return redirect()->route('admin.consoles.index')->with('success', "Consola '{$console->name}' actualizada.");
+        return redirect()->route('admin.consoles.index')->with('success', "Consola '{$console->name}' actualizada correctamente.");
     }
 
     public function destroy(Console $console): RedirectResponse

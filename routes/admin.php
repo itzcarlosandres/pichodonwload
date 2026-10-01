@@ -30,6 +30,9 @@ Route::get('scraper/safety-status', [AdminScraperDemoController::class, 'safetyS
 Route::post('scraper/reset-cooldown', [AdminScraperDemoController::class, 'resetSafetyCooldown'])->name('scraper.reset_cooldown');
 Route::get('scraper/autopilot-status', [AdminScraperDemoController::class, 'autopilotStatus'])->name('scraper.autopilot_status');
 Route::post('scraper/drip-publish-now', [AdminScraperDemoController::class, 'dripPublishNow'])->name('scraper.drip_now');
+Route::post('scraper/auto-harvest-draft', [AdminScraperDemoController::class, 'autoHarvestToDraft'])->name('scraper.auto_harvest_draft');
+Route::get('scraper/autopilot-settings', [AdminScraperDemoController::class, 'getAutopilotSettings'])->name('scraper.autopilot_settings.get');
+Route::post('scraper/autopilot-settings', [AdminScraperDemoController::class, 'updateAutopilotSettings'])->name('scraper.autopilot_settings.update');
 
 // AI Endpoints
 Route::post('/ai/seo', [AdminAiController::class, 'generateSeo'])->name('ai.seo');

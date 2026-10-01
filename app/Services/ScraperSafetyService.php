@@ -219,6 +219,21 @@ class ScraperSafetyService
             ];
         }
 
+        if ($curlError) {
+            $isTimeout = str_contains(strtolower($curlError), 'timed out') || str_contains(strtolower($curlError), 'timeout');
+            if ($isTimeout) {
+                $this->triggerCooldown($provider, 60, "El servidor externo no responde (Timeout)");
+                return [
+                    'success' => false,
+                    'cooldown' => true,
+                    'remaining_seconds' => 60,
+                    'http_code' => 504,
+                    'message' => "El servidor externo de {$provider} no responde (Timeout tras 8s). Parece estar temporalmente fuera de servicio o bloqueando conexiones. Te sugerimos usar Romsemu o CDRomance mientras se restablece.",
+                    'html' => null,
+                ];
+            }
+        }
+
         return [
             'success' => false,
             'cooldown' => false,

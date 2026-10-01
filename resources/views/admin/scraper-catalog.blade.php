@@ -69,21 +69,30 @@
 
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
             <!-- Left Info Section -->
-            <div class="space-y-3 max-w-3xl">
+            <div class="space-y-3 max-w-2xl">
                 <div class="flex flex-wrap items-center gap-2">
-                    <!-- Status Pulse Pill -->
-                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                    <!-- Status Pulse Pill Dynamic -->
+                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-bold transition-colors"
+                          :class="autopilotSettings.autopilot_enabled ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'">
                         <span class="relative flex h-2 w-2">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                                  :class="autopilotSettings.autopilot_enabled ? 'bg-emerald-400' : 'bg-amber-400'"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2"
+                                  :class="autopilotSettings.autopilot_enabled ? 'bg-emerald-400' : 'bg-amber-400'"></span>
                         </span>
-                        Piloto Automático Activo
+                        <span x-text="autopilotSettings.autopilot_enabled ? 'Piloto Automático Activo' : 'Piloto Automático en Pausa'"></span>
                     </span>
 
-                    <!-- Cadence Chip -->
+                    <!-- Cadence Chip Dynamic -->
                     <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono bg-[#141924] border border-[#232B3E] text-gray-300">
                         <i data-lucide="clock" class="w-3 h-3 text-purple-400"></i>
-                        <span>Publicando <strong class="text-white font-bold">{{ config('roms.posts_per_batch', 4) }} juegos</strong> / <strong class="text-purple-300 font-bold">{{ config('roms.batch_interval_hours', 2) }}h</strong></span>
+                        <span>Publicando <strong class="text-white font-bold" x-text="autopilotSettings.posts_per_batch + ' juegos'"></strong> / <strong class="text-purple-300 font-bold" x-text="autopilotSettings.batch_interval_hours + 'h'"></strong></span>
+                    </span>
+
+                    <!-- AI Mode Chip -->
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono bg-purple-500/10 border border-purple-500/25 text-purple-300">
+                        <i data-lucide="sparkles" class="w-3 h-3 text-purple-400"></i>
+                        <span x-text="autopilotSettings.auto_ai_enrich ? 'Gemini IA Redactando' : 'Sin IA'"></span>
                     </span>
 
                     <!-- Google Safe Chip -->
@@ -100,9 +109,9 @@
             </div>
 
             <!-- Right Actions & Counters -->
-            <div class="flex items-center gap-3 shrink-0">
+            <div class="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0">
                 <!-- Draft Queue Widget -->
-                <div class="px-5 py-3 bg-[#080B10]/80 border border-[#1E2536] rounded-2xl text-center min-w-[120px] shadow-inner">
+                <div class="px-4 py-2.5 bg-[#080B10]/80 border border-[#1E2536] rounded-2xl text-center min-w-[105px] shadow-inner">
                     <div class="text-[10px] uppercase font-mono tracking-wider text-gray-500 font-bold">En Cola DRAFT</div>
                     <div class="text-2xl font-black text-amber-400 font-mono tracking-tight" x-text="autopilotQueueCount">
                         {{ \App\Models\Game::where('status', 'DRAFT')->count() }}
@@ -110,13 +119,29 @@
                     <div class="text-[9px] text-gray-400 font-mono">Listos para goteo</div>
                 </div>
 
-                <!-- Publish Button -->
+                <!-- Botón 1: Cargar a Cola DRAFT (Auto-Alimentación) -->
+                <button type="button"
+                        @click="openHarvestModal = true"
+                        class="px-4 py-3 rounded-2xl text-xs font-mono font-bold bg-gradient-to-r from-amber-600 via-amber-500 to-orange-600 hover:from-amber-500 hover:to-orange-500 active:scale-95 text-white shadow-xl shadow-amber-600/25 flex items-center gap-2 transition-all cursor-pointer">
+                    <i data-lucide="download-cloud" class="w-4 h-4"></i>
+                    <span>Cargar a Cola DRAFT</span>
+                </button>
+
+                <!-- Botón 2: Publicar X Ahora (Dinámico con posts_per_batch) -->
                 <button type="button"
                         @click="triggerDripNow()"
                         :disabled="dripLoading"
-                        class="px-5 py-3.5 rounded-2xl text-xs font-mono font-bold bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 active:scale-95 text-white shadow-xl shadow-purple-600/30 flex items-center gap-2.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                        class="px-4 py-3 rounded-2xl text-xs font-mono font-bold bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 active:scale-95 text-white shadow-xl shadow-purple-600/30 flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                     <i data-lucide="send" class="w-4 h-4" :class="{'animate-spin': dripLoading}"></i>
-                    <span x-text="dripLoading ? 'Publicando...' : 'Publicar 4 Ahora'"></span>
+                    <span x-text="dripLoading ? 'Publicando...' : `Publicar ${autopilotSettings.posts_per_batch} Ahora`"></span>
+                </button>
+
+                <!-- Botón 3: Ajustes Piloto Automático -->
+                <button type="button"
+                        @click="openSettingsModal = true"
+                        class="p-3 rounded-2xl bg-[#080B10] hover:bg-[#141926] border border-[#1E2536] hover:border-purple-500/50 text-gray-300 hover:text-white transition-all cursor-pointer shadow-md"
+                        title="Configurar Piloto Automático y cadencia">
+                    <i data-lucide="settings" class="w-4 h-4 text-purple-400"></i>
                 </button>
             </div>
         </div>
@@ -139,36 +164,35 @@
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             
             <!-- Left: Provider Tabs Switcher -->
-            <div class="inline-flex p-1.5 rounded-2xl bg-[#07090F] border border-[#1E2536] shadow-inner gap-1.5 shrink-0">
-                <!-- Romspedia Button -->
+            <div class="inline-flex items-center p-1.5 rounded-2xl bg-[#07090F] border border-[#1E2536] shadow-inner gap-1.5 shrink-0 max-w-full overflow-x-auto no-scrollbar">
+                <!-- Romsemu Button -->
                 <button type="button" 
-                        @click="setProvider('romspedia')" 
-                        class="px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-2 cursor-pointer"
-                        :class="provider === 'romspedia' ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30 border border-purple-400/40' : 'text-gray-400 hover:text-white hover:bg-[#141824]'">
-                    <i data-lucide="gamepad-2" class="w-3.5 h-3.5"></i>
-                    <span>Romspedia</span>
-                    <span class="w-1.5 h-1.5 rounded-full" :class="provider === 'romspedia' ? 'bg-white' : 'bg-transparent'"></span>
+                        @click="setProvider('romsemu')" 
+                        class="px-3.5 sm:px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 whitespace-nowrap"
+                        :class="provider === 'romsemu' ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/30 border border-rose-400/40' : 'text-gray-400 hover:text-white hover:bg-[#141824]'">
+                    <i data-lucide="cpu" class="w-3.5 h-3.5"></i>
+                    <span>Romsemu</span>
+                    <span class="w-1.5 h-1.5 rounded-full" :class="provider === 'romsemu' ? 'bg-white' : 'bg-transparent'"></span>
                 </button>
 
                 <!-- CDRomance Button -->
                 <button type="button" 
                         @click="setProvider('cdromance')" 
-                        class="px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-2 cursor-pointer"
+                        class="px-3.5 sm:px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 whitespace-nowrap"
                         :class="provider === 'cdromance' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30 border border-blue-400/40' : 'text-gray-400 hover:text-white hover:bg-[#141824]'">
                     <i data-lucide="disc-3" class="w-3.5 h-3.5"></i>
                     <span>CDRomance</span>
                     <span class="w-1.5 h-1.5 rounded-full" :class="provider === 'cdromance' ? 'bg-white' : 'bg-transparent'"></span>
                 </button>
 
-                <!-- Romsemu Button -->
+                <!-- Romspedia Button -->
                 <button type="button" 
-                        @click="setProvider('romsemu')" 
-                        class="px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-2 cursor-pointer"
-                        :class="provider === 'romsemu' ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/30 border border-rose-400/40' : 'text-gray-400 hover:text-white hover:bg-[#141824]'">
-                    <i data-lucide="cpu" class="w-3.5 h-3.5"></i>
-                    <span>Romsemu</span>
-                    <span class="text-[9px] px-1 py-0.2 rounded font-mono font-bold" :class="provider === 'romsemu' ? 'bg-white/20 text-white' : 'bg-[#141824] text-gray-500'">6 Consolas</span>
-                    <span class="w-1.5 h-1.5 rounded-full" :class="provider === 'romsemu' ? 'bg-white' : 'bg-transparent'"></span>
+                        @click="setProvider('romspedia')" 
+                        class="px-3.5 sm:px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 whitespace-nowrap"
+                        :class="provider === 'romspedia' ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30 border border-purple-400/40' : 'text-gray-400 hover:text-white hover:bg-[#141824]'">
+                    <i data-lucide="gamepad-2" class="w-3.5 h-3.5"></i>
+                    <span>Romspedia</span>
+                    <span class="w-1.5 h-1.5 rounded-full" :class="provider === 'romspedia' ? 'bg-white' : 'bg-transparent'"></span>
                 </button>
             </div>
 
@@ -252,12 +276,19 @@
             <i :data-lucide="feedbackSuccess ? 'check-circle-2' : 'alert-circle'" class="w-4 h-4 shrink-0"></i>
             <span x-text="feedbackMessage" class="font-medium"></span>
         </div>
-        <template x-if="lastImportedEditUrl">
-            <a :href="lastImportedEditUrl" target="_blank" rel="noopener noreferrer" class="font-bold underline text-white hover:text-emerald-200 shrink-0 flex items-center gap-1 font-mono">
-                <span>Editar Ficha</span>
-                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-            </a>
-        </template>
+        <div class="flex items-center gap-2">
+            <template x-if="!feedbackSuccess && provider === 'romspedia'">
+                <button type="button" @click="setProvider('romsemu')" class="px-3 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-mono text-[11px] font-bold cursor-pointer shrink-0">
+                    Cambiar a Romsemu
+                </button>
+            </template>
+            <template x-if="lastImportedEditUrl">
+                <a :href="lastImportedEditUrl" target="_blank" rel="noopener noreferrer" class="font-bold underline text-white hover:text-emerald-200 shrink-0 flex items-center gap-1 font-mono">
+                    <span>Editar Ficha</span>
+                    <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                </a>
+            </template>
+        </div>
     </div>
 
     <!-- Cooldown / Anti-Ban Safety Alert Banner -->
@@ -473,13 +504,251 @@
 
     </div>
 
+    <!-- ========================================== -->
+    <!-- MODAL 1: Cargar a Cola DRAFT (Auto-Harvest) -->
+    <!-- ========================================== -->
+    <div x-show="openHarvestModal" 
+         x-cloak 
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        
+        <div @click.outside="if (!harvestLoading) openHarvestModal = false"
+             class="w-full max-w-lg bg-[#0F131C] border border-[#232B3E] rounded-3xl p-6 shadow-2xl space-y-5 text-xs font-mono relative overflow-hidden"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100">
+            
+            <div class="absolute -top-12 -right-12 w-40 h-40 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+            <div class="flex items-center justify-between border-b border-[#1E2536] pb-4">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center">
+                        <i data-lucide="download-cloud" class="w-4.5 h-4.5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-white font-sans">Auto-Cargar Juegos a Cola DRAFT</h3>
+                        <p class="text-[11px] text-gray-400 font-sans">Rastrea e importa títulos sin duplicar para goteo progresivo</p>
+                    </div>
+                </div>
+                <button type="button" @click="if (!harvestLoading) openHarvestModal = false" class="text-gray-400 hover:text-white p-1 rounded-lg">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <!-- Fuente / Proveedor Selector -->
+                <div>
+                    <label class="block text-gray-400 mb-1.5 font-bold">Fuente Proveedora:</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" 
+                                @click="harvestProvider = 'romsemu'"
+                                class="p-2.5 rounded-xl border text-center font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
+                                :class="harvestProvider === 'romsemu' ? 'bg-rose-950/40 border-rose-500 text-white shadow-sm shadow-rose-600/30' : 'bg-[#07090F] border-[#1E2536] text-gray-400 hover:text-white'">
+                            <i data-lucide="cpu" class="w-4 h-4 text-rose-400"></i>
+                            <span>Romsemu (PS4, Switch...)</span>
+                        </button>
+                        <button type="button" 
+                                @click="harvestProvider = 'cdromance'"
+                                class="p-2.5 rounded-xl border text-center font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
+                                :class="harvestProvider === 'cdromance' ? 'bg-blue-950/40 border-blue-500 text-white shadow-sm shadow-blue-600/30' : 'bg-[#07090F] border-[#1E2536] text-gray-400 hover:text-white'">
+                            <i data-lucide="disc-3" class="w-4 h-4 text-blue-400"></i>
+                            <span>CDRomance (PSP, PS2...)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Consola Target -->
+                <div>
+                    <label class="block text-gray-400 mb-1.5 font-bold">Ecosistema / Consola:</label>
+                    <select x-model="harvestConsole" class="w-full bg-[#07090F] border border-[#1E2536] rounded-xl p-2.5 text-white focus:outline-none focus:border-amber-500">
+                        <option value="all">⭐ Todos los Sistemas (Catálogo General Variado)</option>
+                        <template x-for="c in (consolesByProvider[harvestProvider] || [])" :key="c.slug">
+                            <option :value="c.slug" x-text="c.name" x-show="c.slug !== 'all'"></option>
+                        </template>
+                    </select>
+                </div>
+
+                <!-- Cantidad a Cosechar -->
+                <div>
+                    <label class="block text-gray-400 mb-1.5 font-bold">Cantidad de títulos a extraer:</label>
+                    <div class="grid grid-cols-4 gap-2">
+                        <button type="button" @click="harvestLimit = 5" :class="harvestLimit === 5 ? 'bg-amber-600 text-white font-bold' : 'bg-[#07090F] border border-[#1E2536] text-gray-400 hover:text-white'" class="py-2 rounded-xl transition-all cursor-pointer">5 ROMs</button>
+                        <button type="button" @click="harvestLimit = 10" :class="harvestLimit === 10 ? 'bg-amber-600 text-white font-bold' : 'bg-[#07090F] border border-[#1E2536] text-gray-400 hover:text-white'" class="py-2 rounded-xl transition-all cursor-pointer">10 ROMs</button>
+                        <button type="button" @click="harvestLimit = 15" :class="harvestLimit === 15 ? 'bg-amber-600 text-white font-bold' : 'bg-[#07090F] border border-[#1E2536] text-gray-400 hover:text-white'" class="py-2 rounded-xl transition-all cursor-pointer">15 ROMs</button>
+                        <button type="button" @click="harvestLimit = 20" :class="harvestLimit === 20 ? 'bg-amber-600 text-white font-bold' : 'bg-[#07090F] border border-[#1E2536] text-gray-400 hover:text-white'" class="py-2 rounded-xl transition-all cursor-pointer">20 ROMs</button>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-[#07090F] border border-[#1E2536] rounded-xl text-[11px] text-gray-400 space-y-1">
+                    <p class="flex items-center gap-1.5 text-emerald-400 font-bold">
+                        <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+                        <span>Filtro Anti-Duplicados Activo</span>
+                    </p>
+                    <p>Los juegos existentes se ignoran automáticamente. Las carátulas se procesan a WebP local para máxima velocidad.</p>
+                </div>
+
+                <!-- Feedback en el modal -->
+                <div x-show="harvestNotice" class="p-3 rounded-xl border text-xs"
+                     :class="harvestNoticeSuccess ? 'bg-emerald-950/70 border-emerald-500/40 text-emerald-300' : 'bg-rose-950/70 border-rose-500/40 text-rose-300'">
+                    <span x-text="harvestNotice"></span>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-[#1E2536]">
+                <button type="button" 
+                        @click="openHarvestModal = false" 
+                        :disabled="harvestLoading"
+                        class="px-4 py-2.5 rounded-xl bg-[#07090F] hover:bg-[#141824] border border-[#1E2536] text-gray-400 hover:text-white cursor-pointer disabled:opacity-50">
+                    Cancelar
+                </button>
+                <button type="button" 
+                        @click="triggerAutoHarvest()" 
+                        :disabled="harvestLoading"
+                        class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold shadow-lg shadow-amber-600/30 flex items-center gap-2 cursor-pointer disabled:opacity-50">
+                    <i data-lucide="loader-2" class="w-4 h-4 animate-spin" x-show="harvestLoading"></i>
+                    <i data-lucide="sparkles" class="w-4 h-4" x-show="!harvestLoading"></i>
+                    <span x-text="harvestLoading ? 'Cosechando Bóveda...' : 'Iniciar Carga a Cola'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 2: Ajustes Piloto Automático          -->
+    <!-- ========================================== -->
+    <div x-show="openSettingsModal" 
+         x-cloak 
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        
+        <div @click.outside="if (!settingsLoading) openSettingsModal = false"
+             class="w-full max-w-lg bg-[#0F131C] border border-[#232B3E] rounded-3xl p-6 shadow-2xl space-y-5 text-xs font-mono relative overflow-hidden"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100">
+            
+            <div class="absolute -top-12 -right-12 w-40 h-40 bg-purple-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+            <div class="flex items-center justify-between border-b border-[#1E2536] pb-4">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 border border-purple-500/30 flex items-center justify-center">
+                        <i data-lucide="sliders" class="w-4.5 h-4.5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-white font-sans">Ajustes del Piloto Automático</h3>
+                        <p class="text-[11px] text-gray-400 font-sans">Controla la cadencia, volumen y automatización con IA</p>
+                    </div>
+                </div>
+                <button type="button" @click="if (!settingsLoading) openSettingsModal = false" class="text-gray-400 hover:text-white p-1 rounded-lg">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <!-- Toggle Estado Maestro -->
+                <div class="flex items-center justify-between p-3.5 rounded-2xl bg-[#07090F] border border-[#1E2536]">
+                    <div>
+                        <span class="font-bold text-white block">Motor de Publicación Automática</span>
+                        <span class="text-[11px] text-gray-400">Activa o pausa el cron en segundo plano</span>
+                    </div>
+                    <button type="button" 
+                            @click="autopilotSettings.autopilot_enabled = !autopilotSettings.autopilot_enabled"
+                            class="relative shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none"
+                            style="width: 48px; height: 26px; min-width: 48px; min-height: 26px;"
+                            :class="autopilotSettings.autopilot_enabled ? 'bg-emerald-500' : 'bg-gray-800'">
+                        <span class="pointer-events-none absolute top-[3px] rounded-full bg-white shadow-md transition-all duration-200 ease-in-out"
+                              style="width: 20px; height: 20px;"
+                              :style="autopilotSettings.autopilot_enabled ? 'left: 25px;' : 'left: 3px;'"></span>
+                    </button>
+                </div>
+
+                <!-- Cantidad por Tanda -->
+                <div>
+                    <label class="block text-gray-400 mb-1.5 font-bold">¿Cuántos juegos publicar por tanda?:</label>
+                    <select x-model.number="autopilotSettings.posts_per_batch" class="w-full bg-[#07090F] border border-[#1E2536] rounded-xl p-2.5 text-white focus:outline-none focus:border-purple-500 font-mono">
+                        <option value="2">2 juegos por lote</option>
+                        <option value="4">4 juegos por lote (Recomendado)</option>
+                        <option value="6">6 juegos por lote</option>
+                        <option value="8">8 juegos por lote</option>
+                        <option value="12">12 juegos por lote</option>
+                        <option value="16">16 juegos por lote</option>
+                        <option value="20">20 juegos por lote</option>
+                    </select>
+                </div>
+
+                <!-- Frecuencia de publicación -->
+                <div>
+                    <label class="block text-gray-400 mb-1.5 font-bold">Intervalo de tiempo (Frecuencia):</label>
+                    <select x-model.number="autopilotSettings.batch_interval_hours" class="w-full bg-[#07090F] border border-[#1E2536] rounded-xl p-2.5 text-white focus:outline-none focus:border-purple-500 font-mono">
+                        <option value="1">Cada 1 hora (Alta frecuencia)</option>
+                        <option value="2">Cada 2 horas (Recomendado SEO)</option>
+                        <option value="4">Cada 4 horas</option>
+                        <option value="6">Cada 6 horas</option>
+                        <option value="12">Cada 12 horas (2 veces al día)</option>
+                        <option value="24">Cada 24 horas (1 vez al día)</option>
+                    </select>
+                </div>
+
+                <!-- Enriquecimiento con IA -->
+                <div class="flex items-center justify-between p-3.5 rounded-2xl bg-[#07090F] border border-[#1E2536]">
+                    <div>
+                        <span class="font-bold text-white block">Redacción Enriquecida con Gemini IA</span>
+                        <span class="text-[11px] text-gray-400">Genera sinopsis de 200+ palabras y tags SEO al publicar</span>
+                    </div>
+                    <button type="button" 
+                            @click="autopilotSettings.auto_ai_enrich = !autopilotSettings.auto_ai_enrich"
+                            class="relative shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none"
+                            style="width: 48px; height: 26px; min-width: 48px; min-height: 26px;"
+                            :class="autopilotSettings.auto_ai_enrich ? 'bg-purple-600' : 'bg-gray-800'">
+                        <span class="pointer-events-none absolute top-[3px] rounded-full bg-white shadow-md transition-all duration-200 ease-in-out"
+                              style="width: 20px; height: 20px;"
+                              :style="autopilotSettings.auto_ai_enrich ? 'left: 25px;' : 'left: 3px;'"></span>
+                    </button>
+                </div>
+
+                <!-- Feedback en el modal -->
+                <div x-show="settingsNotice" class="p-3 rounded-xl border text-xs"
+                     :class="settingsNoticeSuccess ? 'bg-emerald-950/70 border-emerald-500/40 text-emerald-300' : 'bg-rose-950/70 border-rose-500/40 text-rose-300'">
+                    <span x-text="settingsNotice"></span>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-[#1E2536]">
+                <button type="button" 
+                        @click="openSettingsModal = false" 
+                        :disabled="settingsLoading"
+                        class="px-4 py-2.5 rounded-xl bg-[#07090F] hover:bg-[#141824] border border-[#1E2536] text-gray-400 hover:text-white cursor-pointer disabled:opacity-50">
+                    Cancelar
+                </button>
+                <button type="button" 
+                        @click="saveAutopilotSettings()" 
+                        :disabled="settingsLoading"
+                        class="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold shadow-lg shadow-purple-600/30 flex items-center gap-2 cursor-pointer disabled:opacity-50">
+                    <i data-lucide="loader-2" class="w-4 h-4 animate-spin" x-show="settingsLoading"></i>
+                    <i data-lucide="check" class="w-4 h-4" x-show="!settingsLoading"></i>
+                    <span x-text="settingsLoading ? 'Guardando...' : 'Guardar Ajustes'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
 function scraperCatalogApp() {
     return {
-        provider: 'romspedia',
-        consoleSlug: 'psp',
+        provider: 'romsemu',
+        consoleSlug: 'all',
         page: 1,
         consolesByProvider: {
             romsemu: [
@@ -537,17 +806,39 @@ function scraperCatalogApp() {
         dripNotice: '',
         dripNoticeSuccess: true,
 
+        // Modales de Control & Ajustes
+        openHarvestModal: false,
+        harvestProvider: 'romsemu',
+        harvestConsole: 'all',
+        harvestLimit: {{ (int) \App\Models\Setting::get('roms_auto_harvest_limit', 10) }},
+        harvestLoading: false,
+        harvestNotice: '',
+        harvestNoticeSuccess: true,
+
+        openSettingsModal: false,
+        settingsLoading: false,
+        settingsNotice: '',
+        settingsNoticeSuccess: true,
+        autopilotSettings: {
+            autopilot_enabled: {{ \App\Models\Setting::get('roms_autopilot_enabled', config('roms.autopilot_enabled', true)) ? 'true' : 'false' }},
+            posts_per_batch: {{ (int) \App\Models\Setting::get('roms_posts_per_batch', config('roms.posts_per_batch', 4)) }},
+            batch_interval_hours: {{ (int) \App\Models\Setting::get('roms_batch_interval_hours', config('roms.batch_interval_hours', 2)) }},
+            auto_ai_enrich: {{ \App\Models\Setting::get('roms_auto_ai_enrich', config('roms.auto_ai_enrich', true)) ? 'true' : 'false' }},
+            auto_harvest_limit: {{ (int) \App\Models\Setting::get('roms_auto_harvest_limit', 10) }}
+        },
+
         async triggerDripNow() {
             if (this.dripLoading) return;
             if (this.autopilotQueueCount === 0) {
-                this.dripNotice = '⚠️ No hay juegos en estado DRAFT en la cola. Haz clic en "1-Clic Importar" en cualquier juego del catálogo inferior para ponerlo en fila.';
+                this.dripNotice = '⚠️ No hay juegos en estado DRAFT en la cola. Carga juegos con "Cargar a Cola DRAFT" o usa "1-Clic Importar".';
                 this.dripNoticeSuccess = false;
                 this.$nextTick(() => { if (window.lucide) window.lucide.createIcons(); });
                 return;
             }
 
+            const batchCount = this.autopilotSettings.posts_per_batch || 4;
             this.dripLoading = true;
-            this.dripNotice = '⏳ Procesando y publicando lote de 4 juegos en vivo...';
+            this.dripNotice = `⏳ Procesando y publicando lote de ${batchCount} juegos en vivo...`;
             this.dripNoticeSuccess = true;
             this.$nextTick(() => { if (window.lucide) window.lucide.createIcons(); });
 
@@ -559,11 +850,11 @@ function scraperCatalogApp() {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
                         'Accept': 'application/json'
                     },
-                    body: JSON.stringify({ count: 4 })
+                    body: JSON.stringify({ count: batchCount })
                 });
                 const data = await res.json();
                 if (data.success) {
-                    this.dripNotice = data.message || '¡Tanda de 4 juegos publicada con éxito!';
+                    this.dripNotice = data.message || `¡Tanda de ${batchCount} juegos publicada con éxito!`;
                     this.dripNoticeSuccess = true;
                     if (data.remaining_drafts !== undefined) {
                         this.autopilotQueueCount = data.remaining_drafts;
@@ -581,6 +872,91 @@ function scraperCatalogApp() {
                 this.$nextTick(() => {
                     if (window.lucide) window.lucide.createIcons();
                 });
+            }
+        },
+
+        async triggerAutoHarvest() {
+            if (this.harvestLoading) return;
+            this.harvestLoading = true;
+            this.harvestNotice = '⏳ Explorando catálogo y cosechando títulos a la cola DRAFT (Anti-Duplicados)...';
+            this.harvestNoticeSuccess = true;
+
+            try {
+                const res = await fetch('{{ route("admin.scraper.auto_harvest_draft") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        provider: this.harvestProvider,
+                        console_slug: this.harvestConsole,
+                        limit: this.harvestLimit
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.harvestNotice = data.message;
+                    this.harvestNoticeSuccess = true;
+                    if (data.total_drafts !== undefined) {
+                        this.autopilotQueueCount = data.total_drafts;
+                    }
+                    this.loadCatalog();
+                    setTimeout(() => {
+                        this.openHarvestModal = false;
+                        this.harvestNotice = '';
+                    }, 2000);
+                } else {
+                    this.harvestNotice = data.message || 'No se pudo completar la carga a cola.';
+                    this.harvestNoticeSuccess = false;
+                }
+            } catch (e) {
+                this.harvestNotice = 'Error al conectar con el servidor: ' + e.message;
+                this.harvestNoticeSuccess = false;
+            } finally {
+                this.harvestLoading = false;
+                this.$nextTick(() => { if (window.lucide) window.lucide.createIcons(); });
+            }
+        },
+
+        async saveAutopilotSettings() {
+            if (this.settingsLoading) return;
+            this.settingsLoading = true;
+            this.settingsNotice = '⏳ Guardando nueva configuración en vivo...';
+            this.settingsNoticeSuccess = true;
+
+            try {
+                const res = await fetch('{{ route("admin.scraper.autopilot_settings.update") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(this.autopilotSettings)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.settingsNotice = data.message;
+                    this.settingsNoticeSuccess = true;
+                    if (data.settings) {
+                        this.autopilotSettings = data.settings;
+                    }
+                    setTimeout(() => {
+                        this.openSettingsModal = false;
+                        this.settingsNotice = '';
+                    }, 1200);
+                } else {
+                    this.settingsNotice = data.message || 'Error al guardar los ajustes.';
+                    this.settingsNoticeSuccess = false;
+                }
+            } catch (e) {
+                this.settingsNotice = 'Error al conectar: ' + e.message;
+                this.settingsNoticeSuccess = false;
+            } finally {
+                this.settingsLoading = false;
+                this.$nextTick(() => { if (window.lucide) window.lucide.createIcons(); });
             }
         },
 
@@ -700,6 +1076,7 @@ function scraperCatalogApp() {
                     },
                     body: JSON.stringify({
                         url: url,
+                        console_slug: (gameObj && gameObj.console_slug ? gameObj.console_slug : this.consoleSlug),
                         status: this.importStatus,
                         optimize_cover: this.optimizeCover,
                         generate_ai: this.generateAi,

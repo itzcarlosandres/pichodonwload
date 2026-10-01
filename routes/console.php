@@ -19,9 +19,36 @@ use Illuminate\Support\Facades\Schedule;
 |
 */
 
-// 1. PUBLICACIÓN DOSIFICADA (DRIP PUBLISHING): Cada 2 horas publica 4 juegos solos
-Schedule::command('games:publish-drip')
-    ->everyTwoHours()
+// 1. PUBLICACIÓN DOSIFICADA (DRIP PUBLISHING): Programación dinámica controlada desde el panel admin
+$dripCommand = Schedule::command('games:publish-drip');
+
+$intervalHours = 2;
+try {
+    $intervalHours = (int) \App\Models\Setting::get('roms_batch_interval_hours', config('roms.batch_interval_hours', 2));
+    $intervalHours = max(1, min(72, $intervalHours));
+} catch (\Throwable $e) {
+    $intervalHours = (int) config('roms.batch_interval_hours', 2);
+}
+
+match ($intervalHours) {
+    1 => $dripCommand->hourly(),
+    2 => $dripCommand->everyTwoHours(),
+    3 => $dripCommand->everyThreeHours(),
+    4 => $dripCommand->everyFourHours(),
+    6 => $dripCommand->everySixHours(),
+    12 => $dripCommand->twiceDaily(0, 12),
+    24 => $dripCommand->dailyAt('00:00'),
+    default => $dripCommand->cron("0 */{$intervalHours} * * *"),
+};
+
+$dripCommand
+    ->when(function () {
+        try {
+            return (bool) \App\Models\Setting::get('roms_autopilot_enabled', config('roms.autopilot_enabled', true));
+        } catch (\Throwable $e) {
+            return true;
+        }
+    })
     ->withoutOverlapping(15)
     ->runInBackground()
     ->appendOutputTo(storage_path('logs/drip-publisher.log'));

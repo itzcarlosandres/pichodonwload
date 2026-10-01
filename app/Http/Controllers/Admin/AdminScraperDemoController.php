@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Game;
 use App\Models\Console;
 use App\Models\Category;
+use App\Models\Setting;
 use App\Services\RomScraperService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -288,11 +289,48 @@ class AdminScraperDemoController extends Controller
             ]);
         }
 
-        // Buscar consola adecuada
+        // Buscar consola adecuada con normalización estricta (evita asociar PS4 a PS1)
         $console = null;
-        if (!empty($scrape['platform_slug'])) {
-            $console = Console::where('slug', $scrape['platform_slug'])->first();
+        $slugToSearch = $request->input('console_slug') ?: ($scrape['platform_slug'] ?? null);
+
+        if ($slugToSearch) {
+            $slugLower = strtolower(trim($slugToSearch));
+            if (in_array($slugLower, ['ps4', 'playstation-4', 'playstation 4'])) {
+                $console = Console::where('slug', 'playstation-4')->first();
+            } elseif (in_array($slugLower, ['psvita', 'playstation-vita', 'ps vita', 'playstation vita'])) {
+                $console = Console::where('slug', 'psvita')->first();
+            } elseif (in_array($slugLower, ['sega-sg-1000', 'sg-1000'])) {
+                $console = Console::where('slug', 'sega-sg-1000')->first();
+            } elseif (in_array($slugLower, ['sega-32x', '32x'])) {
+                $console = Console::where('slug', 'sega-32x')->first();
+            } else {
+                $console = Console::where('slug', $slugLower)->first();
+            }
         }
+
+        if (!$console && !empty($scrape['platform'])) {
+            $console = Console::where('name', 'like', "%{$scrape['platform']}%")->first();
+        }
+
+        // Si la consola aún no existe en DB, crearla automáticamente con su fabricante correcto
+        if (!$console && !empty($slugToSearch) && $slugToSearch !== 'all') {
+            $cleanName = !empty($scrape['platform']) ? $scrape['platform'] : ucwords(str_replace('-', ' ', $slugToSearch));
+            $mfg = 'Other';
+            $checkLower = strtolower($cleanName . ' ' . $slugToSearch);
+            if (str_contains($checkLower, 'playstation') || str_contains($checkLower, 'ps')) $mfg = 'Sony';
+            elseif (str_contains($checkLower, 'nintendo')) $mfg = 'Nintendo';
+            elseif (str_contains($checkLower, 'sega')) $mfg = 'Sega';
+            elseif (str_contains($checkLower, 'xbox')) $mfg = 'Microsoft';
+
+            $console = Console::create([
+                'name' => $cleanName,
+                'slug' => Str::slug($slugToSearch),
+                'manufacturer' => $mfg,
+                'order' => (int) Console::max('order') + 1,
+                'is_featured' => false,
+            ]);
+        }
+
         if (!$console) {
             $console = Console::first();
         }
@@ -494,42 +532,144 @@ class AdminScraperDemoController extends Controller
     }
 
     /**
-     * Endpoint AJAX para disparar manualmente una tanda del Drip Publisher (ej. 4 posts)
+     * Endpoint AJAX para disparar manualmente una tanda del Drip Publisher
      */
-    public function dripPublishNow(Request $request): JsonResponse
-    {
-        $count = (int) $request->input('count', config('roms.posts_per_batch', 4));
+     public function dripPublishNow(Request $request): JsonResponse
+     {
+         $defaultCount = (int) Setting::get('roms_posts_per_batch', config('roms.posts_per_batch', 4));
+         $count = (int) $request->input('count', $defaultCount);
 
-        $draftsCount = Game::where('status', 'DRAFT')->count();
-        if ($draftsCount === 0) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No hay juegos en estado DRAFT en la cola. Importa juegos abajo con "1-Clic Importar" para ponerlos en fila.',
-                'remaining_drafts' => 0,
-            ]);
-        }
+         $draftsCount = Game::where('status', 'DRAFT')->count();
+         if ($draftsCount === 0) {
+             return response()->json([
+                 'success' => false,
+                 'message' => 'No hay juegos en estado DRAFT en la cola. Carga juegos con el botón "Cargar a Cola DRAFT" o "1-Clic Importar".',
+                 'remaining_drafts' => 0,
+             ]);
+         }
+
+         try {
+             \Illuminate\Support\Facades\Artisan::call('games:publish-drip', [
+                 '--count' => $count,
+                 '--force' => true,
+             ]);
+
+             $output = \Illuminate\Support\Facades\Artisan::output();
+             $remaining = Game::where('status', 'DRAFT')->count();
+             $actuallyPublished = max(0, $draftsCount - $remaining);
+
+             return response()->json([
+                 'success' => true,
+                 'message' => "¡Se publicaron {$actuallyPublished} juegos en vivo exitosamente con IA!",
+                 'output' => $output,
+                 'remaining_drafts' => $remaining,
+             ]);
+         } catch (\Throwable $e) {
+             return response()->json([
+                 'success' => false,
+                 'message' => 'Error al ejecutar publicación dosificada: ' . $e->getMessage(),
+             ], 500);
+         }
+     }
+
+    /**
+     * Endpoint AJAX para auto-alimentar la cola DRAFT cosechando juegos sin duplicar
+     */
+    public function autoHarvestToDraft(Request $request): JsonResponse
+    {
+        $provider = $request->input('provider', 'romsemu');
+        $console = $request->input('console_slug', 'all');
+        $defaultLimit = (int) Setting::get('roms_auto_harvest_limit', 10);
+        $limit = max(1, min(30, (int) $request->input('limit', $defaultLimit)));
+
+        $initialDrafts = Game::where('status', 'DRAFT')->count();
 
         try {
-            \Illuminate\Support\Facades\Artisan::call('games:publish-drip', [
-                '--count' => $count,
-                '--force' => true,
+            \Illuminate\Support\Facades\Artisan::call('roms:auto-harvest', [
+                '--provider' => $provider,
+                '--console' => $console,
+                '--limit' => $limit,
+                '--shuffle' => true,
             ]);
 
             $output = \Illuminate\Support\Facades\Artisan::output();
-            $remaining = Game::where('status', 'DRAFT')->count();
-            $actuallyPublished = max(0, $draftsCount - $remaining);
+            $newDrafts = Game::where('status', 'DRAFT')->count();
+            $added = max(0, $newDrafts - $initialDrafts);
+
+            $providerName = match($provider) {
+                'romsemu' => 'Romsemu',
+                'cdromance' => 'CDRomance',
+                'romspedia' => 'Romspedia',
+                default => ucfirst($provider)
+            };
 
             return response()->json([
                 'success' => true,
-                'message' => "¡Se publicaron {$actuallyPublished} juegos en vivo exitosamente!",
+                'added' => $added,
+                'total_drafts' => $newDrafts,
+                'message' => $added > 0 
+                    ? "¡Se han añadido {$added} nuevos títulos desde {$providerName} a la cola DRAFT con carátulas WebP optimizadas!"
+                    : "No se encontraron títulos nuevos pendientes (todos los explorados en esta página ya existen en tu catálogo).",
                 'output' => $output,
-                'remaining_drafts' => $remaining,
             ]);
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al ejecutar publicación dosificada: ' . $e->getMessage(),
+                'message' => 'Error al auto-alimentar la cola DRAFT: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Endpoint AJAX para consultar los ajustes vigentes del Piloto Automático
+     */
+    public function getAutopilotSettings(): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'settings' => [
+                'autopilot_enabled' => (bool) Setting::get('roms_autopilot_enabled', config('roms.autopilot_enabled', true)),
+                'posts_per_batch' => (int) Setting::get('roms_posts_per_batch', config('roms.posts_per_batch', 4)),
+                'batch_interval_hours' => (int) Setting::get('roms_batch_interval_hours', config('roms.batch_interval_hours', 2)),
+                'auto_ai_enrich' => (bool) Setting::get('roms_auto_ai_enrich', config('roms.auto_ai_enrich', true)),
+                'auto_harvest_limit' => (int) Setting::get('roms_auto_harvest_limit', config('roms.auto_harvest_limit', 10)),
+            ],
+            'drafts_in_queue' => Game::where('status', 'DRAFT')->count(),
+            'total_published' => Game::where('status', 'PUBLISHED')->count(),
+        ]);
+    }
+
+    /**
+     * Endpoint AJAX para actualizar los ajustes del Piloto Automático en la tabla settings
+     */
+    public function updateAutopilotSettings(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'autopilot_enabled' => 'required|boolean',
+            'posts_per_batch' => 'required|integer|min:1|max:50',
+            'batch_interval_hours' => 'required|integer|min:1|max:72',
+            'auto_ai_enrich' => 'required|boolean',
+            'auto_harvest_limit' => 'nullable|integer|min:1|max:50',
+        ]);
+
+        Setting::set('roms_autopilot_enabled', (bool) $validated['autopilot_enabled']);
+        Setting::set('roms_posts_per_batch', (int) $validated['posts_per_batch']);
+        Setting::set('roms_batch_interval_hours', (int) $validated['batch_interval_hours']);
+        Setting::set('roms_auto_ai_enrich', (bool) $validated['auto_ai_enrich']);
+        if (isset($validated['auto_harvest_limit'])) {
+            Setting::set('roms_auto_harvest_limit', (int) $validated['auto_harvest_limit']);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Configuración del Piloto Automático actualizada correctamente.',
+            'settings' => [
+                'autopilot_enabled' => (bool) Setting::get('roms_autopilot_enabled', true),
+                'posts_per_batch' => (int) Setting::get('roms_posts_per_batch', 4),
+                'batch_interval_hours' => (int) Setting::get('roms_batch_interval_hours', 2),
+                'auto_ai_enrich' => (bool) Setting::get('roms_auto_ai_enrich', true),
+                'auto_harvest_limit' => (int) Setting::get('roms_auto_harvest_limit', 10),
+            ],
+        ]);
     }
 }
