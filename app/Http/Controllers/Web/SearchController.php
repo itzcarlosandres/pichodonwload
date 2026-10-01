@@ -29,7 +29,25 @@ class SearchController extends Controller
         }
 
         if ($request->filled('console')) {
-            $query->whereHas('console', fn($q) => $q->where('slug', $request->input('console')));
+            $consoleSlug = (string) $request->input('console');
+            $slugs = [$consoleSlug];
+            $aliases = [
+                'ps4' => 'playstation-4',
+                'ps3' => 'playstation-3',
+                'ps2' => 'playstation-2',
+                'ps1' => 'playstation',
+                'psp' => 'playstation-portable',
+                'gba' => 'game-boy-advance',
+                'gb' => 'game-boy',
+                '3ds' => 'nintendo-3ds',
+                'ds' => 'nintendo-ds',
+                'switch' => 'nintendo-switch',
+                'n64' => 'nintendo-64',
+            ];
+            if (isset($aliases[strtolower($consoleSlug)])) {
+                $slugs[] = $aliases[strtolower($consoleSlug)];
+            }
+            $query->whereHas('console', fn($q) => $q->whereIn('slug', $slugs));
         }
 
         if ($request->filled('category')) {

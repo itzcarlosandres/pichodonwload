@@ -137,7 +137,7 @@
                     $quickChips = [
                         ['name' => 'Switch', 'slug' => 'nintendo-switch', 'color' => '#E60012'],
                         ['name' => 'PS2', 'slug' => 'playstation-2', 'color' => '#003791'],
-                        ['name' => 'PS4', 'slug' => 'ps4', 'color' => '#003791'],
+                        ['name' => 'PS4', 'slug' => 'playstation-4', 'color' => '#003791'],
                         ['name' => 'PSP', 'slug' => 'playstation-portable', 'color' => '#003791'],
                         ['name' => 'GBA', 'slug' => 'game-boy-advance', 'color' => '#5C2D91'],
                         ['name' => '3DS', 'slug' => 'nintendo-3ds', 'color' => '#CE2D2D'],
@@ -182,7 +182,7 @@
                         $showcaseSlugs = [
                             ['slug' => 'nintendo-switch', 'fallback_name' => 'Nintendo Switch', 'gen' => 'Gen 8 • Híbrida', 'color' => '#E60012', 'icon' => 'gamepad-2'],
                             ['slug' => 'playstation-2', 'fallback_name' => 'PlayStation 2', 'gen' => 'Gen 6 • Sony', 'color' => '#003791', 'icon' => 'disc'],
-                            ['slug' => 'ps4', 'fallback_name' => 'PlayStation 4', 'gen' => 'Gen 8 • Sony', 'color' => '#0055D4', 'icon' => 'tv'],
+                            ['slug' => 'playstation-4', 'fallback_name' => 'PlayStation 4', 'gen' => 'Gen 8 • Sony', 'color' => '#0055D4', 'icon' => 'tv'],
                             ['slug' => 'game-boy-advance', 'fallback_name' => 'Game Boy Advance', 'gen' => 'Portátil 32-Bit', 'color' => '#5C2D91', 'icon' => 'cpu'],
                         ];
                     @endphp
@@ -191,8 +191,8 @@
                         @php
                             $realConsole = $consoles->firstWhere('slug', $cItem['slug']);
                             $cName = $realConsole ? $realConsole->name : $cItem['fallback_name'];
-                            $cCount = $realConsole ? $realConsole->games_count : 450;
-                            $cUrl = $realConsole ? route('consoles.show', $realConsole->slug) : route('search', ['console' => $cItem['slug']]);
+                            $cCount = $realConsole ? (int) $realConsole->games_count : 0;
+                            $cUrl = $realConsole ? route('consoles.show', $realConsole->slug) : route('consoles.show', $cItem['slug']);
                         @endphp
                         <a href="{{ $cUrl }}" 
                            class="group p-3.5 rounded-2xl bg-white dark:bg-[#1E1E24] border border-[#E5E0D8] dark:border-[#2E2E38] hover:border-[#CE2D2D] dark:hover:border-[#CE2D2D] transition-all hover:-translate-y-1 shadow-2xs hover:shadow-lg flex flex-col justify-between h-28 relative overflow-hidden">
