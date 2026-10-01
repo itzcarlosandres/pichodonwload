@@ -20,16 +20,8 @@
             <span class="text-[#CE2D2D] relative inline-block">
                 {{ \App\Models\Setting::get('home_hero_title_highlight', 'every classic console.') }}
                 
-                <!-- Modelo de línea original con degradado en las puntas y destello Flash infinito -->
-                <span class="block relative w-full h-[3px] sm:h-[4px] mt-1 sm:mt-1.5 overflow-hidden rounded-full pointer-events-none"
-                      style="-webkit-mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%); mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);">
-                    <!-- Línea roja base idéntica al modelo original (degradado en las puntas) -->
-                    <span class="absolute inset-0 bg-gradient-to-r from-transparent via-[#CE2D2D] to-transparent"></span>
-                    <span class="absolute inset-0 bg-gradient-to-r from-transparent via-[#CE2D2D] to-transparent blur-[2px] opacity-75"></span>
-                    
-                    <!-- Destello estilo Flash que recorre la línea infinitamente -->
-                    <span class="hero-flash-ray absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white via-red-100 to-transparent"></span>
-                </span>
+                <!-- Línea original clásica con degradado en las puntas -->
+                <span class="block w-full h-[3px] sm:h-[4px] mt-1 sm:mt-1.5 rounded-full bg-gradient-to-r from-transparent via-[#CE2D2D] to-transparent pointer-events-none opacity-90"></span>
             </span>
         </h1>
         <p class="text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-300 max-w-xl mx-auto font-sans leading-relaxed font-normal px-2">
@@ -155,22 +147,5 @@
             </a>
         @endforeach
     </div>
-
-    <!-- Hero Underline Flash Animation Styles -->
-    <style>
-    @keyframes heroFlashSweep {
-        0% {
-            transform: translateX(-160%);
-        }
-        100% {
-            transform: translateX(360%);
-        }
-    }
-    .hero-flash-ray {
-        animation: heroFlashSweep 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-        filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 10px rgba(206, 45, 45, 0.85));
-        will-change: transform;
-    }
-    </style>
 
 </section>

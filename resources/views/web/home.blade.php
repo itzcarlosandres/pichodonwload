@@ -5,70 +5,9 @@
 @section('content')
 <main class="{{ \App\Models\Setting::get('container_max_width', 'max-w-[1200px]') }} mx-auto px-4 lg:px-6 py-8 space-y-14">
 
-    <!-- ================= HERO DESIGN DEMO ENGINE (5 EXCLUSIVE DESIGNS) ================= -->
-    <div x-data="{
-        activeHero: (new URLSearchParams(window.location.search).get('hero')) || '{{ \App\Models\Setting::get('home_hero_style', '1') }}',
-        setHero(num) {
-            this.activeHero = String(num);
-            localStorage.setItem('romhub_hero_variant', String(num));
-            const url = new URL(window.location);
-            url.searchParams.set('hero', String(num));
-            window.history.replaceState({}, '', url);
-            this.$nextTick(() => {
-                if (window.lucide) { lucide.createIcons(); }
-            });
-        }
-    }" class="space-y-4">
+    <!-- 1. HERO SECTION (Split Hardware Showcase) -->
+    @include('web.heroes.variant-2')
 
-        <!-- Live Demo Floating Switcher -->
-        @include('web.heroes.switcher')
-
-        <!-- Variant 1: Cyber-Minimal Vault -->
-        <div x-show="activeHero === '1'" 
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 translate-y-3"
-             x-transition:enter-end="opacity-100 translate-y-0"
-             x-cloak>
-            @include('web.heroes.variant-1')
-        </div>
-
-        <!-- Variant 2: Split Hardware Showcase -->
-        <div x-show="activeHero === '2'" 
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 translate-y-3"
-             x-transition:enter-end="opacity-100 translate-y-0"
-             x-cloak>
-            @include('web.heroes.variant-2')
-        </div>
-
-        <!-- Variant 3: Swiss Editorial Catalog -->
-        <div x-show="activeHero === '3'" 
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 translate-y-3"
-             x-transition:enter-end="opacity-100 translate-y-0"
-             x-cloak>
-            @include('web.heroes.variant-3')
-        </div>
-
-        <!-- Variant 4: Neo-Terminal Command Deck -->
-        <div x-show="activeHero === '4'" 
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 translate-y-3"
-             x-transition:enter-end="opacity-100 translate-y-0"
-             x-cloak>
-            @include('web.heroes.variant-4')
-        </div>
-
-        <!-- Variant 5: Immersive Spotlight Showcase -->
-        <div x-show="activeHero === '5'" 
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 translate-y-3"
-             x-transition:enter-end="opacity-100 translate-y-0"
-             x-cloak>
-            @include('web.heroes.variant-5')
-        </div>
-
-    </div>
 
     <!-- 2. CONSOLES SECTION (Horizontal Smooth Slider with Autoplay, Mouse Drag & Mobile Optimization) -->
     <section class="space-y-3 sm:space-y-4" x-data="{
