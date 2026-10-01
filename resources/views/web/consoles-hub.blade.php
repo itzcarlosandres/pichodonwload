@@ -196,7 +196,7 @@
                 <div class="pt-4 mt-4 border-t border-[#E5E0D8] flex items-center justify-between font-mono text-xs">
                     <span class="text-[#CE2D2D] font-bold flex items-center gap-1.5 text-xs">
                         <i data-lucide="database" class="w-3.5 h-3.5"></i>
-                        {{ $console->games_count }} Títulos
+                        {{ $console->games_count > 0 ? $console->games_count : ($console->total_uploaded_count ?? $console->games_count) }} Títulos
                     </span>
 
                     <a href="{{ route('consoles.show', $console->slug) }}" 

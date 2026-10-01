@@ -189,9 +189,50 @@
 
                     @foreach($showcaseSlugs as $cItem)
                         @php
-                            $realConsole = $consoles->firstWhere('slug', $cItem['slug']);
+                            $target = strtolower(trim($cItem['slug']));
+                            $matchingConsoles = $consoles->filter(function($c) use ($target) {
+                                $s = strtolower(trim($c->slug));
+                                $name = strtolower(trim($c->name));
+                                
+                                if ($s === $target) return true;
+                                
+                                // PlayStation 4 aliases & names
+                                if ($target === 'playstation-4' && (
+                                    in_array($s, ['ps4', 'playstation-4', 'playstation4', 'ps-4', 'sony-ps4']) ||
+                                    str_contains($name, 'playstation 4') ||
+                                    str_contains($name, 'ps4')
+                                )) return true;
+                                
+                                // PlayStation 2 aliases & names
+                                if ($target === 'playstation-2' && (
+                                    in_array($s, ['ps2', 'playstation-2', 'playstation2', 'ps-2']) ||
+                                    str_contains($name, 'playstation 2') ||
+                                    str_contains($name, 'ps2')
+                                )) return true;
+                                
+                                // Switch aliases & names
+                                if ($target === 'nintendo-switch' && (
+                                    in_array($s, ['switch', 'nintendo-switch']) ||
+                                    str_contains($name, 'switch')
+                                )) return true;
+                                
+                                // GBA aliases & names
+                                if ($target === 'game-boy-advance' && (
+                                    in_array($s, ['gba', 'game-boy-advance']) ||
+                                    str_contains($name, 'advance') ||
+                                    str_contains($name, 'gba')
+                                )) return true;
+                                
+                                return false;
+                            });
+
+                            $realConsole = $matchingConsoles->first();
                             $cName = $realConsole ? $realConsole->name : $cItem['fallback_name'];
-                            $cCount = $realConsole ? (int) $realConsole->games_count : 0;
+                            
+                            $pubCount = (int) $matchingConsoles->sum('games_count');
+                            $uploadedCount = (int) $matchingConsoles->sum('total_uploaded_count');
+                            $cCount = $pubCount > 0 ? $pubCount : $uploadedCount;
+
                             $cUrl = $realConsole ? route('consoles.show', $realConsole->slug) : route('consoles.show', $cItem['slug']);
                         @endphp
                         <a href="{{ $cUrl }}" 

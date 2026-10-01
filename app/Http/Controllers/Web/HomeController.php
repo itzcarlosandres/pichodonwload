@@ -18,21 +18,29 @@ class HomeController extends Controller
         $spotlightGame = null;
         $railGames = collect();
 
-        // 1. Top 20 Consoles with count
-        $consoles = Console::withCount(['games' => fn($q) => $q->where('status', 'PUBLISHED')])
-            ->orderBy('order')
-            ->get();
+        // 1. Top Consoles with published and total uploaded count
+        $consoles = Console::withCount([
+            'games as games_count' => fn($q) => $q->whereIn('status', ['PUBLISHED', 'published']),
+            'games as total_uploaded_count' => fn($q) => $q->whereIn('status', ['PUBLISHED', 'published', 'DRAFT', 'draft']),
+        ])
+        ->orderBy('order')
+        ->get();
+
+        $publishedCount = Game::whereIn('status', ['PUBLISHED', 'published'])->count();
+        $allowedStatuses = $publishedCount > 0
+            ? ['PUBLISHED', 'published']
+            : ['PUBLISHED', 'published', 'DRAFT', 'draft'];
 
         // 4. Most Downloaded / Trending Games
         $trendingGames = Game::with(['console', 'badges', 'categories'])
-            ->where('status', 'PUBLISHED')
+            ->whereIn('status', $allowedStatuses)
             ->orderByDesc('download_count')
             ->take(12)
             ->get();
 
         // 5. Best Rated Games
         $topRatedGames = Game::with(['console', 'badges'])
-            ->where('status', 'PUBLISHED')
+            ->whereIn('status', $allowedStatuses)
             ->orderByDesc('rating_average')
             ->take(6)
             ->get();
@@ -42,7 +50,7 @@ class HomeController extends Controller
         $recentOrder = Setting::get('home_recent_order', 'created_at');
 
         $recentQuery = Game::with(['console', 'badges', 'categories'])
-            ->where('status', 'PUBLISHED');
+            ->whereIn('status', $allowedStatuses);
 
         if ($recentOrder === 'updated_at') {
             $recentQuery->orderByDesc('updated_at');
@@ -61,8 +69,8 @@ class HomeController extends Controller
         $recentGames = $recentQuery->take($recentCount)->get();
 
         // 7. Platform Global Statistics for Bottom Counter Cards
-        $totalGames = Game::where('status', 'PUBLISHED')->count();
-        $totalDownloads = (int) Game::where('status', 'PUBLISHED')->sum('download_count');
+        $totalGames = Game::whereIn('status', $allowedStatuses)->count();
+        $totalDownloads = (int) Game::whereIn('status', $allowedStatuses)->sum('download_count');
         $totalConsoles = $consoles->count();
 
         // 8. Categories for quick filters

@@ -14,8 +14,7 @@ class SearchController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = Game::with(['console', 'badges', 'categories'])
-            ->where('status', 'PUBLISHED');
+        $query = Game::with(['console', 'badges', 'categories']);
 
         if ($request->filled('q')) {
             $search = $request->input('q');
@@ -30,24 +29,43 @@ class SearchController extends Controller
 
         if ($request->filled('console')) {
             $consoleSlug = (string) $request->input('console');
-            $slugs = [$consoleSlug];
+            $cleanConsole = strtolower(trim($consoleSlug));
             $aliases = [
                 'ps4' => 'playstation-4',
+                'playstation-4' => 'ps4',
                 'ps3' => 'playstation-3',
+                'playstation-3' => 'ps3',
                 'ps2' => 'playstation-2',
+                'playstation-2' => 'ps2',
                 'ps1' => 'playstation',
+                'playstation' => 'ps1',
                 'psp' => 'playstation-portable',
+                'playstation-portable' => 'psp',
                 'gba' => 'game-boy-advance',
+                'game-boy-advance' => 'gba',
                 'gb' => 'game-boy',
+                'game-boy' => 'gb',
                 '3ds' => 'nintendo-3ds',
+                'nintendo-3ds' => '3ds',
                 'ds' => 'nintendo-ds',
+                'nintendo-ds' => 'ds',
                 'switch' => 'nintendo-switch',
+                'nintendo-switch' => 'switch',
                 'n64' => 'nintendo-64',
+                'nintendo-64' => 'n64',
             ];
-            if (isset($aliases[strtolower($consoleSlug)])) {
-                $slugs[] = $aliases[strtolower($consoleSlug)];
-            }
-            $query->whereHas('console', fn($q) => $q->whereIn('slug', $slugs));
+            $slugs = array_values(array_unique(array_filter([
+                $consoleSlug,
+                $cleanConsole,
+                $aliases[$cleanConsole] ?? null,
+                str_replace('-', ' ', $cleanConsole),
+            ])));
+
+            $query->whereHas('console', function($q) use ($slugs, $cleanConsole) {
+                $q->whereIn('slug', $slugs)
+                  ->orWhereRaw('LOWER(slug) = ?', [$cleanConsole])
+                  ->orWhereRaw('LOWER(name) = ?', [str_replace('-', ' ', $cleanConsole)]);
+            });
         }
 
         if ($request->filled('category')) {
@@ -56,6 +74,14 @@ class SearchController extends Controller
 
         if ($request->filled('region')) {
             $query->where('region', 'like', "%{$request->input('region')}%");
+        }
+
+        // Fallback to draft games if no published games exist yet
+        $hasPublished = (clone $query)->whereIn('status', ['PUBLISHED', 'published'])->exists();
+        if ($hasPublished) {
+            $query->whereIn('status', ['PUBLISHED', 'published']);
+        } else {
+            $query->whereIn('status', ['PUBLISHED', 'published', 'DRAFT', 'draft']);
         }
 
         $sort = $request->input('sort', 'popular');
@@ -70,8 +96,11 @@ class SearchController extends Controller
         }
 
         $games = $query->paginate(24)->withQueryString();
-        $consoles = Console::withCount(['games' => fn($q) => $q->where('status', 'PUBLISHED')])->orderBy('name')->get();
-        $categories = Category::withCount(['games' => fn($q) => $q->where('status', 'PUBLISHED')])->orderBy('name')->get();
+        $consoles = Console::withCount([
+            'games as games_count' => fn($q) => $q->whereIn('status', ['PUBLISHED', 'published']),
+            'games as total_uploaded_count' => fn($q) => $q->whereIn('status', ['PUBLISHED', 'published', 'DRAFT', 'draft']),
+        ])->orderBy('name')->get();
+        $categories = Category::withCount(['games' => fn($q) => $q->whereIn('status', ['PUBLISHED', 'published'])])->orderBy('name')->get();
 
         return view('web.search', compact('games', 'consoles', 'categories'));
     }
@@ -83,8 +112,11 @@ class SearchController extends Controller
             return response()->json([]);
         }
 
+        $hasPublished = Game::whereIn('status', ['PUBLISHED', 'published'])->exists();
+        $allowedStatuses = $hasPublished ? ['PUBLISHED', 'published'] : ['PUBLISHED', 'published', 'DRAFT', 'draft'];
+
         $results = Game::with('console')
-            ->where('status', 'PUBLISHED')
+            ->whereIn('status', $allowedStatuses)
             ->where(function($query) use ($q) {
                 $query->where('title', 'like', "%{$q}%")
                       ->orWhere('serial', 'like', "%{$q}%")

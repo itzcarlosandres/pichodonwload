@@ -284,10 +284,7 @@ function gameDetailComponent() {
                 <i data-lucide="book-open" class="w-3.5 h-3.5 text-[#CE2D2D]"></i>
                 <span>Sinopsis & Detalles</span>
             </a>
-            <a href="#guia-juego" class="px-3.5 py-1.5 rounded-xl bg-white hover:bg-[#FAF7F2] text-gray-700 hover:text-black border border-[#DDD6CB] whitespace-nowrap transition-colors flex items-center gap-1.5 font-bold shadow-sm active:scale-95">
-                <i data-lucide="play-circle" class="w-3.5 h-3.5 text-[#CE2D2D]"></i>
-                <span>¿Cómo Jugar?</span>
-            </a>
+
             <a href="#ficha-tecnica" class="px-3.5 py-1.5 rounded-xl bg-white hover:bg-[#FAF7F2] text-gray-700 hover:text-black border border-[#DDD6CB] whitespace-nowrap transition-colors flex items-center gap-1.5 font-bold shadow-sm active:scale-95">
                 <i data-lucide="binary" class="w-3.5 h-3.5 text-[#CE2D2D]"></i>
                 <span>Ficha Técnica</span>
@@ -484,106 +481,7 @@ function gameDetailComponent() {
                     </div>
                 </div>
 
-                <!-- QUICK SETUP GUIDE: ¿CÓMO JUGAR EN 3 PASOS? -->
-                <div id="guia-juego" class="bg-white rounded-2xl border-2 border-[#1E1E1E] p-6 space-y-5 shadow-sm scroll-mt-24">
-                    <div class="flex items-center justify-between border-b border-[#E5E0D8] pb-3">
-                        <div class="flex items-center gap-2.5">
-                            <i data-lucide="play-circle" class="w-5 h-5 text-[#CE2D2D]"></i>
-                            <h2 class="text-xs sm:text-sm font-mono font-bold uppercase text-[#18181B] tracking-wider">
-                                ¿Cómo Jugar este Título en tu PC o Celular? (Guía en 3 Pasos)
-                            </h2>
-                        </div>
-                        <span class="text-[10px] font-mono text-[#CE2D2D] bg-[#FDF2F2] border border-[#FCA5A5] px-2.5 py-1 rounded-lg font-bold">
-                            Guía Vault
-                        </span>
-                    </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <!-- Step 1 -->
-                        <div class="p-4 rounded-xl bg-[#FAF7F2] border border-[#DDD6CB] space-y-3 flex flex-col justify-between">
-                            <div class="space-y-2">
-                                <div class="flex items-center justify-between">
-                                    <span class="w-7 h-7 rounded-lg bg-[#CE2D2D] text-white flex items-center justify-center font-mono font-black text-xs">
-                                        1
-                                    </span>
-                                    <span class="text-[10px] font-mono text-gray-500 font-bold uppercase">Emulador</span>
-                                </div>
-                                <h3 class="text-xs font-bold text-[#18181B] font-sans">
-                                    Instala el Emulador
-                                </h3>
-                                <p class="text-[11px] text-gray-600 font-sans leading-relaxed">
-                                    Para <strong>{{ $game->console->name }}</strong> recomendamos usar <strong>{{ $recommendedEmulator->name ?? 'RetroArch' }}</strong> en PC o Android.
-                                </p>
-                            </div>
-                            <a href="{{ $recommendedEmulator ? ($recommendedEmulator->download_url ?: $recommendedEmulator->website) : route('emulators') }}" 
-                               target="_blank" 
-                               rel="noopener"
-                               class="w-full py-2 px-3 rounded-lg bg-white hover:bg-[#F5EFE6] border border-[#DDD6CB] text-[#18181B] hover:text-[#CE2D2D] text-[11px] font-mono font-bold text-center transition-colors flex items-center justify-center gap-1.5 shadow-sm">
-                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                                <span>Obtener {{ $recommendedEmulator->name ?? 'Emulador' }}</span>
-                            </a>
-                        </div>
-
-                        <!-- Step 2 -->
-                        <div class="p-4 rounded-xl bg-[#FAF7F2] border border-[#DDD6CB] space-y-3 flex flex-col justify-between">
-                            <div class="space-y-2">
-                                <div class="flex items-center justify-between">
-                                    <span class="w-7 h-7 rounded-lg bg-[#18181B] text-white flex items-center justify-center font-mono font-black text-xs">
-                                        2
-                                    </span>
-                                    <span class="text-[10px] font-mono text-gray-500 font-bold uppercase">Firmware</span>
-                                </div>
-                                <h3 class="text-xs font-bold text-[#18181B] font-sans">
-                                    {{ $requiredBios ? 'Configurar BIOS' : 'Sin BIOS Requerida' }}
-                                </h3>
-                                <p class="text-[11px] text-gray-600 font-sans leading-relaxed">
-                                    @if($requiredBios)
-                                        Coloca los archivos de la BIOS en la carpeta <code class="bg-white px-1 py-0.5 rounded border border-[#DDD6CB] text-[10px]">/bios</code> del emulador.
-                                    @else
-                                        Este sistema no requiere archivos BIOS externos. ¡El emulador viene listo de fábrica!
-                                    @endif
-                                </p>
-                            </div>
-                            @if($requiredBios)
-                            <a href="{{ $requiredBios->download_url ?: route('bios') }}" 
-                               target="_blank" 
-                               rel="noopener"
-                               class="w-full py-2 px-3 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 text-[11px] font-mono font-bold text-center transition-colors flex items-center justify-center gap-1.5 shadow-sm">
-                                <i data-lucide="file-down" class="w-3.5 h-3.5 text-amber-700"></i>
-                                <span>Descargar BIOS</span>
-                            </a>
-                            @else
-                            <div class="py-2 px-3 rounded-lg bg-emerald-50 border border-emerald-300 text-emerald-800 text-[11px] font-mono font-bold text-center flex items-center justify-center gap-1">
-                                <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600"></i>
-                                <span>Plug & Play</span>
-                            </div>
-                            @endif
-                        </div>
-
-                        <!-- Step 3 -->
-                        <div class="p-4 rounded-xl bg-[#FAF7F2] border border-[#DDD6CB] space-y-3 flex flex-col justify-between">
-                            <div class="space-y-2">
-                                <div class="flex items-center justify-between">
-                                    <span class="w-7 h-7 rounded-lg bg-[#CE2D2D] text-white flex items-center justify-center font-mono font-black text-xs">
-                                        3
-                                    </span>
-                                    <span class="text-[10px] font-mono text-gray-500 font-bold uppercase">Cargar & Jugar</span>
-                                </div>
-                                <h3 class="text-xs font-bold text-[#18181B] font-sans">
-                                    Carga la ROM y Mando
-                                </h3>
-                                <p class="text-[11px] text-gray-600 font-sans leading-relaxed">
-                                    Abre tu archivo <strong class="text-[#CE2D2D] font-mono uppercase">{{ $game->file_format ?: 'ROM' }}</strong> en el emulador, conecta tu mando y activa resolución HD/4K a 60 FPS.
-                                </p>
-                            </div>
-                            <a href="{{ route('game.download', $game->slug) }}" 
-                               class="w-full py-2 px-3 rounded-lg bg-[#CE2D2D] hover:bg-[#B71C1C] text-white text-[11px] font-mono font-bold text-center transition-colors flex items-center justify-center gap-1.5 shadow-sm">
-                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                                <span>Descargar Videojuego</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
 
 
 
