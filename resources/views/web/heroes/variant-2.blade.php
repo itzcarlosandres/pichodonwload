@@ -5,7 +5,7 @@
     <div class="absolute inset-0 -z-10 opacity-30 dark:opacity-20 pointer-events-none" 
          style="background-image: radial-gradient(rgba(206, 45, 45, 0.18) 1px, transparent 1px); background-size: 24px 24px;"></div>
     <div class="absolute -top-12 -left-12 w-72 h-72 bg-red-500/10 dark:bg-red-500/15 rounded-full blur-3xl pointer-events-none -z-10"></div>
-    <div class="absolute -bottom-12 -right-12 w-80 h-80 bg-blue-500/10 dark:bg-blue-500/10 rounded-full blur-3xl pointer-events-none -z-10"></div>
+    <div class="absolute -bottom-12 -right-12 w-80 h-80 bg-blue-500/10 dark:bg-blue-500/15 rounded-full blur-3xl pointer-events-none -z-10"></div>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
         
@@ -131,7 +131,7 @@
             </div>
 
             <!-- Quick Platform Exploration Chips -->
-            <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 max-w-xl text-xs font-mono">
+            <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 w-full max-w-xl text-xs font-mono">
                 <span class="text-gray-400 dark:text-gray-500 text-[10px] sm:text-[11px] font-sans font-semibold shrink-0 mr-1">Rápido:</span>
                 @php
                     $quickChips = [

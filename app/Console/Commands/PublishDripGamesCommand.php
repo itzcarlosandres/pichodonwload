@@ -2,9 +2,11 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\Game;
+use App\Models\Setting;
 use App\Services\AiContentService;
+use App\Services\CategorySyncService;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
 class PublishDripGamesCommand extends Command
@@ -32,17 +34,18 @@ class PublishDripGamesCommand extends Command
      */
     public function handle(
         AiContentService $aiService,
-        \App\Services\CategorySyncService $categoryService
+        CategorySyncService $categoryService
     ): int {
-        $autopilot = \App\Models\Setting::get('roms_autopilot_enabled', config('roms.autopilot_enabled', true));
-        if (!$autopilot && !$this->option('force')) {
+        $autopilot = Setting::get('roms_autopilot_enabled', config('roms.autopilot_enabled', true));
+        if (! $autopilot && ! $this->option('force')) {
             $this->warn('⏸️ El piloto automático está pausado en configuración (roms_autopilot_enabled=false). Usa --force para forzar la ejecución manual.');
+
             return self::SUCCESS;
         }
 
-        $count = (int) ($this->option('count') ?: \App\Models\Setting::get('roms_posts_per_batch', config('roms.posts_per_batch', 4)));
+        $count = (int) ($this->option('count') ?: Setting::get('roms_posts_per_batch', config('roms.posts_per_batch', 4)));
         $dryRun = (bool) $this->option('dry-run');
-        $withAi = (bool) $this->option('with-ai') || \App\Models\Setting::get('roms_auto_ai_enrich', config('roms.auto_ai_enrich', true));
+        $withAi = (bool) $this->option('with-ai') || Setting::get('roms_auto_ai_enrich', config('roms.auto_ai_enrich', true));
 
         $this->info("🔍 Buscando juegos en cola (DRAFT) para publicar (Lote: {$count} juegos)...");
 
@@ -93,6 +96,7 @@ class PublishDripGamesCommand extends Command
         if ($drafts->isEmpty()) {
             $this->warn('ℹ️ No hay juegos en estado DRAFT pendientes en la cola.');
             Log::channel('single')->info('[Drip-Publisher] No hay juegos pendientes en DRAFT para publicar.');
+
             return self::SUCCESS;
         }
 
@@ -108,7 +112,7 @@ class PublishDripGamesCommand extends Command
 
             // Si se solicita enriquecer con IA y la descripción es vacía o provisional
             $needsAi = empty($game->description) || str_contains($game->description, 'Pendiente de generar');
-            if ($withAi && $needsAi && !$dryRun) {
+            if ($withAi && $needsAi && ! $dryRun) {
                 try {
                     $context = [
                         'release_year' => $game->release_year,
@@ -118,17 +122,21 @@ class PublishDripGamesCommand extends Command
                         'developer' => $game->developer,
                     ];
                     $rich = $aiService->generateRichDescription($game->title, $consoleName, $context);
-                    if (!empty($rich['description'])) {
+                    if (! empty($rich['description'])) {
                         $game->description = $rich['description'];
                     }
 
                     if (empty($game->meta_title) || empty($game->meta_description)) {
                         $seo = $aiService->generateSeo($game->title, $consoleName, $context);
-                        if (!empty($seo['meta_title'])) $game->meta_title = $seo['meta_title'];
-                        if (!empty($seo['meta_description'])) $game->meta_description = $seo['meta_description'];
+                        if (! empty($seo['meta_title'])) {
+                            $game->meta_title = $seo['meta_title'];
+                        }
+                        if (! empty($seo['meta_description'])) {
+                            $game->meta_description = $seo['meta_description'];
+                        }
                     }
                 } catch (\Throwable $e) {
-                    $this->error("⚠️ Error generando IA para {$game->title}: " . $e->getMessage());
+                    $this->error("⚠️ Error generando IA para {$game->title}: ".$e->getMessage());
                 }
             }
 
@@ -138,12 +146,13 @@ class PublishDripGamesCommand extends Command
                 // Garantizar que el juego tenga al menos una categoría asignada
                 if ($game->categories()->count() === 0) {
                     $assignedCats = $categoryService->syncGame($game);
-                    if (!empty($assignedCats)) {
-                        $this->line("   🏷️ <fg=cyan>[CATEGORÍAS AUTO-ASIGNADAS]</> " . implode(', ', $assignedCats));
+                    if (! empty($assignedCats)) {
+                        $this->line('   🏷️ <fg=cyan>[CATEGORÍAS AUTO-ASIGNADAS]</> '.implode(', ', $assignedCats));
                     }
                 }
 
                 $game->status = 'PUBLISHED';
+                $game->created_at = now();
                 $game->updated_at = now();
                 $game->save();
 
@@ -157,7 +166,7 @@ class PublishDripGamesCommand extends Command
         $remainingDrafts = Game::where('status', 'DRAFT')->count();
 
         $logMessage = sprintf(
-            "[Drip-Publisher] %s - Publicados: %d juegos (%s). Restantes en cola DRAFT: %d",
+            '[Drip-Publisher] %s - Publicados: %d juegos (%s). Restantes en cola DRAFT: %d',
             $dryRun ? '[SIMULACIÓN]' : '[REAL]',
             $publishedCount,
             implode(', ', $publishedTitles),
@@ -165,17 +174,17 @@ class PublishDripGamesCommand extends Command
         );
 
         $logPath = storage_path('logs/drip-publisher.log');
-        @file_put_contents($logPath, '[' . now()->toDateTimeString() . '] ' . $logMessage . PHP_EOL, FILE_APPEND);
+        @file_put_contents($logPath, '['.now()->toDateTimeString().'] '.$logMessage.PHP_EOL, FILE_APPEND);
 
         $this->newLine();
-        $this->info("🚀 Resumen del Goteo SEO:");
+        $this->info('🚀 Resumen del Goteo SEO:');
         $this->table(
             ['Métrica', 'Valor'],
             [
                 ['Juegos publicados en esta tanda', $publishedCount],
                 ['Modo', $dryRun ? 'Simulación (Dry-Run)' : 'En Vivo (Publicado)'],
                 ['Juegos restantes en cola (DRAFT)', $remainingDrafts],
-                ['Próxima ejecución estimada', 'En ' . config('roms.batch_interval_hours', 2) . ' horas'],
+                ['Próxima ejecución estimada', 'En '.config('roms.batch_interval_hours', 2).' horas'],
             ]
         );
 

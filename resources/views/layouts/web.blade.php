@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="overflow-x-hidden">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -397,6 +397,7 @@
         html.dark nav.nav-capsule button.nav-item-active i,
         html.dark nav.nav-capsule button.nav-item-active svg {
             color: #EF4444 !important;
+        }
     </style>
 
     {{-- Inyección de Código Personalizado en <head> (Google Analytics, GTM, Meta Pixel, AdSense, etc.) --}}
@@ -421,7 +422,7 @@
         'deportes' => 'trophy',
     ];
 @endphp
-<body class="min-h-screen flex flex-col bg-[#F5EFE6] text-[#18181B] selection:bg-[#CE2D2D] selection:text-white" 
+<body class="min-h-screen flex flex-col bg-[#F5EFE6] text-[#18181B] selection:bg-[#CE2D2D] selection:text-white overflow-x-hidden" 
       x-data="{ 
           mobileMenuOpen: false,
           downloadModalOpen: false, 

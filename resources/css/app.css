@@ -38,12 +38,15 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, .font-heading {
+h1,
+h2,
+.font-heading {
     font-family: 'Bricolage Grotesque', sans-serif !important;
     letter-spacing: -0.02em;
 }
 
-.card-game-title, .font-sans {
+.card-game-title,
+.font-sans {
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
     letter-spacing: -0.01em;
 }
@@ -52,13 +55,16 @@ h1, h2, .font-heading {
     width: 6px;
     height: 6px;
 }
+
 ::-webkit-scrollbar-track {
     background: #0A0C0F;
 }
+
 ::-webkit-scrollbar-thumb {
     background: #232936;
     border-radius: 4px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
     background: #374151;
 }
@@ -70,6 +76,7 @@ h1, h2, .font-heading {
 .catalog-card {
     transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
 }
+
 .catalog-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 14px 28px -4px rgba(0, 0, 0, 0.85);
@@ -82,14 +89,16 @@ h1, h2, .font-heading {
     line-height: 1.8;
     color: #CBD5E1;
 }
-.prose-game-content h1, 
-.prose-game-content h2, 
-.prose-game-content h3, 
+
+.prose-game-content h1,
+.prose-game-content h2,
+.prose-game-content h3,
 .prose-game-content h4 {
     font-family: 'Bricolage Grotesque', sans-serif !important;
     font-weight: 800;
     letter-spacing: -0.02em;
 }
+
 .prose-game-content h1 {
     font-size: 1.4rem;
     color: #FFFFFF;
@@ -98,6 +107,7 @@ h1, h2, .font-heading {
     border-bottom: none !important;
     padding-bottom: 0;
 }
+
 .prose-game-content h2 {
     font-size: 1.18rem;
     color: #F8FAFC;
@@ -109,24 +119,28 @@ h1, h2, .font-heading {
     align-items: center;
     gap: 0.4rem;
 }
+
 .prose-game-content h3 {
     font-size: 1.02rem;
     color: #38BDF8;
     margin-top: 1.25rem;
     margin-bottom: 0.5rem;
 }
+
 .prose-game-content h4 {
     font-size: 0.92rem;
     color: #A78BFA;
     margin-top: 1rem;
     margin-bottom: 0.4rem;
 }
+
 .prose-game-content p {
     color: #CBD5E1;
     margin-bottom: 1rem;
     line-height: 1.8;
 }
-.prose-game-content ul, 
+
+.prose-game-content ul,
 .prose-game-content ol {
     background: #0A0C0F;
     border: 1px solid #232936;
@@ -135,27 +149,34 @@ h1, h2, .font-heading {
     margin: 1rem 0 1.25rem 0;
     color: #E2E8F0;
 }
+
 .prose-game-content ul {
     list-style-type: disc;
 }
+
 .prose-game-content ol {
     list-style-type: decimal;
 }
+
 .prose-game-content li {
     margin-bottom: 0.45rem;
     line-height: 1.65;
     color: #CBD5E1;
 }
+
 .prose-game-content li:last-child {
     margin-bottom: 0;
 }
+
 .prose-game-content strong {
     color: #FFFFFF;
     font-weight: 700;
 }
+
 .prose-game-content em {
     color: #94A3B8;
 }
+
 .prose-game-content blockquote {
     background: #0A0C0F;
     border-left: 3px solid #3B82F6;
@@ -165,6 +186,7 @@ h1, h2, .font-heading {
     font-style: italic;
     margin: 1.25rem 0;
 }
+
 .prose-game-content code {
     background: #0A0C0F;
     border: 1px solid #232936;
@@ -174,10 +196,7 @@ h1, h2, .font-heading {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.82em;
 }
+
 .prose-game-content hr {
     display: none !important;
 }
-
-
-
-

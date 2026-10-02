@@ -3,22 +3,24 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Game;
-use App\Models\Console;
-use App\Models\Category;
 use App\Models\Badge;
+use App\Models\Category;
+use App\Models\Console;
 use App\Models\Franchise;
+use App\Models\Game;
+use App\Services\FranchiseSyncService;
 use App\Services\ImageOptimizationService;
 use App\Services\StorageService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\JsonResponse;
 
 class AdminGameController extends Controller
 {
     protected ImageOptimizationService $imageService;
+
     protected StorageService $storageService;
 
     public function __construct(ImageOptimizationService $imageService, StorageService $storageService)
@@ -66,10 +68,10 @@ class AdminGameController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->input('search');
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('slug', 'like', "%{$search}%")
-                  ->orWhere('serial', 'like', "%{$search}%");
+                    ->orWhere('slug', 'like', "%{$search}%")
+                    ->orWhere('serial', 'like', "%{$search}%");
             });
         }
 
@@ -135,14 +137,14 @@ class AdminGameController extends Controller
             Game::where('is_spotlight', true)->update(['is_spotlight' => false]);
         }
 
-        $rawSlug = !empty($validated['slug']) ? $validated['slug'] : $validated['title'];
+        $rawSlug = ! empty($validated['slug']) ? $validated['slug'] : $validated['title'];
         $validated['slug'] = $this->generateUniqueSlug($rawSlug);
 
         // Direct ROM File Upload to Cloudflare R2 / Local Vault
         if ($request->hasFile('rom_file')) {
             $consoleSlug = Console::find($validated['console_id'])?->slug ?: 'roms';
             $romData = $this->storageService->uploadRomFile($request->file('rom_file'), "roms/{$consoleSlug}");
-            if (!empty($romData['url'])) {
+            if (! empty($romData['url'])) {
                 $validated['download_url'] = $romData['url'];
                 if (empty($validated['file_size'])) {
                     $validated['file_size'] = $romData['file_size'];
@@ -158,9 +160,9 @@ class AdminGameController extends Controller
         if ($request->has('mirrors') && is_array($request->input('mirrors'))) {
             $cleanMirrors = [];
             foreach ($request->input('mirrors') as $m) {
-                if (!empty($m['url'])) {
+                if (! empty($m['url'])) {
                     $cleanMirrors[] = [
-                        'server' => !empty($m['server']) ? trim($m['server']) : 'Servidor Alternativo',
+                        'server' => ! empty($m['server']) ? trim($m['server']) : 'Servidor Alternativo',
                         'url' => trim($m['url']),
                     ];
                 }
@@ -201,7 +203,7 @@ class AdminGameController extends Controller
         }
         if ($request->filled('screenshot_urls') && is_array($request->input('screenshot_urls'))) {
             foreach ($request->input('screenshot_urls') as $sUrl) {
-                if (!empty($sUrl)) {
+                if (! empty($sUrl)) {
                     $game->screenshots()->create([
                         'image_url' => $sUrl,
                         'image_webp_url' => $sUrl,
@@ -222,7 +224,7 @@ class AdminGameController extends Controller
         if ($request->filled('franchise_ids')) {
             $game->franchises()->sync($request->input('franchise_ids'));
         } else {
-            app(\App\Services\FranchiseSyncService::class)->syncGame($game);
+            app(FranchiseSyncService::class)->syncGame($game);
         }
 
         return redirect()->route('admin.games.index')->with('success', "El videojuego '{$game->title}' se ha creado y publicado exitosamente.");
@@ -243,7 +245,7 @@ class AdminGameController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:games,slug,' . $game->id,
+            'slug' => 'required|string|max:255|unique:games,slug,'.$game->id,
             'console_id' => 'required|exists:consoles,id',
             'cover_image' => 'nullable|image|max:20480',
             'banner_image' => 'nullable|image|max:20480',
@@ -284,7 +286,7 @@ class AdminGameController extends Controller
         if ($request->hasFile('rom_file')) {
             $consoleSlug = Console::find($validated['console_id'])?->slug ?: 'roms';
             $romData = $this->storageService->uploadRomFile($request->file('rom_file'), "roms/{$consoleSlug}");
-            if (!empty($romData['url'])) {
+            if (! empty($romData['url'])) {
                 $validated['download_url'] = $romData['url'];
                 if (empty($validated['file_size'])) {
                     $validated['file_size'] = $romData['file_size'];
@@ -300,9 +302,9 @@ class AdminGameController extends Controller
         if ($request->has('mirrors') && is_array($request->input('mirrors'))) {
             $cleanMirrors = [];
             foreach ($request->input('mirrors') as $m) {
-                if (!empty($m['url'])) {
+                if (! empty($m['url'])) {
                     $cleanMirrors[] = [
-                        'server' => !empty($m['server']) ? trim($m['server']) : 'Servidor Alternativo',
+                        'server' => ! empty($m['server']) ? trim($m['server']) : 'Servidor Alternativo',
                         'url' => trim($m['url']),
                     ];
                 }
@@ -321,6 +323,11 @@ class AdminGameController extends Controller
         if ($request->hasFile('banner_image')) {
             $bannerData = $this->imageService->processBanner($request->file('banner_image'));
             $validated['banner_url'] = $bannerData['url'];
+        }
+
+        // Si el juego estaba en borrador (DRAFT) y ahora se publica, actualizar su fecha para que aparezca como reciente
+        if (strtoupper($game->status) === 'DRAFT' && strtoupper($validated['status']) === 'PUBLISHED') {
+            $validated['created_at'] = now();
         }
 
         $game->update($validated);
@@ -373,8 +380,8 @@ class AdminGameController extends Controller
     public function duplicate(Game $game): RedirectResponse
     {
         $newGame = $game->replicate();
-        $newGame->title = $game->title . ' (Copia)';
-        $newGame->slug = Str::slug($newGame->title . '-' . Str::random(5));
+        $newGame->title = $game->title.' (Copia)';
+        $newGame->slug = Str::slug($newGame->title.'-'.Str::random(5));
         $newGame->status = 'DRAFT';
         $newGame->save();
 
@@ -389,11 +396,11 @@ class AdminGameController extends Controller
      */
     protected function generateUniqueSlug(string $title, ?int $ignoreId = null): string
     {
-        $baseSlug = Str::slug($title) ?: 'game-' . Str::random(6);
+        $baseSlug = Str::slug($title) ?: 'game-'.Str::random(6);
         $slug = $baseSlug;
         $counter = 2;
 
-        while (Game::where('slug', $slug)->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId))->exists()) {
+        while (Game::where('slug', $slug)->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))->exists()) {
             $slug = "{$baseSlug}-{$counter}";
             $counter++;
         }

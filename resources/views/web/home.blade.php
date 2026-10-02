@@ -87,21 +87,21 @@
     }" 
     x-init="initSlider()"
     @mouseleave="isDown = false; isPaused = false;">
-        <div class="flex items-center justify-between border-b border-[#E5E0D8] dark:border-[#27272A] pb-3">
-            <div class="flex items-center gap-2">
+        <div class="flex items-center justify-between border-b border-[#E5E0D8] dark:border-[#27272A] pb-3 gap-2 flex-wrap sm:flex-nowrap">
+            <div class="flex items-center gap-2 shrink-0">
                 <span class="w-3 h-3 bg-[#CE2D2D] rounded-sm shrink-0"></span>
                 <h2 class="text-base sm:text-lg font-black text-[#18181B] dark:text-white font-sans tracking-tight uppercase">
                     Consoles
                 </h2>
             </div>
             <div class="flex items-center gap-2">
-                <a href="{{ route('consoles.index') }}" class="px-3 py-1 rounded-full border border-[#1E1E1E] dark:border-[#27272A] bg-white dark:bg-[#18181B] hover:bg-[#FAF7F2] dark:hover:bg-[#27272A] text-xs font-mono font-bold text-[#18181B] dark:text-white transition-colors flex items-center gap-1">
+                <a href="{{ route('consoles.index') }}" class="px-2.5 sm:px-3 py-1 rounded-full border border-[#1E1E1E] dark:border-[#27272A] bg-white dark:bg-[#18181B] hover:bg-[#FAF7F2] dark:hover:bg-[#27272A] text-xs font-mono font-bold text-[#18181B] dark:text-white transition-colors flex items-center gap-1 shrink-0">
                     <span>Ver las {{ $totalConsoles }} consolas</span>
                     <i data-lucide="arrow-right" class="w-3 h-3 text-[#CE2D2D]"></i>
                 </a>
 
-                <!-- Flechas de navegación suave -->
-                <div class="flex items-center gap-1">
+                <!-- Flechas de navegación suave (ocultas en móviles pequeños para evitar desbordes y porque se usa swipe táctil) -->
+                <div class="hidden sm:flex items-center gap-1">
                     <button type="button" 
                             @click="scrollLeft()" 
                             class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl border border-[#1E1E1E] dark:border-[#27272A] bg-white dark:bg-[#18181B] hover:bg-[#CE2D2D] hover:text-white hover:border-[#CE2D2D] dark:hover:bg-[#CE2D2D] dark:hover:border-[#CE2D2D] text-[#18181B] dark:text-white flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-90" 
@@ -180,14 +180,14 @@
 
     <!-- 3. LATEST GAMES SECTION (Retro Poster Grid) -->
     <section id="novedades" class="space-y-4 scroll-mt-24">
-        <div class="flex items-center justify-between border-b border-[#E5E0D8] pb-3">
-            <div class="flex items-center gap-2">
+        <div class="flex items-center justify-between border-b border-[#E5E0D8] dark:border-[#27272A] pb-3 gap-2">
+            <div class="flex items-center gap-2 min-w-0">
                 <span class="w-3 h-3 bg-[#CE2D2D] rounded-sm shrink-0"></span>
-                <h2 class="text-base sm:text-lg font-black text-[#18181B] font-sans tracking-tight uppercase">
+                <h2 class="text-sm sm:text-lg font-black text-[#18181B] dark:text-white font-sans tracking-tight uppercase truncate">
                     {{ \App\Models\Setting::get('home_recent_title', 'Latest Games') }}
                 </h2>
             </div>
-            <a href="{{ route('search') }}" class="px-3.5 sm:px-4 py-1.5 rounded-full border border-[#1E1E1E] bg-white hover:bg-[#FAF7F2] text-xs font-mono font-bold text-[#18181B] transition-colors flex items-center gap-1.5 shadow-sm">
+            <a href="{{ route('search') }}" class="px-3 sm:px-4 py-1.5 rounded-full border border-[#1E1E1E] dark:border-[#27272A] bg-white dark:bg-[#18181B] hover:bg-[#FAF7F2] dark:hover:bg-[#27272A] text-xs font-mono font-bold text-[#18181B] dark:text-white transition-colors flex items-center gap-1.5 shadow-sm shrink-0 whitespace-nowrap">
                 <span>Más ROMs</span>
                 <i data-lucide="arrow-right" class="w-3 h-3 text-[#CE2D2D]"></i>
             </a>
@@ -291,14 +291,14 @@
 
     <!-- 4. LATEST EMULATORS & BIOS SECTION (RomsRetro Style) -->
     <section class="space-y-4">
-        <div class="flex items-center justify-between border-b border-[#E5E0D8] pb-3">
-            <div class="flex items-center gap-2">
+        <div class="flex items-center justify-between border-b border-[#E5E0D8] dark:border-[#27272A] pb-3 gap-2">
+            <div class="flex items-center gap-2 min-w-0">
                 <span class="w-3 h-3 bg-[#CE2D2D] rounded-sm shrink-0"></span>
-                <h2 class="text-base sm:text-lg font-black text-[#18181B] font-sans tracking-tight uppercase">
+                <h2 class="text-sm sm:text-lg font-black text-[#18181B] dark:text-white font-sans tracking-tight uppercase truncate">
                     Últimos Emuladores & BIOS
                 </h2>
             </div>
-            <a href="{{ route('consoles.index') }}" class="px-3.5 py-1 rounded-full border border-[#1E1E1E] bg-white hover:bg-[#FAF7F2] text-xs font-mono font-bold text-[#18181B] transition-colors flex items-center gap-1 shadow-sm">
+            <a href="{{ route('consoles.index') }}" class="px-3 sm:px-3.5 py-1 rounded-full border border-[#1E1E1E] dark:border-[#27272A] bg-white dark:bg-[#18181B] hover:bg-[#FAF7F2] dark:hover:bg-[#27272A] text-xs font-mono font-bold text-[#18181B] dark:text-white transition-colors flex items-center gap-1 shadow-sm shrink-0 whitespace-nowrap">
                 <span>Más Emuladores</span>
                 <i data-lucide="arrow-right" class="w-3 h-3 text-[#CE2D2D]"></i>
             </a>
@@ -320,17 +320,17 @@
 
             @foreach($emulatorsList as $emu)
                 <a href="{{ route('consoles.index') }}" 
-                   class="bg-white border-2 border-[#1E1E1E] rounded-2xl p-3.5 flex items-center gap-3 hover:-translate-y-0.5 hover:shadow-md transition-all group block">
-                    <div class="w-10 h-10 rounded-xl bg-[#FAF7F2] border border-[#E5E0D8] group-hover:bg-[#FDF2F2] group-hover:border-[#FCA5A5] flex items-center justify-center shrink-0 transition-colors">
-                        <i data-lucide="{{ $emu['icon'] }}" class="w-5 h-5 text-[#18181B] group-hover:text-[#CE2D2D] transition-colors"></i>
+                   class="bg-white dark:bg-[#18181B] border-2 border-[#1E1E1E] dark:border-[#27272A] rounded-2xl p-3.5 flex items-center gap-3 hover:-translate-y-0.5 hover:shadow-md transition-all group block">
+                    <div class="w-10 h-10 rounded-xl bg-[#FAF7F2] dark:bg-[#202024] border border-[#E5E0D8] dark:border-[#2E2E33] group-hover:bg-[#FDF2F2] dark:group-hover:bg-red-950/40 group-hover:border-[#FCA5A5] dark:group-hover:border-red-800 flex items-center justify-center shrink-0 transition-colors">
+                        <i data-lucide="{{ $emu['icon'] }}" class="w-5 h-5 text-[#18181B] dark:text-[#E4E4E7] group-hover:text-[#CE2D2D] transition-colors"></i>
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center justify-between gap-1">
-                            <h4 class="text-xs font-black text-[#18181B] group-hover:text-[#CE2D2D] truncate font-sans">
+                            <h4 class="text-xs font-black text-[#18181B] dark:text-white group-hover:text-[#CE2D2D] truncate font-sans">
                                 {{ $emu['name'] }}
                             </h4>
                         </div>
-                        <p class="text-[10px] font-mono text-gray-500 mt-0.5 flex items-center gap-1.5">
+                        <p class="text-[10px] font-mono text-gray-500 dark:text-gray-400 mt-0.5 flex items-center gap-1.5">
                             <span class="truncate">{{ $emu['system'] }}</span>
                             <span>•</span>
                             <span class="font-bold text-[#CE2D2D] shrink-0">{{ $emu['size'] }}</span>
@@ -343,14 +343,14 @@
 
     <!-- 5. ROMS COLLECTIONS & FRANCHISES (RomsRetro Style) -->
     <section class="space-y-4">
-        <div class="flex items-center justify-between border-b border-[#E5E0D8] pb-3">
-            <div class="flex items-center gap-2">
+        <div class="flex items-center justify-between border-b border-[#E5E0D8] dark:border-[#27272A] pb-3 gap-2">
+            <div class="flex items-center gap-2 min-w-0">
                 <span class="w-3 h-3 bg-[#CE2D2D] rounded-sm shrink-0"></span>
-                <h2 class="text-base sm:text-lg font-black text-[#18181B] font-sans tracking-tight uppercase">
+                <h2 class="text-sm sm:text-lg font-black text-[#18181B] dark:text-white font-sans tracking-tight uppercase truncate">
                     Colecciones de ROMs
                 </h2>
             </div>
-            <a href="{{ route('search') }}" class="px-3.5 py-1 rounded-full border border-[#1E1E1E] bg-white hover:bg-[#FAF7F2] text-xs font-mono font-bold text-[#18181B] transition-colors flex items-center gap-1 shadow-sm">
+            <a href="{{ route('search') }}" class="px-3 sm:px-3.5 py-1 rounded-full border border-[#1E1E1E] dark:border-[#27272A] bg-white dark:bg-[#18181B] hover:bg-[#FAF7F2] dark:hover:bg-[#27272A] text-xs font-mono font-bold text-[#18181B] dark:text-white transition-colors flex items-center gap-1 shadow-sm shrink-0 whitespace-nowrap">
                 <span>Todas las Colecciones</span>
                 <i data-lucide="arrow-right" class="w-3 h-3 text-[#CE2D2D]"></i>
             </a>
@@ -376,14 +376,14 @@
 
             @foreach($franchises as $fr)
                 <a href="{{ route('search', ['q' => $fr['query']]) }}" 
-                   class="bg-white border-2 border-[#1E1E1E] rounded-2xl p-4 text-center hover:-translate-y-1 hover:shadow-md transition-all group block">
-                    <div class="w-12 h-12 mx-auto rounded-xl bg-[#FAF7F2] border border-[#E5E0D8] group-hover:bg-[#FDF2F2] group-hover:border-[#FCA5A5] flex items-center justify-center transition-colors">
-                        <i data-lucide="{{ $fr['icon'] }}" class="w-6 h-6 text-[#18181B] group-hover:text-[#CE2D2D] transition-colors"></i>
+                   class="bg-white dark:bg-[#18181B] border-2 border-[#1E1E1E] dark:border-[#27272A] rounded-2xl p-4 text-center hover:-translate-y-1 hover:shadow-md transition-all group block">
+                    <div class="w-12 h-12 mx-auto rounded-xl bg-[#FAF7F2] dark:bg-[#202024] border border-[#E5E0D8] dark:border-[#2E2E33] group-hover:bg-[#FDF2F2] dark:group-hover:bg-red-950/40 group-hover:border-[#FCA5A5] dark:group-hover:border-red-800 flex items-center justify-center transition-colors">
+                        <i data-lucide="{{ $fr['icon'] }}" class="w-6 h-6 text-[#18181B] dark:text-[#E4E4E7] group-hover:text-[#CE2D2D] transition-colors"></i>
                     </div>
-                    <p class="text-xs font-black text-[#18181B] group-hover:text-[#CE2D2D] transition-colors truncate mt-2.5 font-sans">
+                    <p class="text-xs font-black text-[#18181B] dark:text-white group-hover:text-[#CE2D2D] transition-colors truncate mt-2.5 font-sans">
                         {{ $fr['name'] }}
                     </p>
-                    <p class="text-[10px] font-mono text-gray-500 uppercase mt-0.5">
+                    <p class="text-[10px] font-mono text-gray-500 dark:text-gray-400 uppercase mt-0.5">
                         Colección Completa
                     </p>
                 </a>
