@@ -23,8 +23,7 @@ class GameRequestController extends Controller
         $ipHash = hash('sha256', $request->ip().'_vault_picho_salt');
         $userId = Auth::id();
 
-        $consoles = Console::where('is_active', true)
-            ->orderBy('order')
+        $consoles = Console::orderBy('order')
             ->orderBy('name')
             ->get();
 
