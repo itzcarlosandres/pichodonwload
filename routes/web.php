@@ -4,6 +4,7 @@ use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\ConsoleController;
 use App\Http\Controllers\Web\DownloadController;
 use App\Http\Controllers\Web\GameController;
+use App\Http\Controllers\Web\GameRequestController;
 use App\Http\Controllers\Web\HomeController;
 use App\Http\Controllers\Web\LibraryController;
 use App\Http\Controllers\Web\PageController;
@@ -49,6 +50,7 @@ Route::get('/emuladores', [PageController::class, 'emulators'])->name('emulators
 Route::get('/emuladores/hub', [PageController::class, 'emulators'])->name('emulators.index');
 Route::get('/colecciones', [PageController::class, 'collections'])->name('collections.index');
 Route::get('/colecciones/{slug}', [PageController::class, 'collectionDetail'])->name('collections.show');
+
 Route::get('/rankings', [PageController::class, 'rankings'])->name('rankings');
 Route::get('/top-25', [PageController::class, 'rankings'])->name('rankings.index');
 
@@ -56,6 +58,11 @@ Route::get('/search', [SearchController::class, 'index'])->name('search');
 Route::get('/search/live', [SearchController::class, 'live'])->middleware('throttle:60,1')->name('search.live');
 Route::get('/categoria/{slug}', [SearchController::class, 'category'])->name('category.show');
 Route::get('/genero/{slug}', [SearchController::class, 'category'])->name('genre.show');
+
+// Peticiones de Juegos de la Comunidad ("Solicitar ROM")
+Route::get('/peticiones', [GameRequestController::class, 'index'])->name('requests.index');
+Route::post('/peticiones', [GameRequestController::class, 'store'])->middleware('throttle:15,1')->name('requests.store');
+Route::post('/peticiones/{gameRequest}/vote', [GameRequestController::class, 'vote'])->middleware('throttle:30,1')->name('requests.vote');
 
 // 2. User Profile & Favorites
 Route::get('/profile', [ProfileController::class, 'index'])->name('profile');

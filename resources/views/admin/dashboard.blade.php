@@ -53,8 +53,9 @@
                 <span class="text-3xl font-black text-white font-mono">{{ number_format($totalDownloads) }}</span>
                 <span class="text-[11px] text-gray-400 ml-1.5">transferencias</span>
             </div>
-            <div class="text-[11px] font-mono text-emerald-400 flex items-center gap-1">
-                <i data-lucide="check" class="w-3.5 h-3.5"></i> CDN R2 sin límite
+            <div class="text-[11px] font-mono flex items-center gap-1.5 {{ $downloadsGrowth >= 0 ? 'text-emerald-400' : 'text-amber-400' }}">
+                <i data-lucide="{{ $downloadsGrowth >= 0 ? 'trending-up' : 'trending-down' }}" class="w-3.5 h-3.5"></i>
+                <span>Hoy: <strong>{{ number_format($todayDownloads) }}</strong> ({{ $downloadsGrowth >= 0 ? '+' : '' }}{{ $downloadsGrowth }}% vs ayer)</span>
             </div>
         </div>
 
@@ -563,6 +564,97 @@
                 </div>
                 @empty
                 <p class="text-xs text-gray-500 font-mono py-4 text-center">No hay reportes recientes.</p>
+                @endforelse
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Row: Demanda Oculta (Búsquedas sin Resultados) & Peticiones Más Votadas -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Widget 1: Búsquedas sin Resultados -->
+        <div class="bg-[#11141A] border border-[#232936] rounded-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between border-b border-[#232936] pb-3">
+                <div>
+                    <h3 class="text-sm font-bold text-white font-sans flex items-center gap-2">
+                        <i data-lucide="search-x" class="w-4 h-4 text-rose-400"></i> Demanda Oculta (Búsquedas sin Resultados)
+                    </h3>
+                    <p class="text-[11px] text-gray-400 font-mono mt-0.5">Términos que tus visitantes buscan pero aún no están en la web</p>
+                </div>
+            </div>
+
+            <div class="divide-y divide-[#232936]/60">
+                @forelse($failedSearches as $fs)
+                <div class="py-2.5 flex items-center justify-between gap-3 first:pt-0 last:pb-0 font-mono text-xs">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="px-2 py-0.5 rounded bg-rose-950/40 text-rose-400 border border-rose-500/30 font-bold">
+                            {{ $fs->searches_count }} {{ $fs->searches_count == 1 ? 'vez' : 'veces' }}
+                        </span>
+                        <strong class="text-white truncate font-sans">"{{ $fs->query }}"</strong>
+                    </div>
+
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <a href="{{ route('admin.scraper.catalog', ['q' => $fs->query]) }}" 
+                           class="px-2 py-1 rounded-lg bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white border border-purple-500/30 text-[10px] font-bold flex items-center gap-1 transition-all"
+                           title="Buscar en catálogo de scraper para importar">
+                            <i data-lucide="sparkles" class="w-3 h-3"></i> Scraper
+                        </a>
+                        <a href="{{ route('admin.games.create', ['title' => ucwords($fs->query)]) }}" 
+                           class="px-2 py-1 rounded-lg bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/30 text-[10px] font-bold flex items-center gap-1 transition-all"
+                           title="Crear ficha de juego">
+                            <i data-lucide="plus" class="w-3 h-3"></i> Subir
+                        </a>
+                    </div>
+                </div>
+                @empty
+                <div class="p-6 text-center text-xs text-gray-500 font-mono">
+                    <p>No hay registro de búsquedas fallidas todavía.</p>
+                </div>
+                @endforelse
+            </div>
+        </div>
+
+        <!-- Widget 2: Peticiones Comunitarias Más Votadas -->
+        <div class="bg-[#11141A] border border-[#232936] rounded-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between border-b border-[#232936] pb-3">
+                <div>
+                    <h3 class="text-sm font-bold text-white font-sans flex items-center gap-2">
+                        <i data-lucide="help-circle" class="w-4 h-4 text-amber-400"></i> Peticiones Más Apoyadas (Comunidad)
+                    </h3>
+                    <p class="text-[11px] text-gray-400 font-mono mt-0.5">ROMs que la comunidad está esperando con más votos</p>
+                </div>
+                <a href="{{ route('admin.requests.index') }}" class="text-xs text-blue-400 hover:text-blue-300 font-mono font-bold">Ver todas ({{ $pendingRequestsCount }}) &rarr;</a>
+            </div>
+
+            <div class="divide-y divide-[#232936]/60">
+                @forelse($pendingRequests as $preq)
+                <div class="py-2.5 flex items-center justify-between gap-3 first:pt-0 last:pb-0">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <span class="px-2 py-1 rounded-xl bg-red-950/40 text-red-400 border border-red-500/30 font-mono font-black text-xs shrink-0 flex items-center gap-1">
+                            <i data-lucide="flame" class="w-3 h-3 text-red-400"></i>
+                            {{ $preq->votes_count }}
+                        </span>
+                        <div class="min-w-0">
+                            <strong class="text-white text-xs font-sans truncate block">{{ $preq->title }}</strong>
+                            <div class="text-[10px] font-mono text-gray-400 flex items-center gap-1.5">
+                                <span class="text-amber-400">{{ $preq->console->name }}</span>
+                                @if($preq->region) <span>• {{ $preq->region }}</span> @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="shrink-0">
+                        <a href="{{ route('admin.games.create', ['title' => $preq->title, 'console_id' => $preq->console_id]) }}" 
+                           class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-mono font-bold text-[10px] flex items-center gap-1 shadow-sm transition-all">
+                            <i data-lucide="upload" class="w-3 h-3"></i> Subir ROM
+                        </a>
+                    </div>
+                </div>
+                @empty
+                <div class="p-6 text-center text-xs text-gray-500 font-mono">
+                    <p>No hay peticiones pendientes en este momento.</p>
+                </div>
                 @endforelse
             </div>
         </div>

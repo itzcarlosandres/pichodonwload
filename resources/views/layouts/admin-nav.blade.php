@@ -146,6 +146,20 @@
                 <span class="text-[10px] font-mono text-gray-500 bg-[#0A0C0F] px-2 py-0.5 rounded border border-[#232936]">{{ \App\Models\Review::count() }}</span>
             @endif
         </a>
+
+        <!-- Peticiones de la Comunidad -->
+        <a href="{{ route('admin.requests.index') }}" 
+           class="w-full px-3 py-2 rounded-xl flex items-center justify-between transition-all {{ request()->routeIs('admin.requests.*') ? 'bg-red-600/20 text-red-400 border border-red-500/40 font-semibold shadow-sm' : 'text-gray-400 hover:bg-[#171B22] hover:text-white border border-transparent' }}">
+            <span class="flex items-center gap-2.5">
+                <i data-lucide="help-circle" class="w-4 h-4 text-red-400"></i> Peticiones de Juegos
+            </span>
+            @php $pendingRequestsCount = \App\Models\GameRequest::where('status', 'pending')->count(); @endphp
+            @if($pendingRequestsCount > 0)
+                <span class="text-[10px] font-mono bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded font-bold">{{ $pendingRequestsCount }}</span>
+            @else
+                <span class="text-[10px] font-mono text-gray-500 bg-[#0A0C0F] px-2 py-0.5 rounded border border-[#232936]">{{ \App\Models\GameRequest::count() }}</span>
+            @endif
+        </a>
     </div>
 
     <!-- GROUP 4: SISTEMA & SERVICIOS -->

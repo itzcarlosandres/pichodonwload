@@ -20,6 +20,16 @@
             <a href="{{ route('game.show', $game->slug) }}" target="_blank" class="px-3.5 py-2 rounded-xl bg-[#11141A] hover:bg-[#171B22] border border-[#232936] text-gray-300 text-xs font-semibold flex items-center gap-1.5 transition-colors">
                 <i data-lucide="external-link" class="w-4 h-4 text-blue-400"></i> Ver en Web
             </a>
+            
+            <button type="button" 
+                    @click="publishToTelegram()"
+                    :disabled="telegramPublishing"
+                    class="px-3.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white border border-sky-400/30 text-xs font-bold transition-all flex items-center gap-1.5 shadow-lg shadow-sky-600/20 cursor-pointer disabled:opacity-50"
+                    title="{{ $game->telegram_sent_at ? 'Ya publicado el ' . $game->telegram_sent_at->format('d/m/Y H:i') . '. Haz clic para volver a publicar.' : 'Publicar esta ROM en el canal de Telegram' }}">
+                <svg class="w-4 h-4 fill-current text-white shrink-0" viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.946z"/></svg>
+                <span x-text="telegramPublishing ? 'Enviando...' : '{{ $game->telegram_sent_at ? 'Republicar Telegram' : 'Publicar en Telegram' }}'"></span>
+            </button>
+
             <button type="button" 
                     @click="autocompleteAllWithAi()" 
                     :disabled="allAiLoading"
@@ -1031,6 +1041,30 @@ function gameEditForm() {
                 this.allAiLoading = false;
                 this.$nextTick(() => { if (window.lucide) { lucide.createIcons(); } });
             }
+        },
+
+        telegramPublishing: false,
+        publishToTelegram() {
+            if (!confirm('¿Deseas enviar esta ROM con carátula y enlaces al canal de Telegram configurado?')) return;
+            this.telegramPublishing = true;
+            fetch('{{ route('admin.games.publishTelegram', $game->id) }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+            })
+            .then(r => r.json())
+            .then(d => {
+                this.telegramPublishing = false;
+                if (d.success) {
+                    alert('✅ ' + d.message);
+                    window.location.reload();
+                } else {
+                    alert('❌ Error al publicar en Telegram: ' + (d.error || d.message || 'Error desconocido. Revisa token e ID de canal.'));
+                }
+            })
+            .catch(err => {
+                this.telegramPublishing = false;
+                alert('Error de red al contactar al servidor: ' + err.message);
+            });
         }
     };
 }

@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Models\Game;
-use App\Models\Console;
 use App\Models\Category;
+use App\Models\Console;
+use App\Models\Game;
+use App\Models\SearchLog;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Http\JsonResponse;
 
 class SearchController extends Controller
 {
@@ -18,12 +19,12 @@ class SearchController extends Controller
 
         if ($request->filled('q')) {
             $search = $request->input('q');
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('developer', 'like', "%{$search}%")
-                  ->orWhere('publisher', 'like', "%{$search}%")
-                  ->orWhere('serial', 'like', "%{$search}%")
-                  ->orWhereHas('console', fn($cq) => $cq->where('name', 'like', "%{$search}%"));
+                    ->orWhere('developer', 'like', "%{$search}%")
+                    ->orWhere('publisher', 'like', "%{$search}%")
+                    ->orWhere('serial', 'like', "%{$search}%")
+                    ->orWhereHas('console', fn ($cq) => $cq->where('name', 'like', "%{$search}%"));
             });
         }
 
@@ -61,15 +62,15 @@ class SearchController extends Controller
                 str_replace('-', ' ', $cleanConsole),
             ])));
 
-            $query->whereHas('console', function($q) use ($slugs, $cleanConsole) {
+            $query->whereHas('console', function ($q) use ($slugs, $cleanConsole) {
                 $q->whereIn('slug', $slugs)
-                  ->orWhereRaw('LOWER(slug) = ?', [$cleanConsole])
-                  ->orWhereRaw('LOWER(name) = ?', [str_replace('-', ' ', $cleanConsole)]);
+                    ->orWhereRaw('LOWER(slug) = ?', [$cleanConsole])
+                    ->orWhereRaw('LOWER(name) = ?', [str_replace('-', ' ', $cleanConsole)]);
             });
         }
 
         if ($request->filled('category')) {
-            $query->whereHas('categories', fn($q) => $q->where('slug', $request->input('category')));
+            $query->whereHas('categories', fn ($q) => $q->where('slug', $request->input('category')));
         }
 
         if ($request->filled('region')) {
@@ -96,11 +97,16 @@ class SearchController extends Controller
         }
 
         $games = $query->paginate(24)->withQueryString();
+
+        if ($request->filled('q')) {
+            SearchLog::record((string) $request->input('q'), (int) $games->total(), $request->ip());
+        }
+
         $consoles = Console::withCount([
-            'games as games_count' => fn($q) => $q->whereIn('status', ['PUBLISHED', 'published']),
-            'games as total_uploaded_count' => fn($q) => $q->whereIn('status', ['PUBLISHED', 'published', 'DRAFT', 'draft']),
+            'games as games_count' => fn ($q) => $q->whereIn('status', ['PUBLISHED', 'published']),
+            'games as total_uploaded_count' => fn ($q) => $q->whereIn('status', ['PUBLISHED', 'published', 'DRAFT', 'draft']),
         ])->orderBy('name')->get();
-        $categories = Category::withCount(['games' => fn($q) => $q->whereIn('status', ['PUBLISHED', 'published'])])->orderBy('name')->get();
+        $categories = Category::withCount(['games' => fn ($q) => $q->whereIn('status', ['PUBLISHED', 'published'])])->orderBy('name')->get();
 
         return view('web.search', compact('games', 'consoles', 'categories'));
     }
@@ -117,16 +123,16 @@ class SearchController extends Controller
 
         $results = Game::with('console')
             ->whereIn('status', $allowedStatuses)
-            ->where(function($query) use ($q) {
+            ->where(function ($query) use ($q) {
                 $query->where('title', 'like', "%{$q}%")
-                      ->orWhere('serial', 'like', "%{$q}%")
-                      ->orWhere('developer', 'like', "%{$q}%")
-                      ->orWhere('publisher', 'like', "%{$q}%")
-                      ->orWhereHas('console', fn($cq) => $cq->where('name', 'like', "%{$q}%"));
+                    ->orWhere('serial', 'like', "%{$q}%")
+                    ->orWhere('developer', 'like', "%{$q}%")
+                    ->orWhere('publisher', 'like', "%{$q}%")
+                    ->orWhereHas('console', fn ($cq) => $cq->where('name', 'like', "%{$q}%"));
             })
             ->take(8)
             ->get()
-            ->map(function($g) {
+            ->map(function ($g) {
                 return [
                     'id' => $g->id,
                     'title' => $g->title,
@@ -137,7 +143,7 @@ class SearchController extends Controller
                     'formatted_size' => $g->formatted_size,
                     'rating' => $g->rating_average > 0 ? number_format($g->rating_average, 1) : null,
                     'region' => $g->region ?: null,
-                    'downloads' => number_format((int)$g->download_count),
+                    'downloads' => number_format((int) $g->download_count),
                     'url' => route('game.show', $g->slug),
                 ];
             });
@@ -152,10 +158,10 @@ class SearchController extends Controller
 
         $query = Game::with(['console', 'badges', 'categories'])
             ->where('status', 'PUBLISHED')
-            ->whereHas('categories', fn($q) => $q->where('categories.id', $category->id));
+            ->whereHas('categories', fn ($q) => $q->where('categories.id', $category->id));
 
         if ($request->filled('console')) {
-            $query->whereHas('console', fn($q) => $q->where('slug', $request->input('console')));
+            $query->whereHas('console', fn ($q) => $q->where('slug', $request->input('console')));
         }
 
         $sort = $request->input('sort', 'popular');
@@ -170,8 +176,8 @@ class SearchController extends Controller
         }
 
         $games = $query->paginate(24)->withQueryString();
-        $consoles = Console::withCount(['games' => fn($q) => $q->where('status', 'PUBLISHED')])->orderBy('name')->get();
-        $categories = Category::withCount(['games' => fn($q) => $q->where('status', 'PUBLISHED')])->orderBy('name')->get();
+        $consoles = Console::withCount(['games' => fn ($q) => $q->where('status', 'PUBLISHED')])->orderBy('name')->get();
+        $categories = Category::withCount(['games' => fn ($q) => $q->where('status', 'PUBLISHED')])->orderBy('name')->get();
         $activeCategory = $category;
 
         return view('web.search', compact('games', 'consoles', 'categories', 'activeCategory'));

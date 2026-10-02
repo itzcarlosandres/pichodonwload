@@ -57,6 +57,14 @@
                 class="px-5 py-3 border-b-2 font-bold uppercase tracking-wider transition-colors rounded-t-xl flex items-center gap-2 cursor-pointer">
             <i data-lucide="code-2" class="w-4 h-4 text-emerald-400"></i> Scripts & Analytics
         </button>
+
+        <!-- Tab 6: Bot de Telegram -->
+        <button type="button" @click="activeTab = 'telegram'" 
+                :class="activeTab === 'telegram' ? 'border-sky-500 text-sky-400 bg-[#11141A]' : 'border-transparent text-gray-400 hover:text-white'"
+                class="px-5 py-3 border-b-2 font-bold uppercase tracking-wider transition-colors rounded-t-xl flex items-center gap-2 cursor-pointer">
+            <svg class="w-4 h-4 text-sky-400 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.946z"/></svg>
+            <span>Bot de Telegram</span>
+        </button>
     </div>
 
     <!-- Main Settings Form -->
@@ -901,6 +909,173 @@
 
         </div>
 
+        <!-- TAB 6: Telegram Bot & Auto-Publishing -->
+        <div x-show="activeTab === 'telegram'" class="space-y-6">
+
+            <!-- Card 1: Bot Credentials & Channel -->
+            <div class="bg-[#11141A] border border-[#232936] rounded-2xl p-6 shadow-xl space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#232936] pb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-sky-500/20">
+                            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.946z"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-mono font-bold uppercase text-white tracking-wider flex items-center gap-2">
+                                Credenciales del Bot & Canal Oficial
+                            </h3>
+                            <p class="text-xs text-gray-400 font-sans mt-0.5">Conecta tu Bot de Telegram para publicar automáticamente novedades y alimentar la comunidad.</p>
+                        </div>
+                    </div>
+
+                    <!-- Botón de Prueba en Vivo -->
+                    <button type="button" 
+                            @click="testTelegramConnection()"
+                            :disabled="testingTelegram"
+                            class="px-4 py-2 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 font-mono text-xs font-bold flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50 shadow-sm shrink-0">
+                        <template x-if="!testingTelegram">
+                            <span class="flex items-center gap-2">
+                                <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.946z"/></svg>
+                                <span>Probar Conexión con Telegram</span>
+                            </span>
+                        </template>
+                        <template x-if="testingTelegram">
+                            <span class="flex items-center gap-2">
+                                <i data-lucide="loader" class="w-4 h-4 animate-spin text-sky-400"></i>
+                                <span>Conectando con Telegram...</span>
+                            </span>
+                        </template>
+                    </button>
+                </div>
+
+                <!-- Test Connection Live Result Banner -->
+                <div x-show="telegramTestResult" class="space-y-2">
+                    <template x-if="telegramTestResult?.success">
+                        <div class="p-4 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs font-mono flex items-start gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-emerald-400 shrink-0 mt-0.5"></i>
+                            <div>
+                                <strong class="font-bold text-emerald-200">¡Conexión Exitosa!</strong>
+                                <p class="mt-0.5 text-emerald-300/90" x-text="telegramTestResult?.message"></p>
+                            </div>
+                        </div>
+                    </template>
+                    <template x-if="telegramTestResult && !telegramTestResult.success">
+                        <div class="p-4 rounded-xl bg-red-950/40 border border-red-500/40 text-red-300 text-xs font-mono flex items-start gap-3">
+                            <i data-lucide="alert-triangle" class="w-5 h-5 text-red-400 shrink-0 mt-0.5"></i>
+                            <div>
+                                <strong class="font-bold text-red-200">Error de Configuración</strong>
+                                <p class="mt-0.5 text-red-300/90" x-text="telegramTestResult?.message"></p>
+                                <p class="text-[11px] text-red-400 mt-1 font-sans" x-text="telegramTestResult?.error"></p>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 font-mono text-xs">
+                    <!-- Telegram Bot Token -->
+                    <div class="space-y-1.5 md:col-span-2">
+                        <label class="block font-bold text-gray-200 flex items-center justify-between">
+                            <span class="flex items-center gap-2 text-sky-400">
+                                <i data-lucide="key" class="w-3.5 h-3.5"></i> Token del Bot de Telegram (BotFather)
+                            </span>
+                            <a href="https://t.me/BotFather" target="_blank" class="text-[11px] text-sky-400 hover:underline font-sans flex items-center gap-1">
+                                Crear bot con @BotFather <i data-lucide="external-link" class="w-3 h-3"></i>
+                            </a>
+                        </label>
+                        <input type="password" 
+                               name="telegram_bot_token" 
+                               value="{{ $settings['telegram_bot_token'] ?? '' }}"
+                               placeholder="ej: 7123456789:AAH7XyZ..." 
+                               class="w-full bg-[#0A0C0F] border border-[#232936] rounded-xl p-3 text-xs text-white font-mono focus:border-sky-500">
+                        <p class="text-[10px] text-gray-500 font-sans">Token privado que te entrega @BotFather tras crear el bot. Nunca lo compartas.</p>
+                    </div>
+
+                    <!-- Channel ID or Username -->
+                    <div class="space-y-1.5">
+                        <label class="block font-bold text-gray-200 flex items-center gap-2">
+                            <i data-lucide="hash" class="w-3.5 h-3.5 text-sky-400"></i> ID o Username del Canal de Publicación
+                        </label>
+                        <input type="text" 
+                               name="telegram_channel_id" 
+                               value="{{ $settings['telegram_channel_id'] ?? '' }}"
+                               placeholder="ej: @cdromsdown o -100192837465" 
+                               class="w-full bg-[#0A0C0F] border border-[#232936] rounded-xl p-3 text-xs text-sky-300 font-mono focus:border-sky-500">
+                        <p class="text-[10px] text-gray-500 font-sans">Username público del canal (ej: <code>@micanal</code>) o su ID numérico. <strong>El bot debe ser Administrador del canal</strong>.</p>
+                    </div>
+
+                    <!-- Public Channel URL (para visitantes) -->
+                    <div class="space-y-1.5">
+                        <label class="block font-bold text-gray-200 flex items-center gap-2">
+                            <i data-lucide="link" class="w-3.5 h-3.5 text-sky-400"></i> Enlace Público del Canal (Para Botones en la Web)
+                        </label>
+                        <input type="text" 
+                               name="telegram_channel_url" 
+                               value="{{ $settings['telegram_channel_url'] ?? 'https://t.me/cdromsdown' }}"
+                               placeholder="https://t.me/cdromsdown" 
+                               class="w-full bg-[#0A0C0F] border border-[#232936] rounded-xl p-3 text-xs text-white font-mono focus:border-sky-500">
+                        <p class="text-[10px] text-gray-500 font-sans">Enlace al que se redirige a los visitantes al hacer clic en el botón de Telegram en la web.</p>
+                    </div>
+
+                    <!-- Button Text on Game Detail -->
+                    <div class="space-y-1.5 md:col-span-2">
+                        <label class="block font-bold text-gray-200 flex items-center gap-2">
+                            <i data-lucide="type" class="w-3.5 h-3.5 text-gray-400"></i> Texto / Tooltip del Botón en Ficha de Juego
+                        </label>
+                        <input type="text" 
+                               name="telegram_button_text" 
+                               value="{{ $settings['telegram_button_text'] ?? '¿Problemas con la descarga o buscas otra ROM? Únete a nuestro Telegram' }}"
+                               placeholder="¿Problemas con la descarga o buscas otra ROM? Únete a nuestro Telegram" 
+                               class="w-full bg-[#0A0C0F] border border-[#232936] rounded-xl p-3 text-xs text-white font-sans focus:border-sky-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Auto-Publishing & Message Template -->
+            <div class="bg-[#11141A] border border-[#232936] rounded-2xl p-6 shadow-xl space-y-6">
+                <div class="flex items-center justify-between border-b border-[#232936] pb-4">
+                    <div>
+                        <h3 class="text-sm font-mono font-bold uppercase text-white tracking-wider flex items-center gap-2">
+                            <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i> Publicación Automática & Plantilla
+                        </h3>
+                        <p class="text-xs text-gray-400 font-sans mt-0.5">Controla cuándo se envía a Telegram y personaliza el formato del mensaje.</p>
+                    </div>
+
+                    <!-- Toggle Switch -->
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="telegram_auto_publish" value="1" {{ ($settings['telegram_auto_publish'] ?? '0') === '1' ? 'checked' : '' }} class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-500"></div>
+                        <span class="ml-3 text-xs font-mono font-bold text-gray-300">Publicar al crear ROM</span>
+                    </label>
+                </div>
+
+                <div class="space-y-4 font-mono text-xs">
+                    <div>
+                        <label class="block font-bold text-gray-200 mb-2 flex items-center justify-between">
+                            <span>Plantilla del Mensaje de Telegram:</span>
+                            <span class="text-[10px] text-gray-500 font-sans">Soporta formato HTML (<code>&lt;b&gt;</code>, <code>&lt;i&gt;</code>, <code>&lt;code&gt;</code>)</span>
+                        </label>
+                        <textarea name="telegram_message_template" 
+                                  rows="7" 
+                                  class="w-full bg-[#0A0C0F] border border-[#232936] rounded-xl p-3.5 text-xs text-sky-200 font-mono focus:border-sky-500 leading-relaxed">{{ $settings['telegram_message_template'] ?? "🕹️ <b>¡NUEVA ROM PUBLICADA EN EL VAULT!</b>\n\n🎮 <b>Título:</b> {title}\n💾 <b>Consola:</b> {console}\n🌍 <b>Región:</b> {region}\n📦 <b>Tamaño:</b> {size}\n📅 <b>Año:</b> {year}\n\n⚡ <i>Archivo verificado, limpio y con descarga directa de alta velocidad.</i>\n\n🔗 <b>Ficha & Enlaces:</b> {url}" }}</textarea>
+                    </div>
+
+                    <!-- Variables Chips / Pills -->
+                    <div class="p-3.5 rounded-xl bg-[#0A0C0F] border border-[#232936] space-y-2">
+                        <div class="text-[11px] font-bold text-gray-400 font-sans">Variables dinámicas disponibles para usar en la plantilla:</div>
+                        <div class="flex flex-wrap gap-2 text-[11px]">
+                            <span class="px-2 py-0.5 rounded bg-sky-950/60 border border-sky-500/30 text-sky-300 font-mono">{title}</span>
+                            <span class="px-2 py-0.5 rounded bg-sky-950/60 border border-sky-500/30 text-sky-300 font-mono">{console}</span>
+                            <span class="px-2 py-0.5 rounded bg-sky-950/60 border border-sky-500/30 text-sky-300 font-mono">{region}</span>
+                            <span class="px-2 py-0.5 rounded bg-sky-950/60 border border-sky-500/30 text-sky-300 font-mono">{size}</span>
+                            <span class="px-2 py-0.5 rounded bg-sky-950/60 border border-sky-500/30 text-sky-300 font-mono">{year}</span>
+                            <span class="px-2 py-0.5 rounded bg-sky-950/60 border border-sky-500/30 text-sky-300 font-mono">{developer}</span>
+                            <span class="px-2 py-0.5 rounded bg-sky-950/60 border border-sky-500/30 text-sky-300 font-mono">{url}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
         <!-- Save Button -->
         <div class="flex justify-end pt-2">
             <button type="submit" class="px-8 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-xl shadow-blue-600/30 flex items-center gap-2">
@@ -920,6 +1095,8 @@ function settingsForm() {
         testResult: null,
         testingGemini: false,
         geminiTestResult: null,
+        testingTelegram: false,
+        telegramTestResult: null,
         
         // Logo & Branding interactive state
         logoType: {!! json_encode($settings['site_logo_type'] ?? 'icon_text') !!},
@@ -994,6 +1171,34 @@ function settingsForm() {
             .catch(err => {
                 this.testingGemini = false;
                 this.geminiTestResult = { success: false, message: 'Error de red al conectar con Google Gemini.' };
+            });
+        },
+
+        testTelegramConnection() {
+            this.testingTelegram = true;
+            this.telegramTestResult = null;
+            const token = document.querySelector('input[name="telegram_bot_token"]')?.value || '';
+            const channelId = document.querySelector('input[name="telegram_channel_id"]')?.value || '';
+
+            fetch('{{ route('admin.settings.testTelegram') }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                body: JSON.stringify({ telegram_bot_token: token, telegram_channel_id: channelId })
+            })
+            .then(r => r.json())
+            .then(d => {
+                this.testingTelegram = false;
+                this.telegramTestResult = d;
+                this.$nextTick(() => {
+                    if (window.lucide) window.lucide.createIcons();
+                });
+            })
+            .catch(err => {
+                this.testingTelegram = false;
+                this.telegramTestResult = { success: false, message: 'Error de red al conectar con el servidor para probar Telegram.', error: err.message };
+                this.$nextTick(() => {
+                    if (window.lucide) window.lucide.createIcons();
+                });
             });
         }
     };

@@ -647,6 +647,14 @@
                     <i data-lucide="sparkles" class="w-4 h-4 {{ $isCollections ? 'text-[#CE2D2D]' : 'text-gray-500' }}"></i>
                     <span>Sagas</span>
                 </a>
+
+                <!-- 6. Peticiones de Juegos -->
+                @php $isRequests = request()->routeIs('requests.*'); @endphp
+                <a href="{{ route('requests.index') }}" 
+                   class="px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 text-xs font-semibold transition-all {{ $isRequests ? 'nav-item-active' : 'nav-item-inactive' }}">
+                    <i data-lucide="help-circle" class="w-4 h-4 {{ $isRequests ? 'text-[#CE2D2D]' : 'text-gray-500' }}"></i>
+                    <span>Peticiones</span>
+                </a>
             </nav>
 
             <!-- Right Section: Novedades CTA, Theme Switcher & Mobile Controls -->
@@ -819,6 +827,11 @@
                 <!-- 5. Sagas / Colecciones -->
                 <a href="{{ route('collections.index') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold {{ request()->routeIs('collections.*') ? 'bg-[#FDF2F2] dark:bg-[#2B1616] text-[#CE2D2D] font-bold' : 'text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white hover:bg-[#FAF7F2] dark:hover:bg-[#202025]' }}">
                     <i data-lucide="sparkles" class="w-4 h-4 text-[#CE2D2D]"></i> Sagas & Colecciones
+                </a>
+
+                <!-- 6. Peticiones de Juegos (Móvil) -->
+                <a href="{{ route('requests.index') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold {{ request()->routeIs('requests.*') ? 'bg-[#FDF2F2] dark:bg-[#2B1616] text-[#CE2D2D] font-bold' : 'text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white hover:bg-[#FAF7F2] dark:hover:bg-[#202025]' }}">
+                    <i data-lucide="help-circle" class="w-4 h-4 text-[#CE2D2D]"></i> Pedir un Juego / Peticiones
                 </a>
             </div>
 

@@ -127,19 +127,35 @@
 
                         <!-- Status -->
                         <td class="py-3 px-3 font-mono">
-                            @if($game->status === 'PUBLISHED')
-                                <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold">PUBLICADO</span>
-                            @elseif($game->status === 'DRAFT')
-                                <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-bold">BORRADOR</span>
-                            @else
-                                <span class="px-2 py-0.5 rounded bg-gray-500/20 text-gray-400 border border-gray-500/30 text-[10px] font-bold">ARCHIVADO</span>
-                            @endif
+                            <div class="flex flex-col gap-1 items-start">
+                                @if($game->status === 'PUBLISHED')
+                                    <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold">PUBLICADO</span>
+                                @elseif($game->status === 'DRAFT')
+                                    <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-bold">BORRADOR</span>
+                                @else
+                                    <span class="px-2 py-0.5 rounded bg-gray-500/20 text-gray-400 border border-gray-500/30 text-[10px] font-bold">ARCHIVADO</span>
+                                @endif
+
+                                @if($game->telegram_sent_at)
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-400 border border-sky-500/30 text-[9px] font-bold" title="Enviado a Telegram: {{ $game->telegram_sent_at->format('d/m/Y H:i') }}">
+                                        <svg class="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.946z"/></svg>
+                                        TG OK
+                                    </span>
+                                @endif
+                            </div>
                         </td>
 
                         <!-- Actions -->
                         <td class="py-3 px-4 text-right">
                             <div class="flex items-center justify-end gap-1.5 font-mono">
                                 
+                                <button type="button" 
+                                        onclick="publishGameToTelegram({{ $game->id }}, '{{ addslashes($game->title) }}')"
+                                        class="p-1.5 rounded-lg {{ $game->telegram_sent_at ? 'bg-sky-500/10 text-sky-400 border border-sky-500/30 hover:bg-sky-500 hover:text-white' : 'bg-[#0A0C0F] text-gray-400 hover:text-sky-400 hover:border-sky-500/50 border border-[#232936]' }} transition-colors" 
+                                        title="{{ $game->telegram_sent_at ? 'Reenviar a Telegram (Publicado el ' . $game->telegram_sent_at->format('d/m/Y') . ')' : 'Publicar en Telegram' }}">
+                                    <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.946z"/></svg>
+                                </button>
+
                                 <a href="{{ route('game.show', $game->slug) }}" target="_blank" class="p-1.5 rounded-lg bg-[#0A0C0F] hover:bg-[#171B22] text-gray-400 hover:text-white border border-[#232936] transition-colors" title="Ver en Web">
                                     <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
                                 </a>
@@ -184,4 +200,30 @@
     </div>
 
 </div>
+
+<script>
+function publishGameToTelegram(gameId, title) {
+    if (!confirm('¿Deseas enviar "' + title + '" al canal de Telegram configurado?')) return;
+    
+    fetch('{{ url("admin/games") }}/' + gameId + '/publish-telegram', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        }
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.success) {
+            alert('✅ ' + d.message);
+            window.location.reload();
+        } else {
+            alert('❌ ' + (d.message || d.error || 'Error al publicar en Telegram'));
+        }
+    })
+    .catch(err => {
+        alert('Error de red al conectar con el servidor: ' + err.message);
+    });
+}
+</script>
 @endsection

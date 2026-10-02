@@ -1,20 +1,21 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\AdminDashboardController;
-use App\Http\Controllers\Admin\AdminGameController;
 use App\Http\Controllers\Admin\AdminAiController;
-use App\Http\Controllers\Admin\AdminConsoleController;
-use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminBadgeController;
 use App\Http\Controllers\Admin\AdminBannerController;
-use App\Http\Controllers\Admin\AdminUserController;
-use App\Http\Controllers\Admin\AdminReviewController;
-use App\Http\Controllers\Admin\AdminSettingController;
 use App\Http\Controllers\Admin\AdminBiosController;
+use App\Http\Controllers\Admin\AdminCategoryController;
+use App\Http\Controllers\Admin\AdminConsoleController;
+use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminEmulatorController;
 use App\Http\Controllers\Admin\AdminFranchiseController;
+use App\Http\Controllers\Admin\AdminGameController;
+use App\Http\Controllers\Admin\AdminGameRequestController;
+use App\Http\Controllers\Admin\AdminReviewController;
 use App\Http\Controllers\Admin\AdminScraperDemoController;
+use App\Http\Controllers\Admin\AdminSettingController;
+use App\Http\Controllers\Admin\AdminUserController;
+use Illuminate\Support\Facades\Route;
 
 // Dashboard
 Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
@@ -79,15 +80,21 @@ Route::get('reviews', [AdminReviewController::class, 'index'])->name('reviews.in
 Route::post('reviews/{review}/approve', [AdminReviewController::class, 'approve'])->name('reviews.approve');
 Route::delete('reviews/{review}/reject', [AdminReviewController::class, 'reject'])->name('reviews.reject');
 
-// System Settings & Storage S3/R2 & Gemini Test
+// Peticiones de la Comunidad ("Solicitar ROM")
+Route::resource('requests', AdminGameRequestController::class)->only(['index', 'destroy']);
+Route::patch('requests/{gameRequest}/status', [AdminGameRequestController::class, 'updateStatus'])->name('requests.updateStatus');
+
+// System Settings & Storage S3/R2 & Gemini & Telegram Test
 Route::get('settings', [AdminSettingController::class, 'index'])->name('settings.index');
 Route::post('settings', [AdminSettingController::class, 'update'])->name('settings.update');
 Route::post('settings/test-storage', [AdminSettingController::class, 'testStorage'])->name('settings.testStorage');
 Route::post('settings/test-gemini', [AdminSettingController::class, 'testGemini'])->name('settings.testGemini');
+Route::post('settings/test-telegram', [AdminSettingController::class, 'testTelegram'])->name('settings.testTelegram');
 Route::post('settings/clear-cache', [AdminSettingController::class, 'clearCache'])->name('settings.clearCache');
+
+// Telegram Game Publishing
+Route::post('games/{game}/publish-telegram', [AdminGameController::class, 'publishTelegram'])->name('games.publishTelegram');
 
 // Admin Profile / Credenciales (Correo y Contraseña)
 Route::get('profile', [AdminUserController::class, 'profile'])->name('profile');
 Route::put('profile', [AdminUserController::class, 'updateProfile'])->name('profile.update');
-
-

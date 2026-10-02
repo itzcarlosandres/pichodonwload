@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Game extends Model
 {
@@ -41,6 +42,7 @@ class Game extends Model
         'rating_average',
         'rating_count',
         'status',
+        'telegram_sent_at',
         'is_spotlight',
         'is_featured',
     ];
@@ -55,6 +57,7 @@ class Game extends Model
         'rating_count' => 'integer',
         'is_spotlight' => 'boolean',
         'is_featured' => 'boolean',
+        'telegram_sent_at' => 'datetime',
     ];
 
     public function getRouteKeyName(): string
@@ -115,20 +118,20 @@ class Game extends Model
 
     public function getFormattedSizeAttribute(): string
     {
-        if (!empty($this->file_size)) {
+        if (! empty($this->file_size)) {
             return $this->file_size;
         }
 
         $bytes = (int) $this->file_size_bytes;
         if ($bytes >= 1073741824) {
-            return number_format($bytes / 1073741824, 2) . ' GB';
+            return number_format($bytes / 1073741824, 2).' GB';
         } elseif ($bytes >= 1048576) {
-            return number_format($bytes / 1048576, 1) . ' MB';
+            return number_format($bytes / 1048576, 1).' MB';
         } elseif ($bytes >= 1024) {
-            return number_format($bytes / 1024, 0) . ' KB';
+            return number_format($bytes / 1024, 0).' KB';
         }
 
-        return $bytes > 0 ? $bytes . ' B' : '1.2 GB';
+        return $bytes > 0 ? $bytes.' B' : '1.2 GB';
     }
 
     /**
@@ -138,7 +141,7 @@ class Game extends Model
     {
         $links = [];
 
-        if (!empty($this->download_url)) {
+        if (! empty($this->download_url)) {
             $links[] = [
                 'server' => 'Servidor Principal (Cloudflare R2 Directo)',
                 'url' => $this->download_url,
@@ -148,7 +151,7 @@ class Game extends Model
             ];
         }
 
-        if (!empty($this->mirror_url)) {
+        if (! empty($this->mirror_url)) {
             $links[] = [
                 'server' => 'Servidor Espejo (Mirror 1)',
                 'url' => $this->mirror_url,
@@ -158,10 +161,10 @@ class Game extends Model
             ];
         }
 
-        if (!empty($this->download_links) && is_array($this->download_links)) {
+        if (! empty($this->download_links) && is_array($this->download_links)) {
             foreach ($this->download_links as $link) {
-                if (!empty($link['url'])) {
-                    $serverName = !empty($link['server']) ? $link['server'] : 'Servidor Alternativo';
+                if (! empty($link['url'])) {
+                    $serverName = ! empty($link['server']) ? $link['server'] : 'Servidor Alternativo';
                     $type = 'custom';
                     $badge = 'Mirror';
                     $color = 'purple';
@@ -209,13 +212,13 @@ class Game extends Model
     public static function findDuplicate(string $title, int $consoleId, ?string $sourceUrl = null, ?string $serial = null): ?self
     {
         $cleanTitle = trim($title);
-        $slug = \Illuminate\Support\Str::slug($cleanTitle);
+        $slug = Str::slug($cleanTitle);
 
         // 1. Coincidencia por slug o título exacto dentro de la misma consola
         $query = static::where('console_id', $consoleId)
             ->where(function ($q) use ($slug, $cleanTitle) {
                 $q->where('slug', $slug)
-                  ->orWhere('title', $cleanTitle);
+                    ->orWhere('title', $cleanTitle);
             });
 
         $found = $query->first();
@@ -224,7 +227,7 @@ class Game extends Model
         }
 
         // 2. Coincidencia por serial si se especifica
-        if (!empty($serial)) {
+        if (! empty($serial)) {
             $found = static::where('serial', trim($serial))->first();
             if ($found) {
                 return $found;
@@ -232,14 +235,14 @@ class Game extends Model
         }
 
         // 3. Coincidencia por URL de origen o download_url
-        if (!empty($sourceUrl)) {
+        if (! empty($sourceUrl)) {
             $path = trim(parse_url($sourceUrl, PHP_URL_PATH) ?? '', '/');
             $segment = basename($path);
             if ($segment) {
                 $found = static::where(function ($q) use ($sourceUrl, $segment) {
                     $q->where('download_url', $sourceUrl)
-                      ->orWhere('download_url', 'LIKE', "%{$segment}%")
-                      ->orWhere('slug', $segment);
+                        ->orWhere('download_url', 'LIKE', "%{$segment}%")
+                        ->orWhere('slug', $segment);
                 })->first();
 
                 if ($found) {

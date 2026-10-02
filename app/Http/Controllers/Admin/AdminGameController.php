@@ -8,12 +8,15 @@ use App\Models\Category;
 use App\Models\Console;
 use App\Models\Franchise;
 use App\Models\Game;
+use App\Models\Setting;
 use App\Services\FranchiseSyncService;
 use App\Services\ImageOptimizationService;
 use App\Services\StorageService;
+use App\Services\TelegramBotService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -227,6 +230,15 @@ class AdminGameController extends Controller
             app(FranchiseSyncService::class)->syncGame($game);
         }
 
+        // Auto-publish to Telegram if configured
+        if (strtoupper($game->status) === 'PUBLISHED' && Setting::get('telegram_auto_publish', '0') === '1' && ! $game->telegram_sent_at) {
+            try {
+                app(TelegramBotService::class)->publishGame($game);
+            } catch (\Throwable $e) {
+                Log::warning("Telegram auto-publish error on game create #{$game->id}: ".$e->getMessage());
+            }
+        }
+
         return redirect()->route('admin.games.index')->with('success', "El videojuego '{$game->title}' se ha creado y publicado exitosamente.");
     }
 
@@ -366,7 +378,23 @@ class AdminGameController extends Controller
             $game->franchises()->sync($request->input('franchise_ids', []));
         }
 
+        // Auto-publish to Telegram if configured and was newly published
+        if (strtoupper($game->status) === 'PUBLISHED' && Setting::get('telegram_auto_publish', '0') === '1' && ! $game->telegram_sent_at) {
+            try {
+                app(TelegramBotService::class)->publishGame($game);
+            } catch (\Throwable $e) {
+                Log::warning("Telegram auto-publish error on game update #{$game->id}: ".$e->getMessage());
+            }
+        }
+
         return redirect()->route('admin.games.index')->with('success', "Videojuego '{$game->title}' actualizado con éxito.");
+    }
+
+    public function publishTelegram(Game $game, TelegramBotService $telegramBot): JsonResponse
+    {
+        $result = $telegramBot->publishGame($game, force: true);
+
+        return response()->json($result);
     }
 
     public function destroy(Game $game): RedirectResponse

@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Console;
 use App\Models\DailyStat;
 use App\Models\Game;
+use App\Models\GameRequest;
 use App\Models\Review;
-use App\Models\Setting;
+use App\Models\SearchLog;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class AdminDashboardController extends Controller
@@ -44,10 +46,10 @@ class AdminDashboardController extends Controller
         $downloadTrend = DailyStat::getWeeklyTrend();
 
         // Calculate storage breakdown by manufacturer
-        $sonyBytes = Game::whereHas('console', fn($q) => $q->where('manufacturer', 'Sony'))->sum('file_size_bytes');
-        $nintendoBytes = Game::whereHas('console', fn($q) => $q->where('manufacturer', 'Nintendo'))->sum('file_size_bytes');
-        $xboxBytes = Game::whereHas('console', fn($q) => $q->where('manufacturer', 'Microsoft'))->sum('file_size_bytes');
-        $segaBytes = Game::whereHas('console', fn($q) => $q->where('manufacturer', 'Sega'))->sum('file_size_bytes');
+        $sonyBytes = Game::whereHas('console', fn ($q) => $q->where('manufacturer', 'Sony'))->sum('file_size_bytes');
+        $nintendoBytes = Game::whereHas('console', fn ($q) => $q->where('manufacturer', 'Nintendo'))->sum('file_size_bytes');
+        $xboxBytes = Game::whereHas('console', fn ($q) => $q->where('manufacturer', 'Microsoft'))->sum('file_size_bytes');
+        $segaBytes = Game::whereHas('console', fn ($q) => $q->where('manufacturer', 'Sega'))->sum('file_size_bytes');
         $totalBytes = $sonyBytes + $nintendoBytes + $xboxBytes + $segaBytes ?: 1;
 
         $storageStats = [
@@ -57,6 +59,31 @@ class AdminDashboardController extends Controller
             'xbox_pct' => round(($xboxBytes / $totalBytes) * 100, 1),
             'sega_pct' => round(($segaBytes / $totalBytes) * 100, 1),
         ];
+
+        // Today vs Yesterday download comparison
+        $todayDate = today()->toDateString();
+        $yesterdayDate = today()->subDay()->toDateString();
+        $todayDownloads = (int) DailyStat::where('date', $todayDate)->sum('downloads_count');
+        $yesterdayDownloads = (int) DailyStat::where('date', $yesterdayDate)->sum('downloads_count');
+        $downloadsGrowth = $yesterdayDownloads > 0
+            ? round((($todayDownloads - $yesterdayDownloads) / $yesterdayDownloads) * 100, 1)
+            : ($todayDownloads > 0 ? 100.0 : 0.0);
+
+        // Failed Searches (Demanda Oculta)
+        $failedSearches = SearchLog::where('results_count', 0)
+            ->select('query', DB::raw('count(*) as searches_count'))
+            ->groupBy('query')
+            ->orderByDesc('searches_count')
+            ->take(6)
+            ->get();
+
+        // Pending community requests
+        $pendingRequests = GameRequest::with('console')
+            ->where('status', 'pending')
+            ->orderByDesc('votes_count')
+            ->take(5)
+            ->get();
+        $pendingRequestsCount = GameRequest::where('status', 'pending')->count();
 
         return view('admin.dashboard', compact(
             'totalGames',
@@ -69,7 +96,13 @@ class AdminDashboardController extends Controller
             'topViewedGames',
             'topConsoles',
             'storageStats',
-            'downloadTrend'
+            'downloadTrend',
+            'todayDownloads',
+            'yesterdayDownloads',
+            'downloadsGrowth',
+            'failedSearches',
+            'pendingRequests',
+            'pendingRequestsCount'
         ));
     }
 }
