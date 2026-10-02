@@ -63,8 +63,8 @@ class AdminDashboardController extends Controller
         // Today vs Yesterday download comparison
         $todayDate = today()->toDateString();
         $yesterdayDate = today()->subDay()->toDateString();
-        $todayDownloads = (int) DailyStat::where('date', $todayDate)->sum('downloads_count');
-        $yesterdayDownloads = (int) DailyStat::where('date', $yesterdayDate)->sum('downloads_count');
+        $todayDownloads = (int) DailyStat::where('date', $todayDate)->sum('downloads');
+        $yesterdayDownloads = (int) DailyStat::where('date', $yesterdayDate)->sum('downloads');
         $downloadsGrowth = $yesterdayDownloads > 0
             ? round((($todayDownloads - $yesterdayDownloads) / $yesterdayDownloads) * 100, 1)
             : ($todayDownloads > 0 ? 100.0 : 0.0);
