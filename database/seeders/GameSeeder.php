@@ -2,12 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\Game;
-use App\Models\Console;
-use App\Models\Category;
 use App\Models\Badge;
-use App\Models\Banner;
-use App\Models\Screenshot;
+use App\Models\Category;
+use App\Models\Console;
+use App\Models\Game;
 use Illuminate\Database\Seeder;
 
 class GameSeeder extends Seeder
@@ -64,21 +62,12 @@ class GameSeeder extends Seeder
                 'is_featured' => true,
             ]);
 
-            if ($catAccion) $game1->categories()->syncWithoutDetaching([$catAccion->id]);
+            if ($catAccion) {
+                $game1->categories()->syncWithoutDetaching([$catAccion->id]);
+            }
             if ($badge60fps && $badgeRedump && $badgeMes) {
                 $game1->badges()->syncWithoutDetaching([$badge60fps->id, $badgeRedump->id, $badgeMes->id]);
             }
-
-            // Banner
-            Banner::updateOrCreate(['title' => 'Shadow of the Colossus'], [
-                'title' => 'Shadow of the Colossus',
-                'subtitle' => 'Juego Destacado del Mes • PlayStation 2 • 1080p Enhanced',
-                'image_url' => 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1600&q=80',
-                'target_url' => '/game/shadow-of-the-colossus-ps2',
-                'badge_text' => 'JUEGO DEL MES',
-                'is_active' => true,
-                'order' => 1,
-            ]);
         }
 
         // 2. Zelda: Breath of the Wild (Switch)
@@ -112,8 +101,12 @@ class GameSeeder extends Seeder
                 'is_featured' => true,
             ]);
 
-            if ($catAccion && $catRpg) $game2->categories()->syncWithoutDetaching([$catAccion->id, $catRpg->id]);
-            if ($badgeNoIntro && $badgeEsp) $game2->badges()->syncWithoutDetaching([$badgeNoIntro->id, $badgeEsp->id]);
+            if ($catAccion && $catRpg) {
+                $game2->categories()->syncWithoutDetaching([$catAccion->id, $catRpg->id]);
+            }
+            if ($badgeNoIntro && $badgeEsp) {
+                $game2->badges()->syncWithoutDetaching([$badgeNoIntro->id, $badgeEsp->id]);
+            }
         }
 
         // 3. God of War II (PS2)
@@ -124,7 +117,7 @@ class GameSeeder extends Seeder
                 'console_id' => $ps2->id,
                 'cover_url' => 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=800&q=80',
                 'banner_url' => 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=1600&q=80',
-                'description' => "Kratos busca cambiar su destino desafiando a las mismísimas Moiras. Una de las mayores obras cumbre del género Hack and Slash en la era de los 128 bits con gráficos que llevaron a PS2 a su límite absoluto.",
+                'description' => 'Kratos busca cambiar su destino desafiando a las mismísimas Moiras. Una de las mayores obras cumbre del género Hack and Slash en la era de los 128 bits con gráficos que llevaron a PS2 a su límite absoluto.',
                 'release_year' => 2007,
                 'developer' => 'Santa Monica Studio',
                 'publisher' => 'Sony Computer Entertainment',
@@ -147,8 +140,12 @@ class GameSeeder extends Seeder
                 'is_featured' => true,
             ]);
 
-            if ($catAccion) $game3->categories()->syncWithoutDetaching([$catAccion->id]);
-            if ($badgeRedump && $badgeEsp) $game3->badges()->syncWithoutDetaching([$badgeRedump->id, $badgeEsp->id]);
+            if ($catAccion) {
+                $game3->categories()->syncWithoutDetaching([$catAccion->id]);
+            }
+            if ($badgeRedump && $badgeEsp) {
+                $game3->badges()->syncWithoutDetaching([$badgeRedump->id, $badgeEsp->id]);
+            }
         }
 
         // 4. Super Smash Bros. Melee (GameCube)
@@ -159,7 +156,7 @@ class GameSeeder extends Seeder
                 'console_id' => $gcn->id,
                 'cover_url' => 'https://images.unsplash.com/photo-1563089145-599997674d42?w=800&q=80',
                 'banner_url' => 'https://images.unsplash.com/photo-1563089145-599997674d42?w=1600&q=80',
-                'description' => "La cumbre competitiva de la franquicia Super Smash Bros. Con físicas rápidas, técnicas avanzadas de movimiento (wavedash, l-canceling) y compatibilidad perfecta con Slippi para juego online rollback.",
+                'description' => 'La cumbre competitiva de la franquicia Super Smash Bros. Con físicas rápidas, técnicas avanzadas de movimiento (wavedash, l-canceling) y compatibilidad perfecta con Slippi para juego online rollback.',
                 'release_year' => 2001,
                 'developer' => 'HAL Laboratory',
                 'publisher' => 'Nintendo',
@@ -182,8 +179,12 @@ class GameSeeder extends Seeder
                 'is_featured' => true,
             ]);
 
-            if ($catLucha) $game4->categories()->syncWithoutDetaching([$catLucha->id]);
-            if ($badgeRedump && $badge60fps) $game4->badges()->syncWithoutDetaching([$badgeRedump->id, $badge60fps->id]);
+            if ($catLucha) {
+                $game4->categories()->syncWithoutDetaching([$catLucha->id]);
+            }
+            if ($badgeRedump && $badge60fps) {
+                $game4->badges()->syncWithoutDetaching([$badgeRedump->id, $badge60fps->id]);
+            }
         }
 
         // 5. Halo 3 (Xbox 360)
@@ -194,7 +195,7 @@ class GameSeeder extends Seeder
                 'console_id' => $x360->id,
                 'cover_url' => 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=800&q=80',
                 'banner_url' => 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1600&q=80',
-                'description' => "Master Chief concluye la trilogía original en una batalla desesperada por salvar la Tierra y la galaxia entera del Covenant y los Flood. Compatible con Xenia Canary.",
+                'description' => 'Master Chief concluye la trilogía original en una batalla desesperada por salvar la Tierra y la galaxia entera del Covenant y los Flood. Compatible con Xenia Canary.',
                 'release_year' => 2007,
                 'developer' => 'Bungie',
                 'publisher' => 'Microsoft Game Studios',
@@ -217,8 +218,12 @@ class GameSeeder extends Seeder
                 'is_featured' => true,
             ]);
 
-            if ($catShooter) $game5->categories()->syncWithoutDetaching([$catShooter->id]);
-            if ($badgeEsp) $game5->badges()->syncWithoutDetaching([$badgeEsp->id]);
+            if ($catShooter) {
+                $game5->categories()->syncWithoutDetaching([$catShooter->id]);
+            }
+            if ($badgeEsp) {
+                $game5->badges()->syncWithoutDetaching([$badgeEsp->id]);
+            }
         }
 
         // 6. Pokemon Emerald (GBA)
@@ -229,7 +234,7 @@ class GameSeeder extends Seeder
                 'console_id' => $gba->id,
                 'cover_url' => 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80',
                 'banner_url' => 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1600&q=80',
-                'description' => "La edición definitiva de la tercera generación en la región de Hoenn. Enfréntate tanto al Team Magma como al Team Aqua y despierta a Rayquaza para calmar la batalla entre Groudon y Kyogre.",
+                'description' => 'La edición definitiva de la tercera generación en la región de Hoenn. Enfréntate tanto al Team Magma como al Team Aqua y despierta a Rayquaza para calmar la batalla entre Groudon y Kyogre.',
                 'release_year' => 2004,
                 'developer' => 'Game Freak',
                 'publisher' => 'The Pokémon Company / Nintendo',
@@ -252,8 +257,12 @@ class GameSeeder extends Seeder
                 'is_featured' => true,
             ]);
 
-            if ($catRpg) $game6->categories()->syncWithoutDetaching([$catRpg->id]);
-            if ($badgeNoIntro && $badgeEsp) $game6->badges()->syncWithoutDetaching([$badgeNoIntro->id, $badgeEsp->id]);
+            if ($catRpg) {
+                $game6->categories()->syncWithoutDetaching([$catRpg->id]);
+            }
+            if ($badgeNoIntro && $badgeEsp) {
+                $game6->badges()->syncWithoutDetaching([$badgeNoIntro->id, $badgeEsp->id]);
+            }
         }
     }
 }

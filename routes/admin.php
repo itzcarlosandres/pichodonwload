@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Admin\AdminAiController;
 use App\Http\Controllers\Admin\AdminBadgeController;
-use App\Http\Controllers\Admin\AdminBannerController;
 use App\Http\Controllers\Admin\AdminBiosController;
 use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminConsoleController;
@@ -66,9 +65,6 @@ Route::resource('categories', AdminCategoryController::class)->except(['create',
 
 // Badges CRUD
 Route::resource('badges', AdminBadgeController::class)->except(['create', 'show', 'edit']);
-
-// Banners CRUD
-Route::resource('banners', AdminBannerController::class)->except(['create', 'show', 'edit']);
 
 // Users & RBAC
 Route::get('users', [AdminUserController::class, 'index'])->name('users.index');

@@ -1,18 +1,18 @@
 <?php
 
-require __DIR__ . '/../vendor/autoload.php';
-$app = require_once __DIR__ . '/../bootstrap/app.php';
-$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+require __DIR__.'/../vendor/autoload.php';
+$app = require_once __DIR__.'/../bootstrap/app.php';
+$kernel = $app->make(Kernel::class);
 $kernel->bootstrap();
 
-use App\Models\Game;
-use App\Models\Console;
-use App\Models\Category;
 use App\Models\Badge;
-use App\Models\User;
-use App\Models\Setting;
+use App\Models\Category;
+use App\Models\Console;
+use App\Models\Game;
 use App\Models\Review;
-use App\Models\Banner;
+use App\Models\Setting;
+use App\Models\User;
+use Illuminate\Contracts\Console\Kernel;
 
 echo "--- TESTING ALL VIEWS ---\n";
 
@@ -25,7 +25,7 @@ $home = view('web.home', [
     'topRatedGames' => Game::take(3)->get(),
     'recentGames' => Game::take(6)->get(),
     'banners' => collect(),
-    'categories' => Category::all()
+    'categories' => Category::all(),
 ])->render();
 echo "[OK] web.home\n";
 
@@ -33,7 +33,7 @@ echo "[OK] web.home\n";
 $game = Game::with(['console', 'badges', 'categories', 'screenshots', 'reviews.user'])->first();
 $detail = view('web.game-detail', [
     'game' => $game,
-    'relatedGames' => Game::take(4)->get()
+    'relatedGames' => Game::take(4)->get(),
 ])->render();
 echo "[OK] web.game-detail\n";
 
@@ -45,7 +45,7 @@ echo "[OK] web.consoles-hub\n";
 $conDetail = view('web.console-detail', [
     'console' => Console::first(),
     'games' => Game::paginate(12),
-    'categories' => Category::all()
+    'categories' => Category::all(),
 ])->render();
 echo "[OK] web.console-detail\n";
 
@@ -53,14 +53,14 @@ echo "[OK] web.console-detail\n";
 $search = view('web.search', [
     'games' => Game::paginate(12),
     'consoles' => Console::all(),
-    'categories' => Category::all()
+    'categories' => Category::all(),
 ])->render();
 echo "[OK] web.search\n";
 
 // 6. Profile
 $profile = view('web.profile', [
     'user' => User::first(),
-    'favorites' => Game::paginate(6)
+    'favorites' => Game::paginate(6),
 ])->render();
 echo "[OK] web.profile\n";
 
@@ -82,15 +82,15 @@ $adminDash = view('admin.dashboard', [
         'sony_pct' => 50,
         'nintendo_pct' => 30,
         'xbox_pct' => 15,
-        'sega_pct' => 5
-    ]
+        'sega_pct' => 5,
+    ],
 ])->render();
 echo "[OK] admin.dashboard\n";
 
 // 9. Admin Games
 $adminGames = view('admin.games.index', [
     'games' => Game::paginate(10),
-    'consoles' => Console::all()
+    'consoles' => Console::all(),
 ])->render();
 echo "[OK] admin.games.index\n";
 
@@ -98,13 +98,13 @@ echo "[OK] admin.games.index\n";
 $adminCreate = view('admin.games.create', [
     'consoles' => Console::all(),
     'categories' => Category::all(),
-    'badges' => Badge::all()
+    'badges' => Badge::all(),
 ])->render();
 $adminEdit = view('admin.games.edit', [
     'game' => $game,
     'consoles' => Console::all(),
     'categories' => Category::all(),
-    'badges' => Badge::all()
+    'badges' => Badge::all(),
 ])->render();
 echo "[OK] admin.games.create & edit\n";
 
@@ -120,11 +120,7 @@ echo "[OK] admin.categories.index\n";
 $adminBadges = view('admin.badges.index', ['badges' => Badge::withCount('games')->get()])->render();
 echo "[OK] admin.badges.index\n";
 
-// 14. Admin Banners
-$adminBanners = view('admin.banners.index', ['banners' => Banner::all()])->render();
-echo "[OK] admin.banners.index\n";
-
-// 15. Admin Users
+// 14. Admin Users
 $adminUsers = view('admin.users.index', ['users' => User::paginate(15)])->render();
 echo "[OK] admin.users.index\n";
 

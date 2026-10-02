@@ -3,10 +3,9 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Models\Game;
-use App\Models\Console;
-use App\Models\Banner;
 use App\Models\Category;
+use App\Models\Console;
+use App\Models\Game;
 use App\Models\Setting;
 use Illuminate\View\View;
 
@@ -20,11 +19,11 @@ class HomeController extends Controller
 
         // 1. Top Consoles with published and total uploaded count
         $consoles = Console::withCount([
-            'games as games_count' => fn($q) => $q->whereIn('status', ['PUBLISHED', 'published']),
-            'games as total_uploaded_count' => fn($q) => $q->whereIn('status', ['PUBLISHED', 'published', 'DRAFT', 'draft']),
+            'games as games_count' => fn ($q) => $q->whereIn('status', ['PUBLISHED', 'published']),
+            'games as total_uploaded_count' => fn ($q) => $q->whereIn('status', ['PUBLISHED', 'published', 'DRAFT', 'draft']),
         ])
-        ->orderBy('order')
-        ->get();
+            ->orderBy('order')
+            ->get();
 
         $publishedCount = Game::whereIn('status', ['PUBLISHED', 'published'])->count();
         $allowedStatuses = $publishedCount > 0
@@ -63,7 +62,7 @@ class HomeController extends Controller
         // Filter by console if requested from pill chips
         $selectedConsole = request('console');
         if ($selectedConsole) {
-            $recentQuery->whereHas('console', fn($q) => $q->where('slug', $selectedConsole));
+            $recentQuery->whereHas('console', fn ($q) => $q->where('slug', $selectedConsole));
         }
 
         $recentGames = $recentQuery->take($recentCount)->get();
