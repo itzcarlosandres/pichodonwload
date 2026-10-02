@@ -124,15 +124,6 @@
             Contenido & Usuarios
         </div>
 
-        <!-- Banners -->
-        <a href="{{ route('admin.banners.index') }}" 
-           class="w-full px-3 py-2 rounded-xl flex items-center justify-between transition-all {{ request()->routeIs('admin.banners.*') ? 'bg-blue-600/15 text-blue-400 border border-blue-500/30 font-semibold shadow-sm shadow-blue-500/10' : 'text-gray-400 hover:bg-[#171B22] hover:text-white border border-transparent' }}">
-            <span class="flex items-center gap-2.5">
-                <i data-lucide="image" class="w-4 h-4"></i> Banners de Portada
-            </span>
-            <span class="text-[10px] font-mono text-gray-400 bg-[#0A0C0F] px-2 py-0.5 rounded border border-[#232936]">{{ \App\Models\Banner::where('is_active', true)->count() }}</span>
-        </a>
-
         <!-- Reseñas -->
         <a href="{{ route('admin.reviews.index') }}" 
            class="w-full px-3 py-2 rounded-xl flex items-center justify-between transition-all {{ request()->routeIs('admin.reviews.*') ? 'bg-blue-600/15 text-blue-400 border border-blue-500/30 font-semibold shadow-sm shadow-blue-500/10' : 'text-gray-400 hover:bg-[#171B22] hover:text-white border border-transparent' }}">
