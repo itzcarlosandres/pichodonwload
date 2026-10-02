@@ -216,6 +216,18 @@
             scrollbar-width: none !important;
         }
 
+        /* ================= RETRO CREAM (LIGHT THEME) HARMONY ================= */
+        html:not(.dark) {
+            color-scheme: light;
+        }
+        html:not(.dark) body {
+            background-color: #F5EFE6 !important;
+            color: #18181B !important;
+        }
+        html:not(.dark) .border-\[\#1E1E1E\] {
+            border-color: #DDD6CB !important;
+        }
+
         /* ================= DARK VAULT THEME ENHANCEMENTS ================= */
         html.dark {
             color-scheme: dark;
@@ -311,41 +323,41 @@
             background-color: #EDE7DE !important;
             border-color: #DDD6CB !important;
         }
-        nav.nav-capsule a,
-        nav.nav-capsule button {
+        nav.nav-capsule > a,
+        nav.nav-capsule > div > button {
             color: #4B5563 !important;
             transition: all 0.15s ease-in-out;
         }
-        nav.nav-capsule a i,
-        nav.nav-capsule a svg,
-        nav.nav-capsule button i,
-        nav.nav-capsule button svg {
+        nav.nav-capsule > a i,
+        nav.nav-capsule > a svg,
+        nav.nav-capsule > div > button i,
+        nav.nav-capsule > div > button svg {
             color: #6B7280;
             transition: color 0.15s ease-in-out;
         }
-        nav.nav-capsule a:hover,
-        nav.nav-capsule button:hover {
+        nav.nav-capsule > a:hover,
+        nav.nav-capsule > div > button:hover {
             color: #18181B !important;
             background-color: #FFFFFF !important;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
         }
-        nav.nav-capsule a:hover i,
-        nav.nav-capsule a:hover svg,
-        nav.nav-capsule button:hover i,
-        nav.nav-capsule button:hover svg {
+        nav.nav-capsule > a:hover i,
+        nav.nav-capsule > a:hover svg,
+        nav.nav-capsule > div > button:hover i,
+        nav.nav-capsule > div > button:hover svg {
             color: #CE2D2D !important;
         }
-        nav.nav-capsule a.nav-item-active,
-        nav.nav-capsule button.nav-item-active {
+        nav.nav-capsule > a.nav-item-active,
+        nav.nav-capsule > div > button.nav-item-active {
             background-color: #FFFFFF !important;
             color: #18181B !important;
             font-weight: 800 !important;
             box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1) !important;
         }
-        nav.nav-capsule a.nav-item-active i,
-        nav.nav-capsule a.nav-item-active svg,
-        nav.nav-capsule button.nav-item-active i,
-        nav.nav-capsule button.nav-item-active svg {
+        nav.nav-capsule > a.nav-item-active i,
+        nav.nav-capsule > a.nav-item-active svg,
+        nav.nav-capsule > div > button.nav-item-active i,
+        nav.nav-capsule > div > button.nav-item-active svg {
             color: #CE2D2D !important;
         }
 
@@ -354,48 +366,48 @@
             background-color: #131317 !important;
             border-color: #27272A !important;
         }
-        html.dark nav.nav-capsule a,
-        html.dark nav.nav-capsule button {
+        html.dark nav.nav-capsule > a,
+        html.dark nav.nav-capsule > div > button {
             color: #94A3B8 !important;
         }
-        html.dark nav.nav-capsule a i,
-        html.dark nav.nav-capsule a svg,
-        html.dark nav.nav-capsule button i,
-        html.dark nav.nav-capsule button svg {
+        html.dark nav.nav-capsule > a i,
+        html.dark nav.nav-capsule > a svg,
+        html.dark nav.nav-capsule > div > button i,
+        html.dark nav.nav-capsule > div > button svg {
             color: #94A3B8 !important;
         }
-        html.dark nav.nav-capsule a:hover,
-        html.dark nav.nav-capsule button:hover {
+        html.dark nav.nav-capsule > a:hover,
+        html.dark nav.nav-capsule > div > button:hover {
             color: #FFFFFF !important;
             background-color: #272730 !important;
             box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4) !important;
         }
-        html.dark nav.nav-capsule a:hover span,
-        html.dark nav.nav-capsule button:hover span {
+        html.dark nav.nav-capsule > a:hover span,
+        html.dark nav.nav-capsule > div > button:hover span {
             color: #FFFFFF !important;
         }
-        html.dark nav.nav-capsule a:hover i,
-        html.dark nav.nav-capsule a:hover svg,
-        html.dark nav.nav-capsule button:hover i,
-        html.dark nav.nav-capsule button:hover svg {
+        html.dark nav.nav-capsule > a:hover i,
+        html.dark nav.nav-capsule > a:hover svg,
+        html.dark nav.nav-capsule > div > button:hover i,
+        html.dark nav.nav-capsule > div > button:hover svg {
             color: #EF4444 !important;
         }
-        html.dark nav.nav-capsule a.nav-item-active,
-        html.dark nav.nav-capsule button.nav-item-active {
+        html.dark nav.nav-capsule > a.nav-item-active,
+        html.dark nav.nav-capsule > div > button.nav-item-active {
             background-color: #272730 !important;
             color: #FFFFFF !important;
             font-weight: 800 !important;
             box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5) !important;
             border: 1px solid #3F3F46 !important;
         }
-        html.dark nav.nav-capsule a.nav-item-active span,
-        html.dark nav.nav-capsule button.nav-item-active span {
+        html.dark nav.nav-capsule > a.nav-item-active span,
+        html.dark nav.nav-capsule > div > button.nav-item-active span {
             color: #FFFFFF !important;
         }
-        html.dark nav.nav-capsule a.nav-item-active i,
-        html.dark nav.nav-capsule a.nav-item-active svg,
-        html.dark nav.nav-capsule button.nav-item-active i,
-        html.dark nav.nav-capsule button.nav-item-active svg {
+        html.dark nav.nav-capsule > a.nav-item-active i,
+        html.dark nav.nav-capsule > a.nav-item-active svg,
+        html.dark nav.nav-capsule > div > button.nav-item-active i,
+        html.dark nav.nav-capsule > div > button.nav-item-active svg {
             color: #EF4444 !important;
         }
     </style>
@@ -476,15 +488,7 @@
 
             <!-- Center: Navigation Pill Capsule -->
             <nav class="nav-capsule hidden md:flex items-center gap-1 bg-[#EDE7DE] border border-[#DDD6CB] rounded-xl p-1 shadow-inner shrink-0"
-                 x-data="{ genreOpen: false }">
-                <!-- 0. Biblioteca (Antes de HOME) -->
-                @php $isLibrary = request()->routeIs('library.*') || request()->routeIs('emulators*') || request()->routeIs('bios*'); @endphp
-                <a href="{{ route('library.index') }}" 
-                   class="px-3.5 py-1.5 rounded-lg flex items-center gap-2 text-xs font-semibold transition-all {{ $isLibrary ? 'nav-item-active' : 'nav-item-inactive' }}">
-                    <i data-lucide="library" class="w-4 h-4 {{ $isLibrary ? 'text-[#CE2D2D]' : 'text-gray-500' }}"></i>
-                    <span>Biblioteca</span>
-                </a>
-
+                 x-data="{ genreOpen: false, libraryOpen: false }">
                 <!-- 1. HOME -->
                 @php $isHome = request()->routeIs('home') && !request('category'); @endphp
                 <a href="{{ route('home') }}" 
@@ -492,6 +496,69 @@
                     <i data-lucide="home" class="w-4 h-4 {{ $isHome ? 'text-[#CE2D2D]' : 'text-gray-500' }}"></i>
                     <span>HOME</span>
                 </a>
+
+                <!-- 2. Biblioteca con Submenú (Emuladores & BIOS) -->
+                @php $isLibrary = request()->routeIs('library.*') || request()->routeIs('emulators*') || request()->routeIs('bios*'); @endphp
+                <div class="relative" 
+                     @click.outside="libraryOpen = false" 
+                     @keydown.escape.window="libraryOpen = false">
+                    <button type="button" 
+                            @click="libraryOpen = !libraryOpen; $nextTick(() => { if (window.lucide) { lucide.createIcons(); } })"
+                            class="px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 text-xs font-semibold transition-all cursor-pointer {{ $isLibrary ? 'nav-item-active' : 'nav-item-inactive' }}"
+                            :class="libraryOpen ? 'nav-item-active' : ''">
+                        <i data-lucide="library" class="w-4 h-4 {{ $isLibrary ? 'text-[#CE2D2D]' : 'text-gray-500' }}" :class="libraryOpen ? 'text-[#CE2D2D]' : ''"></i>
+                        <span>Biblioteca</span>
+                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-gray-500 transition-transform duration-200" :class="libraryOpen ? 'rotate-180 text-[#CE2D2D]' : ''"></i>
+                    </button>
+
+                    <!-- Dropdown Submenu: Emuladores & BIOS -->
+                    <div x-show="libraryOpen" 
+                         x-cloak 
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                         x-transition:leave-end="opacity-0 translate-y-2 scale-95"
+                         class="absolute left-0 mt-3 w-60 bg-white dark:bg-[#18181B] border border-[#E5E0D8] dark:border-[#27272A] rounded-2xl shadow-2xl p-2 z-[100] space-y-1">
+                        
+                        <!-- Emuladores -->
+                        <a href="{{ route('library.index', ['tab' => 'emulators']) }}" 
+                           @click="libraryOpen = false"
+                           class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-[#FAF7F2] dark:hover:bg-[#202025] transition-colors group">
+                            <div class="w-8 h-8 rounded-lg bg-[#FAF7F2] dark:bg-[#202025] group-hover:bg-[#FDF2F2] dark:group-hover:bg-[#2B1616] text-blue-500 group-hover:text-[#CE2D2D] flex items-center justify-center shrink-0 transition-colors">
+                                <i data-lucide="cpu" class="w-4 h-4"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <span class="text-xs font-bold text-[#18181B] dark:text-white group-hover:text-[#CE2D2D] block">Emuladores</span>
+                                <span class="text-[10px] font-mono text-gray-500 dark:text-gray-400 block">Software oficial</span>
+                            </div>
+                        </a>
+
+                        <!-- BIOS & Firmware -->
+                        <a href="{{ route('library.index', ['tab' => 'bios']) }}" 
+                           @click="libraryOpen = false"
+                           class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-[#FAF7F2] dark:hover:bg-[#202025] transition-colors group">
+                            <div class="w-8 h-8 rounded-lg bg-[#FAF7F2] dark:bg-[#202025] group-hover:bg-[#FDF2F2] dark:group-hover:bg-[#2B1616] text-purple-500 group-hover:text-[#CE2D2D] flex items-center justify-center shrink-0 transition-colors">
+                                <i data-lucide="binary" class="w-4 h-4"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <span class="text-xs font-bold text-[#18181B] dark:text-white group-hover:text-[#CE2D2D] block">BIOS & Firmware</span>
+                                <span class="text-[10px] font-mono text-gray-500 dark:text-gray-400 block">Dumps 1:1 verificados</span>
+                            </div>
+                        </a>
+
+                        <!-- Footer: Ver Toda la Biblioteca -->
+                        <div class="pt-1.5 mt-1.5 border-t border-[#E5E0D8] dark:border-[#27272A] px-2 py-1">
+                            <a href="{{ route('library.index') }}" 
+                               @click="libraryOpen = false"
+                               class="text-[11px] font-mono font-bold text-[#CE2D2D] hover:underline flex items-center justify-between">
+                                <span>Ver Biblioteca Completa</span>
+                                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- 2. Consolas con contador -->
                 @php $isConsoles = request()->routeIs('consoles.*'); @endphp
@@ -668,16 +735,38 @@
                     </span>
                     <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[#EDE7DE] dark:bg-[#272730] border border-[#DDD6CB] dark:border-[#3F3F46]" x-text="isDark ? 'Dark Vault 🌙' : 'Retro Cream ☀️'"></span>
                 </button>
-                <!-- 0. Biblioteca (Antes de HOME) -->
-                @php $isMobileLibrary = request()->routeIs('library.*') || request()->routeIs('emulators*') || request()->routeIs('bios*'); @endphp
-                <a href="{{ route('library.index') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold {{ $isMobileLibrary ? 'bg-[#FDF2F2] dark:bg-[#2B1616] text-[#CE2D2D] font-bold' : 'text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white hover:bg-[#FAF7F2] dark:hover:bg-[#202025]' }}">
-                    <i data-lucide="library" class="w-4 h-4 text-[#CE2D2D]"></i> Biblioteca
-                </a>
-
                 <!-- 1. HOME -->
                 <a href="{{ route('home') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold {{ request()->routeIs('home') && !request('category') ? 'bg-[#FDF2F2] dark:bg-[#2B1616] text-[#CE2D2D] font-bold' : 'text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white hover:bg-[#FAF7F2] dark:hover:bg-[#202025]' }}">
                     <i data-lucide="home" class="w-4 h-4 text-[#CE2D2D]"></i> HOME
                 </a>
+
+                <!-- 2. Biblioteca con Submenú Móvil -->
+                @php $isMobileLibrary = request()->routeIs('library.*') || request()->routeIs('emulators*') || request()->routeIs('bios*'); @endphp
+                <div x-data="{ mobileLibraryOpen: false }" class="space-y-1">
+                    <div class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold {{ $isMobileLibrary ? 'bg-[#FDF2F2] dark:bg-[#2B1616] text-[#CE2D2D] font-bold' : 'text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white hover:bg-[#FAF7F2] dark:hover:bg-[#202025]' }}">
+                        <a href="{{ route('library.index') }}" class="flex items-center gap-3 flex-1">
+                            <i data-lucide="library" class="w-4 h-4 text-[#CE2D2D]"></i>
+                            <span>Biblioteca</span>
+                        </a>
+                        <button type="button" 
+                                @click="mobileLibraryOpen = !mobileLibraryOpen; $nextTick(() => { if (window.lucide) { lucide.createIcons(); } })"
+                                class="p-1 -mr-1 rounded-lg text-gray-400 hover:text-[#CE2D2D] cursor-pointer"
+                                title="Desplegar Emuladores y BIOS">
+                            <i data-lucide="chevron-down" class="w-4 h-4 transition-transform" :class="mobileLibraryOpen ? 'rotate-180 text-[#CE2D2D]' : ''"></i>
+                        </button>
+                    </div>
+
+                    <div x-show="mobileLibraryOpen" x-cloak class="pl-7 pr-2 py-1 space-y-1">
+                        <a href="{{ route('library.index', ['tab' => 'emulators']) }}" class="flex items-center gap-2.5 p-2 rounded-xl text-xs text-gray-600 dark:text-gray-400 hover:text-[#CE2D2D] hover:bg-[#FAF7F2] dark:hover:bg-[#202025]">
+                            <i data-lucide="cpu" class="w-3.5 h-3.5 text-blue-500"></i>
+                            <span class="font-bold">Emuladores</span>
+                        </a>
+                        <a href="{{ route('library.index', ['tab' => 'bios']) }}" class="flex items-center gap-2.5 p-2 rounded-xl text-xs text-gray-600 dark:text-gray-400 hover:text-[#CE2D2D] hover:bg-[#FAF7F2] dark:hover:bg-[#202025]">
+                            <i data-lucide="binary" class="w-3.5 h-3.5 text-purple-500"></i>
+                            <span class="font-bold">BIOS & Firmware</span>
+                        </a>
+                    </div>
+                </div>
 
                 <!-- 2. Consolas -->
                 <a href="{{ route('consoles.index') }}" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold {{ request()->routeIs('consoles.*') ? 'bg-[#FDF2F2] dark:bg-[#2B1616] text-[#CE2D2D] font-bold' : 'text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white hover:bg-[#FAF7F2] dark:hover:bg-[#202025]' }}">

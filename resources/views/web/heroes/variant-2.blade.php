@@ -89,7 +89,7 @@
                  @click.outside="close()"
                  @keydown.escape.window="close()">
                 
-                <form action="{{ route('search') }}" method="GET" class="p-1 sm:p-1.5 rounded-2xl bg-white dark:bg-[#18181B] border-2 border-[#1E1E1E] dark:border-[#2E2E38] shadow-[0_10px_28px_rgba(0,0,0,0.06)] dark:shadow-[0_10px_28px_rgba(0,0,0,0.4)] flex items-center gap-1.5 sm:gap-2 transition-all relative z-30 focus-within:ring-2 focus-within:ring-[#CE2D2D]/30 focus-within:border-[#CE2D2D]">
+                <form action="{{ route('search') }}" method="GET" class="p-1 sm:p-1.5 rounded-2xl bg-white dark:bg-[#18181B] border-2 border-[#DDD6CB] dark:border-[#2E2E38] shadow-[0_10px_28px_rgba(0,0,0,0.06)] dark:shadow-[0_10px_28px_rgba(0,0,0,0.4)] flex items-center gap-1.5 sm:gap-2 transition-all relative z-30 focus-within:ring-2 focus-within:ring-[#CE2D2D]/30 focus-within:border-[#CE2D2D]">
                     <div class="relative flex-1 min-w-0 flex items-center pl-2.5 sm:pl-3">
                         <i data-lucide="search" class="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0"></i>
                         <input 
@@ -159,7 +159,7 @@
 
         <!-- Right Column: Interactive Hardware Showcase Station (5 Cols) -->
         <div class="lg:col-span-5">
-            <div class="p-5 sm:p-6 rounded-3xl bg-[#FAF7F2] dark:bg-[#141822] border-2 border-[#1E1E1E] dark:border-[#232B3E] shadow-[0_16px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.4)] space-y-4">
+            <div class="p-5 sm:p-6 rounded-3xl bg-[#FAF7F2] dark:bg-[#141822] border border-[#DDD6CB] dark:border-[#232B3E] shadow-[0_16px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.4)] space-y-4">
                 
                 <!-- Station Header -->
                 <div class="flex items-center justify-between pb-3 border-b border-[#E5E0D8] dark:border-[#232B3E]">

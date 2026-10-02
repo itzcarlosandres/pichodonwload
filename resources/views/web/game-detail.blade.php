@@ -241,55 +241,8 @@ function gameDetailComponent() {
             }
         @endphp
 
-        @if(!empty($telegramUrl))
-        <!-- Animated Telegram Community & Support Banner -->
-        <a href="{{ $telegramUrl }}" 
-           target="_blank" 
-           rel="noopener noreferrer" 
-           class="group relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#229ED9] via-[#0088cc] to-[#179cde] p-3.5 sm:p-4 text-white shadow-lg shadow-sky-500/20 border-2 border-sky-400/40 hover:border-white transition-all duration-300 transform hover:-translate-y-0.5 flex flex-col sm:flex-row items-center justify-between gap-3">
-            
-            <!-- Animated Background Glow & Sweep -->
-            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none"></div>
-
-            <!-- Left: Icon + Info -->
-            <div class="flex items-center gap-3.5 z-10 w-full sm:w-auto">
-                <div class="relative w-11 h-11 rounded-xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shrink-0 shadow-inner group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-                    <!-- Telegram Paper Plane SVG -->
-                    <svg class="w-6 h-6 text-white group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-                    </svg>
-                    <!-- Ripple radar ping -->
-                    <span class="absolute -top-1 -right-1 flex h-3 w-3">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-400"></span>
-                    </span>
-                </div>
-                <div class="min-w-0">
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <span class="text-[10px] font-mono font-black uppercase tracking-wider bg-black/25 px-2 py-0.5 rounded-full border border-white/20 text-white flex items-center gap-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                            Comunidad Oficial
-                        </span>
-                        <span class="text-[10px] font-mono text-sky-100 hidden sm:inline">Soporte rápido & Pedidos</span>
-                    </div>
-                    <p class="text-xs sm:text-sm font-bold text-white font-sans truncate tracking-tight mt-0.5">
-                        {{ $telegramButtonText }}
-                    </p>
-                </div>
-            </div>
-
-            <!-- Right: Action CTA Pill -->
-            <div class="z-10 w-full sm:w-auto flex justify-end">
-                <span class="w-full sm:w-auto px-4 py-2 rounded-xl bg-white text-[#0088cc] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md group-hover:bg-[#FAF7F2] transition-colors">
-                    <span>Unirme al Canal</span>
-                    <i data-lucide="arrow-right" class="w-4 h-4 text-[#0088cc] group-hover:translate-x-1 transition-transform"></i>
-                </span>
-            </div>
-        </a>
-        @endif
-
-        <!-- Action Capsule / Pill Bar with Retro Download Button -->
-        <div class="p-3 sm:p-3.5 rounded-2xl bg-white border-2 border-[#1E1E1E] shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        <!-- Action Capsule / Pill Bar with Retro Download Button & Telegram -->
+        <div class="p-3 sm:p-3.5 rounded-2xl bg-white border border-[#DDD6CB] dark:border-[#27272A] shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
             
             <!-- Community Rating inside Capsule -->
             <div class="flex flex-wrap items-center justify-center md:justify-start gap-3 text-xs font-mono text-[#18181B] px-2">
@@ -303,12 +256,38 @@ function gameDetailComponent() {
                 </a>
             </div>
 
-            <!-- Action Buttons Segment -->
-            <div class="flex items-center gap-2.5 w-full sm:w-auto justify-center sm:justify-end shrink-0">
+            <!-- Action Buttons Segment: Telegram + Download Button (Aligned) -->
+            <div class="flex items-center gap-2.5 w-full sm:w-auto justify-center sm:justify-end shrink-0 flex-wrap sm:flex-nowrap">
                 
+                @if(!empty($telegramUrl))
+                <!-- Animated Compact Telegram Button -->
+                <a href="{{ $telegramUrl }}" 
+                   target="_blank" 
+                   rel="noopener noreferrer" 
+                   class="relative overflow-hidden group px-4 sm:px-5 py-3 rounded-xl bg-gradient-to-r from-[#229ED9] to-[#0088cc] hover:from-[#1d8fc5] hover:to-[#0077b5] text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md shadow-sky-500/25 transition-all transform active:scale-95 cursor-pointer shrink-0"
+                   title="{{ $telegramButtonText ?: 'Canal Oficial de Telegram' }}">
+                    
+                    <!-- Glow Sweep Animation -->
+                    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out pointer-events-none"></div>
+
+                    <!-- Telegram plane icon with animated radar ping -->
+                    <div class="relative flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                        </svg>
+                        <span class="absolute -top-1 -right-1 flex h-2 w-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                        </span>
+                    </div>
+
+                    <span>Telegram</span>
+                </a>
+                @endif
+
                 <!-- Big CTA Download Button in Retro Red -->
                 <a href="{{ route('game.download', $game->slug) }}"
-                   class="relative overflow-hidden group flex-1 sm:flex-initial px-6 sm:px-8 py-3 rounded-xl bg-[#CE2D2D] hover:bg-[#B71C1C] text-white border border-[#1E1E1E] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2.5 shadow-md shadow-red-500/25 transition-all transform active:scale-95 cursor-pointer">
+                   class="relative overflow-hidden group flex-1 sm:flex-initial px-6 sm:px-8 py-3 rounded-xl bg-[#CE2D2D] hover:bg-[#B71C1C] text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2.5 shadow-md shadow-red-500/25 transition-all transform active:scale-95 cursor-pointer">
                     
                     <i data-lucide="download" class="w-4 h-4 text-white stroke-[2.5] shrink-0"></i>
                     <span class="tracking-wider font-black text-white">DESCARGAR VIDEOJUEGO</span>
@@ -812,7 +791,7 @@ function gameDetailComponent() {
                             <a href="{{ $recommendedEmulator->download_url ?: $recommendedEmulator->website }}" 
                                target="_blank" 
                                rel="noopener" 
-                               class="flex-1 py-2 px-3 rounded-xl bg-[#18181B] hover:bg-[#CE2D2D] text-white text-xs font-mono font-bold text-center transition-colors flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
+                               class="flex-1 py-2 px-3 rounded-xl bg-[#CE2D2D] hover:bg-[#B71C1C] text-white text-xs font-mono font-bold text-center transition-colors flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
                                 <i data-lucide="download" class="w-3.5 h-3.5"></i>
                                 <span>Descargar {{ $recommendedEmulator->name }}</span>
                             </a>

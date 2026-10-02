@@ -119,7 +119,7 @@
                 </div>
             </div>
 
-            <a href="{{ route('game.show', $silver->slug) }}" class="mt-4 w-full py-2.5 rounded-xl bg-[#18181B] dark:bg-[#272730] hover:bg-[#CE2D2D] dark:hover:bg-[#CE2D2D] text-white text-xs font-mono font-bold text-center transition-colors flex items-center justify-center gap-1.5 shadow-sm">
+            <a href="{{ route('game.show', $silver->slug) }}" class="mt-4 w-full py-2.5 rounded-xl bg-[#CE2D2D] hover:bg-[#B71C1C] text-white text-xs font-mono font-bold text-center transition-colors flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
                 <span>Ver Ficha & ROM</span>
                 <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
             </a>
@@ -193,7 +193,7 @@
                 </div>
             </div>
 
-            <a href="{{ route('game.show', $bronze->slug) }}" class="mt-4 w-full py-2.5 rounded-xl bg-[#18181B] dark:bg-[#272730] hover:bg-[#CE2D2D] dark:hover:bg-[#CE2D2D] text-white text-xs font-mono font-bold text-center transition-colors flex items-center justify-center gap-1.5 shadow-sm">
+            <a href="{{ route('game.show', $bronze->slug) }}" class="mt-4 w-full py-2.5 rounded-xl bg-[#CE2D2D] hover:bg-[#B71C1C] text-white text-xs font-mono font-bold text-center transition-colors flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
                 <span>Ver Ficha & ROM</span>
                 <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
             </a>
@@ -255,7 +255,7 @@
                 <!-- Right: Download Action Button -->
                 <div class="shrink-0 flex items-center gap-2">
                     <a href="{{ route('game.show', $game->slug) }}" 
-                       class="px-3.5 py-1.5 rounded-xl bg-[#18181B] dark:bg-[#CE2D2D] hover:bg-[#CE2D2D] dark:hover:bg-[#B71C1C] text-white text-xs font-mono font-bold transition-all shadow-sm flex items-center gap-1.5 active:scale-95">
+                       class="px-3.5 py-1.5 rounded-xl bg-[#CE2D2D] hover:bg-[#B71C1C] text-white text-xs font-mono font-bold transition-all shadow-sm flex items-center gap-1.5 active:scale-95">
                         <i data-lucide="download" class="w-3.5 h-3.5"></i>
                         <span class="hidden sm:inline">Descargar</span>
                     </a>

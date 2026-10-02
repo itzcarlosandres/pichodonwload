@@ -7,7 +7,7 @@
      x-transition:leave="transition ease-in duration-100"
      x-transition:leave-start="opacity-100 translate-y-0 scale-100"
      x-transition:leave-end="opacity-0 translate-y-2 scale-98"
-     class="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-[#18181B] border-2 border-[#1E1E1E] dark:border-[#27272A] rounded-2xl shadow-[0_20px_45px_rgba(0,0,0,0.2)] overflow-hidden z-50 text-left">
+     class="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-[#18181B] border border-[#DDD6CB] dark:border-[#27272A] rounded-2xl shadow-[0_20px_45px_rgba(0,0,0,0.2)] overflow-hidden z-50 text-left">
     
     <!-- Top header banner in dropdown -->
     <div class="px-4 py-2.5 bg-[#FAF7F2] dark:bg-[#202025] border-b border-[#E5E0D8] dark:border-[#2E2E35] flex items-center justify-between text-xs font-mono">

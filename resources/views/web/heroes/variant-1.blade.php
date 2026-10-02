@@ -81,7 +81,7 @@
          @click.outside="close()"
          @keydown.escape.window="close()">
         
-        <form action="{{ route('search') }}" method="GET" class="p-1 sm:p-1.5 md:p-2 rounded-2xl bg-white dark:bg-[#18181B] border-2 border-[#1E1E1E] dark:border-[#2E2E38] shadow-[0_10px_28px_rgba(0,0,0,0.06)] dark:shadow-[0_10px_28px_rgba(0,0,0,0.4)] flex items-center gap-1.5 sm:gap-2 transition-all relative z-30 focus-within:ring-2 focus-within:ring-[#CE2D2D]/30 focus-within:border-[#CE2D2D]">
+        <form action="{{ route('search') }}" method="GET" class="p-1 sm:p-1.5 md:p-2 rounded-2xl bg-white dark:bg-[#18181B] border-2 border-[#DDD6CB] dark:border-[#2E2E38] shadow-[0_10px_28px_rgba(0,0,0,0.06)] dark:shadow-[0_10px_28px_rgba(0,0,0,0.4)] flex items-center gap-1.5 sm:gap-2 transition-all relative z-30 focus-within:ring-2 focus-within:ring-[#CE2D2D]/30 focus-within:border-[#CE2D2D]">
             
             <!-- Search Text Input -->
             <div class="relative flex-1 min-w-0 flex items-center pl-2.5 sm:pl-3">

@@ -82,7 +82,7 @@
              @click.outside="close()"
              @keydown.escape.window="close()">
 
-            <form action="{{ route('search') }}" method="GET" class="p-2 rounded-2xl bg-white dark:bg-[#121215] border-2 border-[#1E1E1E] dark:border-[#CE2D2D]/60 shadow-[0_0_25px_rgba(206,45,45,0.12)] flex items-center gap-2 relative z-30">
+            <form action="{{ route('search') }}" method="GET" class="p-2 rounded-2xl bg-white dark:bg-[#121215] border-2 border-[#DDD6CB] dark:border-[#CE2D2D]/60 shadow-[0_0_25px_rgba(206,45,45,0.12)] flex items-center gap-2 relative z-30">
                 <div class="relative flex-1 flex items-center pl-3">
                     <span class="text-[#CE2D2D] font-mono font-bold mr-2 text-sm select-none">&gt;_</span>
                     <input 

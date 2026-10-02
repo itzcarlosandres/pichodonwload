@@ -67,7 +67,7 @@
          @click.outside="close()"
          @keydown.escape.window="close()">
 
-        <form action="{{ route('search') }}" method="GET" class="p-1 sm:p-1.5 bg-white dark:bg-[#18181B] border-2 border-[#1E1E1E] dark:border-[#383842] shadow-[4px_4px_0px_#1E1E1E] dark:shadow-[4px_4px_0px_#CE2D2D] flex flex-col sm:flex-row items-stretch gap-1 relative z-30">
+        <form action="{{ route('search') }}" method="GET" class="p-1 sm:p-1.5 bg-white dark:bg-[#18181B] border-2 border-[#DDD6CB] dark:border-[#383842] shadow-[4px_4px_0px_#DDD6CB] dark:shadow-[4px_4px_0px_#CE2D2D] flex flex-col sm:flex-row items-stretch gap-1 relative z-30">
             
             <!-- Console Selector Dropdown Segment -->
             <div class="sm:w-48 bg-[#FAF7F2] dark:bg-[#202025] border-b sm:border-b-0 sm:border-r border-[#E5E0D8] dark:border-[#2E2E35] flex items-center px-3">
@@ -104,7 +104,7 @@
             </div>
 
             <!-- Swiss Monospace Action Button -->
-            <button type="submit" class="px-7 py-3 bg-[#1E1E1E] dark:bg-[#CE2D2D] hover:bg-[#CE2D2D] dark:hover:bg-[#B71C1C] text-white font-mono font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors shrink-0 cursor-pointer">
+            <button type="submit" class="px-7 py-3 bg-[#CE2D2D] hover:bg-[#B71C1C] text-white font-mono font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors shrink-0 cursor-pointer">
                 <span>EJECUTAR BÚSQUEDA</span>
                 <i data-lucide="corner-down-left" class="w-3.5 h-3.5"></i>
             </button>

@@ -32,10 +32,15 @@
 }
 
 body {
-    background-color: #0A0C0F;
-    color: #E5E7EB;
+    background-color: #F5EFE6;
+    color: #18181B;
     font-family: 'Plus Jakarta Sans', sans-serif;
     -webkit-font-smoothing: antialiased;
+}
+
+html.dark body {
+    background-color: #0F0F12;
+    color: #F4F4F5;
 }
 
 h1,
@@ -57,16 +62,28 @@ h2,
 }
 
 ::-webkit-scrollbar-track {
-    background: #0A0C0F;
+    background: #EDE7DE;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #232936;
+    background: #DDD6CB;
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #374151;
+    background: #CE2D2D;
+}
+
+html.dark ::-webkit-scrollbar-track {
+    background: #0F0F12;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+    background: #27272A;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+    background: #3F3F46;
 }
 
 .aspect-cover {
@@ -87,7 +104,7 @@ h2,
 .prose-game-content {
     font-size: 0.875rem;
     line-height: 1.8;
-    color: #CBD5E1;
+    color: #52525B;
 }
 
 .prose-game-content h1,
@@ -101,7 +118,7 @@ h2,
 
 .prose-game-content h1 {
     font-size: 1.4rem;
-    color: #FFFFFF;
+    color: #18181B;
     margin-top: 1.5rem;
     margin-bottom: 0.8rem;
     border-bottom: none !important;
@@ -110,7 +127,7 @@ h2,
 
 .prose-game-content h2 {
     font-size: 1.18rem;
-    color: #F8FAFC;
+    color: #18181B;
     margin-top: 1.8rem;
     margin-bottom: 0.75rem;
     border-bottom: none !important;
@@ -122,32 +139,32 @@ h2,
 
 .prose-game-content h3 {
     font-size: 1.02rem;
-    color: #38BDF8;
+    color: #CE2D2D;
     margin-top: 1.25rem;
     margin-bottom: 0.5rem;
 }
 
 .prose-game-content h4 {
     font-size: 0.92rem;
-    color: #A78BFA;
+    color: #71717A;
     margin-top: 1rem;
     margin-bottom: 0.4rem;
 }
 
 .prose-game-content p {
-    color: #CBD5E1;
+    color: #52525B;
     margin-bottom: 1rem;
     line-height: 1.8;
 }
 
 .prose-game-content ul,
 .prose-game-content ol {
-    background: #0A0C0F;
-    border: 1px solid #232936;
+    background: #FAF7F2;
+    border: 1px solid #DDD6CB;
     border-radius: 0.875rem;
     padding: 0.85rem 1.25rem 0.85rem 2.25rem;
     margin: 1rem 0 1.25rem 0;
-    color: #E2E8F0;
+    color: #3F3F46;
 }
 
 .prose-game-content ul {
@@ -161,7 +178,7 @@ h2,
 .prose-game-content li {
     margin-bottom: 0.45rem;
     line-height: 1.65;
-    color: #CBD5E1;
+    color: #52525B;
 }
 
 .prose-game-content li:last-child {
@@ -169,28 +186,28 @@ h2,
 }
 
 .prose-game-content strong {
-    color: #FFFFFF;
+    color: #18181B;
     font-weight: 700;
 }
 
 .prose-game-content em {
-    color: #94A3B8;
+    color: #71717A;
 }
 
 .prose-game-content blockquote {
-    background: #0A0C0F;
-    border-left: 3px solid #3B82F6;
+    background: #FAF7F2;
+    border-left: 3px solid #CE2D2D;
     border-radius: 0 0.75rem 0.75rem 0;
     padding: 0.85rem 1.25rem;
-    color: #94A3B8;
+    color: #71717A;
     font-style: italic;
     margin: 1.25rem 0;
 }
 
 .prose-game-content code {
-    background: #0A0C0F;
-    border: 1px solid #232936;
-    color: #38BDF8;
+    background: #EDE7DE;
+    border: 1px solid #DDD6CB;
+    color: #CE2D2D;
     padding: 0.15rem 0.45rem;
     border-radius: 0.375rem;
     font-family: 'JetBrains Mono', monospace;
@@ -199,4 +216,57 @@ h2,
 
 .prose-game-content hr {
     display: none !important;
+}
+
+/* Dark Theme Overrides for Prose */
+html.dark .prose-game-content {
+    color: #CBD5E1;
+}
+
+html.dark .prose-game-content h1,
+html.dark .prose-game-content h2 {
+    color: #F4F4F5;
+}
+
+html.dark .prose-game-content h3 {
+    color: #60A5FA;
+}
+
+html.dark .prose-game-content h4 {
+    color: #A78BFA;
+}
+
+html.dark .prose-game-content p {
+    color: #CBD5E1;
+}
+
+html.dark .prose-game-content strong {
+    color: #FFFFFF;
+}
+
+html.dark .prose-game-content em {
+    color: #94A3B8;
+}
+
+html.dark .prose-game-content ul,
+html.dark .prose-game-content ol {
+    background: #11141A;
+    border-color: #232936;
+    color: #E2E8F0;
+}
+
+html.dark .prose-game-content li {
+    color: #CBD5E1;
+}
+
+html.dark .prose-game-content blockquote {
+    background: #11141A;
+    border-left-color: #3B82F6;
+    color: #94A3B8;
+}
+
+html.dark .prose-game-content code {
+    background: #171B22;
+    border-color: #232936;
+    color: #F87171;
 }

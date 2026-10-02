@@ -332,7 +332,7 @@
                 @endphp
                 <div x-show="(emulatorPlatform === 'all' || '{{ $platformString }}'.includes(emulatorPlatform)) && 
                              (!emulatorSearch || '{{ strtolower($emu->name . ' ' . $emu->system . ' ' . $emu->description) }}'.includes(emulatorSearch.toLowerCase()))"
-                     class="bg-white dark:bg-[#18181B] border-2 border-[#1E1E1E] dark:border-[#27272A] hover:border-[#CE2D2D] dark:hover:border-[#CE2D2D] rounded-2xl p-5 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
+                     class="bg-white dark:bg-[#18181B] border border-[#DDD6CB] dark:border-[#27272A] hover:border-[#CE2D2D] dark:hover:border-[#CE2D2D] rounded-2xl p-5 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
                     
                     <div class="space-y-3.5">
                         <!-- Top Bar: Icon + System Badge -->
@@ -467,7 +467,7 @@
                              (biosCategory === 'nintendo' && ('{{ $systemLower }}'.includes('nintendo') || '{{ $systemLower }}'.includes('gamecube') || '{{ $systemLower }}'.includes('gba') || '{{ $systemLower }}'.includes('ds') || '{{ $systemLower }}'.includes('switch'))) || 
                              (biosCategory === 'sega' && ('{{ $systemLower }}'.includes('sega') || '{{ $systemLower }}'.includes('dreamcast') || '{{ $systemLower }}'.includes('saturn')))) && 
                              (!biosSearch || '{{ strtolower($bios->system . ' ' . $bios->files . ' ' . $bios->emulator . ' ' . $bios->description) }}'.includes(biosSearch.toLowerCase()))"
-                     class="bg-white dark:bg-[#18181B] border-2 border-[#1E1E1E] dark:border-[#27272A] hover:border-[#CE2D2D] dark:hover:border-[#CE2D2D] rounded-2xl p-5 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
+                     class="bg-white dark:bg-[#18181B] border border-[#DDD6CB] dark:border-[#27272A] hover:border-[#CE2D2D] dark:hover:border-[#CE2D2D] rounded-2xl p-5 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
                     
                     <div class="space-y-3.5">
                         <!-- Top Line -->

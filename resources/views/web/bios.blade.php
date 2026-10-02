@@ -213,28 +213,28 @@
         <!-- Emulator Selector Chips -->
         <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs font-mono">
             <button @click="activeGuideEmu = 'pcsx2'"
-                    :class="activeGuideEmu === 'pcsx2' ? 'bg-[#18181B] text-white' : 'bg-[#FAF7F2] text-gray-700 hover:bg-[#EDE7DE]'"
-                    class="px-3 py-1.5 rounded-xl border border-[#DDD6CB] font-bold transition-all shrink-0">
+                    :class="activeGuideEmu === 'pcsx2' ? 'bg-[#CE2D2D] text-white shadow-sm' : 'bg-[#FAF7F2] dark:bg-[#202025] text-gray-700 dark:text-gray-300 hover:bg-[#EDE7DE] dark:hover:bg-[#272730]'"
+                    class="px-3 py-1.5 rounded-xl border border-[#DDD6CB] dark:border-[#27272A] font-bold transition-all shrink-0">
                 PCSX2 (PS2)
             </button>
             <button @click="activeGuideEmu = 'duckstation'"
-                    :class="activeGuideEmu === 'duckstation' ? 'bg-[#18181B] text-white' : 'bg-[#FAF7F2] text-gray-700 hover:bg-[#EDE7DE]'"
-                    class="px-3 py-1.5 rounded-xl border border-[#DDD6CB] font-bold transition-all shrink-0">
+                    :class="activeGuideEmu === 'duckstation' ? 'bg-[#CE2D2D] text-white shadow-sm' : 'bg-[#FAF7F2] dark:bg-[#202025] text-gray-700 dark:text-gray-300 hover:bg-[#EDE7DE] dark:hover:bg-[#272730]'"
+                    class="px-3 py-1.5 rounded-xl border border-[#DDD6CB] dark:border-[#27272A] font-bold transition-all shrink-0">
                 DuckStation (PS1)
             </button>
             <button @click="activeGuideEmu = 'rpcs3'"
-                    :class="activeGuideEmu === 'rpcs3' ? 'bg-[#18181B] text-white' : 'bg-[#FAF7F2] text-gray-700 hover:bg-[#EDE7DE]'"
-                    class="px-3 py-1.5 rounded-xl border border-[#DDD6CB] font-bold transition-all shrink-0">
+                    :class="activeGuideEmu === 'rpcs3' ? 'bg-[#CE2D2D] text-white shadow-sm' : 'bg-[#FAF7F2] dark:bg-[#202025] text-gray-700 dark:text-gray-300 hover:bg-[#EDE7DE] dark:hover:bg-[#272730]'"
+                    class="px-3 py-1.5 rounded-xl border border-[#DDD6CB] dark:border-[#27272A] font-bold transition-all shrink-0">
                 RPCS3 (PS3)
             </button>
             <button @click="activeGuideEmu = 'flycast'"
-                    :class="activeGuideEmu === 'flycast' ? 'bg-[#18181B] text-white' : 'bg-[#FAF7F2] text-gray-700 hover:bg-[#EDE7DE]'"
-                    class="px-3 py-1.5 rounded-xl border border-[#DDD6CB] font-bold transition-all shrink-0">
+                    :class="activeGuideEmu === 'flycast' ? 'bg-[#CE2D2D] text-white shadow-sm' : 'bg-[#FAF7F2] dark:bg-[#202025] text-gray-700 dark:text-gray-300 hover:bg-[#EDE7DE] dark:hover:bg-[#272730]'"
+                    class="px-3 py-1.5 rounded-xl border border-[#DDD6CB] dark:border-[#27272A] font-bold transition-all shrink-0">
                 Flycast (Dreamcast)
             </button>
             <button @click="activeGuideEmu = 'retroarch'"
-                    :class="activeGuideEmu === 'retroarch' ? 'bg-[#18181B] text-white' : 'bg-[#FAF7F2] text-gray-700 hover:bg-[#EDE7DE]'"
-                    class="px-3 py-1.5 rounded-xl border border-[#DDD6CB] font-bold transition-all shrink-0">
+                    :class="activeGuideEmu === 'retroarch' ? 'bg-[#CE2D2D] text-white shadow-sm' : 'bg-[#FAF7F2] dark:bg-[#202025] text-gray-700 dark:text-gray-300 hover:bg-[#EDE7DE] dark:hover:bg-[#272730]'"
+                    class="px-3 py-1.5 rounded-xl border border-[#DDD6CB] dark:border-[#27272A] font-bold transition-all shrink-0">
                 RetroArch (Todos)
             </button>
         </div>

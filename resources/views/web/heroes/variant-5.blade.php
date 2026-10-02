@@ -123,7 +123,7 @@
          @click.outside="close()"
          @keydown.escape.window="close()">
 
-        <form action="{{ route('search') }}" method="GET" class="p-2 rounded-2xl bg-white dark:bg-[#18181B] border-2 border-[#1E1E1E] dark:border-[#2E2E38] shadow-[0_15px_35px_rgba(0,0,0,0.08)] dark:shadow-[0_15px_35px_rgba(0,0,0,0.5)] flex flex-col sm:flex-row items-center gap-2 relative z-30 focus-within:ring-2 focus-within:ring-[#CE2D2D]/30 focus-within:border-[#CE2D2D]">
+        <form action="{{ route('search') }}" method="GET" class="p-2 rounded-2xl bg-white dark:bg-[#18181B] border-2 border-[#DDD6CB] dark:border-[#2E2E38] shadow-[0_15px_35px_rgba(0,0,0,0.08)] dark:shadow-[0_15px_35px_rgba(0,0,0,0.5)] flex flex-col sm:flex-row items-center gap-2 relative z-30 focus-within:ring-2 focus-within:ring-[#CE2D2D]/30 focus-within:border-[#CE2D2D]">
             
             <div class="relative flex-1 w-full flex items-center pl-3">
                 <i data-lucide="search" class="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0"></i>
