@@ -477,6 +477,14 @@
             <!-- Center: Navigation Pill Capsule -->
             <nav class="nav-capsule hidden md:flex items-center gap-1 bg-[#EDE7DE] border border-[#DDD6CB] rounded-xl p-1 shadow-inner shrink-0"
                  x-data="{ genreOpen: false }">
+                <!-- 0. Biblioteca (Antes de HOME) -->
+                @php $isLibrary = request()->routeIs('library.*') || request()->routeIs('emulators*') || request()->routeIs('bios*'); @endphp
+                <a href="{{ route('library.index') }}" 
+                   class="px-3.5 py-1.5 rounded-lg flex items-center gap-2 text-xs font-semibold transition-all {{ $isLibrary ? 'nav-item-active' : 'nav-item-inactive' }}">
+                    <i data-lucide="library" class="w-4 h-4 {{ $isLibrary ? 'text-[#CE2D2D]' : 'text-gray-500' }}"></i>
+                    <span>Biblioteca</span>
+                </a>
+
                 <!-- 1. HOME -->
                 @php $isHome = request()->routeIs('home') && !request('category'); @endphp
                 <a href="{{ route('home') }}" 
@@ -572,22 +580,6 @@
                     <i data-lucide="sparkles" class="w-4 h-4 {{ $isCollections ? 'text-[#CE2D2D]' : 'text-gray-500' }}"></i>
                     <span>Sagas</span>
                 </a>
-
-                <!-- 6. Emuladores -->
-                @php $isEmulators = request()->routeIs('emulators*'); @endphp
-                <a href="{{ route('emulators') }}" 
-                   class="px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 text-xs font-semibold transition-all {{ $isEmulators ? 'nav-item-active' : 'nav-item-inactive' }}">
-                    <i data-lucide="cpu" class="w-4 h-4 {{ $isEmulators ? 'text-[#CE2D2D]' : 'text-gray-500' }}"></i>
-                    <span>Emuladores</span>
-                </a>
-
-                <!-- 7. BIOS -->
-                @php $isBios = request()->routeIs('bios*'); @endphp
-                <a href="{{ route('bios') }}" 
-                   class="px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 text-xs font-semibold transition-all {{ $isBios ? 'nav-item-active' : 'nav-item-inactive' }}">
-                    <i data-lucide="binary" class="w-4 h-4 {{ $isBios ? 'text-[#CE2D2D]' : 'text-gray-500' }}"></i>
-                    <span>BIOS</span>
-                </a>
             </nav>
 
             <!-- Right Section: Novedades CTA, Theme Switcher & Mobile Controls -->
@@ -676,6 +668,12 @@
                     </span>
                     <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[#EDE7DE] dark:bg-[#272730] border border-[#DDD6CB] dark:border-[#3F3F46]" x-text="isDark ? 'Dark Vault 🌙' : 'Retro Cream ☀️'"></span>
                 </button>
+                <!-- 0. Biblioteca (Antes de HOME) -->
+                @php $isMobileLibrary = request()->routeIs('library.*') || request()->routeIs('emulators*') || request()->routeIs('bios*'); @endphp
+                <a href="{{ route('library.index') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold {{ $isMobileLibrary ? 'bg-[#FDF2F2] dark:bg-[#2B1616] text-[#CE2D2D] font-bold' : 'text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white hover:bg-[#FAF7F2] dark:hover:bg-[#202025]' }}">
+                    <i data-lucide="library" class="w-4 h-4 text-[#CE2D2D]"></i> Biblioteca
+                </a>
+
                 <!-- 1. HOME -->
                 <a href="{{ route('home') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold {{ request()->routeIs('home') && !request('category') ? 'bg-[#FDF2F2] dark:bg-[#2B1616] text-[#CE2D2D] font-bold' : 'text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white hover:bg-[#FAF7F2] dark:hover:bg-[#202025]' }}">
                     <i data-lucide="home" class="w-4 h-4 text-[#CE2D2D]"></i> HOME
@@ -732,16 +730,6 @@
                 <!-- 5. Sagas / Colecciones -->
                 <a href="{{ route('collections.index') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold {{ request()->routeIs('collections.*') ? 'bg-[#FDF2F2] dark:bg-[#2B1616] text-[#CE2D2D] font-bold' : 'text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white hover:bg-[#FAF7F2] dark:hover:bg-[#202025]' }}">
                     <i data-lucide="sparkles" class="w-4 h-4 text-[#CE2D2D]"></i> Sagas & Colecciones
-                </a>
-
-                <!-- 6. Emuladores Oficiales -->
-                <a href="{{ route('emulators') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold {{ request()->routeIs('emulators') ? 'bg-[#FDF2F2] dark:bg-[#2B1616] text-[#CE2D2D] font-bold' : 'text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white hover:bg-[#FAF7F2] dark:hover:bg-[#202025]' }}">
-                    <i data-lucide="cpu" class="w-4 h-4 text-[#CE2D2D]"></i> Emuladores Recomendados
-                </a>
-
-                <!-- 7. BIOS & Firmwares -->
-                <a href="{{ route('bios') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold {{ request()->routeIs('bios') ? 'bg-[#FDF2F2] dark:bg-[#2B1616] text-[#CE2D2D] font-bold' : 'text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white hover:bg-[#FAF7F2] dark:hover:bg-[#202025]' }}">
-                    <i data-lucide="binary" class="w-4 h-4 text-[#CE2D2D]"></i> BIOS & Firmware
                 </a>
             </div>
 

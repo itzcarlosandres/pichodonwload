@@ -562,6 +562,47 @@
                     </div>
                 </div>
             </div>
+
+            <!-- 8. CANAL OFICIAL DE TELEGRAM & COMUNIDAD -->
+            <div class="bg-[#11141A] border border-[#232936] rounded-2xl p-6 sm:p-8 space-y-6 shadow-xl">
+                <div class="border-b border-[#232936] pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                        <h2 class="text-base font-bold text-white font-sans flex items-center gap-2">
+                            <i data-lucide="send" class="w-5 h-5 text-sky-400"></i> Comunidad & Canal Oficial de Telegram
+                        </h2>
+                        <p class="text-xs text-gray-400 font-sans mt-0.5">Configura el enlace de Telegram que aparecerá animado en la ficha de cada videojuego sobre el botón de descarga.</p>
+                    </div>
+                    <span class="text-[11px] font-mono text-sky-400 bg-sky-950/40 border border-sky-500/30 px-2.5 py-1 rounded-full w-fit flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+                        Telegram Integration
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 font-mono text-xs">
+                    <div>
+                        <label class="block text-gray-300 mb-1 font-bold">Enlace o Usuario del Canal / Grupo de Telegram</label>
+                        <div class="relative">
+                            <i data-lucide="send" class="w-4 h-4 text-sky-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                            <input type="text" 
+                                   name="telegram_channel_url" 
+                                   value="{{ $settings['telegram_channel_url'] ?? '' }}" 
+                                   placeholder="https://t.me/mi_canal_roms o @mi_canal_roms" 
+                                   class="w-full bg-[#0A0C0F] border border-[#232936] rounded-lg pl-9 pr-3 py-2.5 text-white font-sans focus:border-sky-500">
+                        </div>
+                        <span class="text-[10px] text-gray-500 font-sans mt-1 block">Ingresa el enlace oficial (ej: <code>https://t.me/tu_canal</code>) o tu usuario con <code>@tu_canal</code>.</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-300 mb-1 font-bold">Texto / Llamado a la Acción en el Botón</label>
+                        <input type="text" 
+                               name="telegram_button_text" 
+                               value="{{ $settings['telegram_button_text'] ?? '¿Problemas con la descarga? Únete a nuestro Canal de Telegram' }}" 
+                               placeholder="¿Problemas con la descarga? Únete a nuestro Canal de Telegram" 
+                               class="w-full bg-[#0A0C0F] border border-[#232936] rounded-lg p-2.5 text-white font-sans focus:border-sky-500">
+                        <span class="text-[10px] text-gray-500 font-sans mt-1 block">Texto visible en el botón animado que invita al usuario a unirse al canal.</span>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- TAB 2: Global SEO & Meta -->

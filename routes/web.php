@@ -1,15 +1,16 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Web\HomeController;
-use App\Http\Controllers\Web\GameController;
-use App\Http\Controllers\Web\ConsoleController;
-use App\Http\Controllers\Web\SearchController;
-use App\Http\Controllers\Web\ProfileController;
-use App\Http\Controllers\Web\DownloadController;
 use App\Http\Controllers\Web\AuthController;
+use App\Http\Controllers\Web\ConsoleController;
+use App\Http\Controllers\Web\DownloadController;
+use App\Http\Controllers\Web\GameController;
+use App\Http\Controllers\Web\HomeController;
+use App\Http\Controllers\Web\LibraryController;
 use App\Http\Controllers\Web\PageController;
+use App\Http\Controllers\Web\ProfileController;
+use App\Http\Controllers\Web\SearchController;
 use App\Http\Controllers\Web\SitemapController;
+use Illuminate\Support\Facades\Route;
 
 // 0. SEO: Dynamic Sitemaps & Robots.txt
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.index');
@@ -35,6 +36,9 @@ Route::get('/download/{slug}/go', [DownloadController::class, 'go'])->name('down
 
 Route::get('/consoles', [ConsoleController::class, 'index'])->name('consoles.index');
 Route::get('/consoles/{slug}', [ConsoleController::class, 'show'])->name('consoles.show');
+
+// Biblioteca Centralizada: ROMs Recientes, Emuladores y BIOS
+Route::get('/biblioteca', [LibraryController::class, 'index'])->name('library.index');
 
 // Bios, Emuladores & Sagas / Colecciones
 Route::get('/bios', [PageController::class, 'bios'])->name('bios');
@@ -65,4 +69,3 @@ Route::get('/register', [AuthController::class, 'showRegister'])->name('register
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:6,1')->name('register.submit');
 Route::post('/register/post', [AuthController::class, 'register'])->middleware('throttle:6,1')->name('register.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
