@@ -45,6 +45,7 @@ class Game extends Model
         'telegram_sent_at',
         'is_spotlight',
         'is_featured',
+        'created_at',
     ];
 
     protected $casts = [
