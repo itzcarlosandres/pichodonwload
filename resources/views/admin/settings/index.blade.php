@@ -1255,7 +1255,7 @@
 <script>
 function settingsForm() {
     return {
-        activeTab: 'general',
+        activeTab: (new URLSearchParams(window.location.search).get('tab')) || 'general',
         testingStorage: false,
         testResult: null,
         testingGemini: false,

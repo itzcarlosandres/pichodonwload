@@ -161,11 +161,24 @@
 
         <!-- Configuración Global -->
         <a href="{{ route('admin.settings.index') }}" 
-           class="w-full px-3 py-2 rounded-xl flex items-center justify-between transition-all {{ request()->routeIs('admin.settings.*') ? 'bg-blue-600/15 text-blue-400 border border-blue-500/30 font-semibold shadow-sm shadow-blue-500/10' : 'text-gray-400 hover:bg-[#171B22] hover:text-white border border-transparent' }}">
+           class="w-full px-3 py-2 rounded-xl flex items-center justify-between transition-all {{ request()->routeIs('admin.settings.*') && request('tab') !== 'ads' ? 'bg-blue-600/15 text-blue-400 border border-blue-500/30 font-semibold shadow-sm shadow-blue-500/10' : 'text-gray-400 hover:bg-[#171B22] hover:text-white border border-transparent' }}">
             <span class="flex items-center gap-2.5">
                 <i data-lucide="settings" class="w-4 h-4"></i> Configuración Global
             </span>
             <span class="text-[10px] font-mono text-purple-400 bg-purple-950/40 border border-purple-500/30 px-1.5 py-0.5 rounded font-bold">Gemini IA</span>
+        </a>
+
+        <!-- Publicidad & Monetización -->
+        <a href="{{ route('admin.settings.index') }}?tab=ads" 
+           class="w-full px-3 py-2 rounded-xl flex items-center justify-between transition-all {{ request()->routeIs('admin.settings.*') && request('tab') === 'ads' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30 font-semibold shadow-sm shadow-amber-500/10' : 'text-gray-400 hover:bg-[#171B22] hover:text-white border border-transparent' }}">
+            <span class="flex items-center gap-2.5">
+                <i data-lucide="megaphone" class="w-4 h-4 text-amber-400"></i> Publicidad & Ads
+            </span>
+            @if((\App\Models\Setting::get('ads_enabled', '0')) === '1')
+                <span class="text-[10px] font-mono text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 px-1.5 py-0.5 rounded font-bold">Activo</span>
+            @else
+                <span class="text-[10px] font-mono text-gray-400 bg-[#0A0C0F] px-1.5 py-0.5 rounded border border-[#232936]">Pausado</span>
+            @endif
         </a>
 
         <!-- Mi Cuenta & Seguridad -->
