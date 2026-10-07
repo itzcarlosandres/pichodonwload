@@ -1,6 +1,7 @@
 @extends('layouts.web')
 
 @section('title', \App\Models\Setting::get('seo_meta_title', \App\Models\Setting::get('site_name', 'ROMHUB') . ' — Retro ROMs & Emulators for Every Classic Console'))
+@section('canonical', url('/'))
 
 @section('content')
 <main class="{{ \App\Models\Setting::get('container_max_width', 'max-w-[1200px]') }} mx-auto px-4 lg:px-6 py-8 space-y-14">

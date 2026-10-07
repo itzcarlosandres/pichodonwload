@@ -2,6 +2,10 @@
 
 @section('title', 'Top 25 Videojuegos Más Jugados' . ($activeConsole ? ' de ' . $activeConsole->name : '') . ' | ' . \App\Models\Setting::get('site_name', 'ROMHUB'))
 @section('meta_description', 'Descubre el ranking de los 25 mejores videojuegos retro y clásicos preservados con mayor puntuación y descargas de la comunidad.')
+@section('canonical', route('rankings'))
+@if(request()->filled('console') || request()->filled('genre'))
+@section('meta_robots', 'noindex, follow')
+@endif
 
 @section('content')
 <main class="{{ \App\Models\Setting::get('container_max_width', 'max-w-[1200px]') }} mx-auto px-4 lg:px-6 py-6 space-y-8">

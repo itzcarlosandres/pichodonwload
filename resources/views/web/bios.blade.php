@@ -2,6 +2,7 @@
 
 @section('title', 'Bóveda Oficial de BIOS & Firmwares para Emuladores — ' . \App\Models\Setting::get('site_name', 'ROMHUB'))
 @section('meta_description', 'Descarga directa de los 38 packs de BIOS oficiales y verificados (No-Intro & Redump) para PlayStation, Nintendo, Sega, Xbox y Arcade. Sin publicidad y a máxima velocidad desde nuestro Servidor Privado Vault CDN.')
+@section('canonical', route('bios'))
 
 @section('content')
 <main class="{{ \App\Models\Setting::get('container_max_width', 'max-w-[1200px]') }} mx-auto px-4 lg:px-6 py-8 space-y-8"

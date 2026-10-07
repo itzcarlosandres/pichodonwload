@@ -30,7 +30,9 @@ Route::post('/contacto', [PageController::class, 'submitContact'])->middleware('
 Route::get('/game/{slug}', [GameController::class, 'show'])->name('game.show');
 Route::post('/game/{game}/review', [GameController::class, 'submitReview'])->middleware('throttle:10,1')->name('game.review');
 Route::get('/game/{slug}/download', [DownloadController::class, 'show'])->name('game.download');
-Route::get('/download/{slug}', [DownloadController::class, 'show'])->name('download.file');
+Route::get('/download/{slug}', function (string $slug) {
+    return redirect()->route('game.download', ['slug' => $slug], 301);
+})->name('download.file');
 Route::post('/download/{slug}/track', [DownloadController::class, 'track'])->name('download.track');
 Route::post('/download/{slug}/resolve', [DownloadController::class, 'resolve'])->middleware('throttle:30,1')->name('download.resolve');
 Route::get('/download/{slug}/go', [DownloadController::class, 'go'])->name('download.go');
@@ -43,21 +45,23 @@ Route::get('/biblioteca', [LibraryController::class, 'index'])->name('library.in
 
 // Bios, Emuladores & Sagas / Colecciones
 Route::get('/bios', [PageController::class, 'bios'])->name('bios');
-Route::get('/bios/hub', [PageController::class, 'bios'])->name('bios.index');
+Route::redirect('/bios/hub', '/bios', 301)->name('bios.index');
 Route::get('/vault/download/bios/{id}/{slug?}', [PageController::class, 'downloadBios'])->middleware('throttle:30,1')->name('bios.download');
 Route::get('/emuladores', [PageController::class, 'emulators'])->name('emulators');
 
-Route::get('/emuladores/hub', [PageController::class, 'emulators'])->name('emulators.index');
+Route::redirect('/emuladores/hub', '/emuladores', 301)->name('emulators.index');
 Route::get('/colecciones', [PageController::class, 'collections'])->name('collections.index');
 Route::get('/colecciones/{slug}', [PageController::class, 'collectionDetail'])->name('collections.show');
 
 Route::get('/rankings', [PageController::class, 'rankings'])->name('rankings');
-Route::get('/top-25', [PageController::class, 'rankings'])->name('rankings.index');
+Route::redirect('/top-25', '/rankings', 301)->name('rankings.index');
 
 Route::get('/search', [SearchController::class, 'index'])->name('search');
 Route::get('/search/live', [SearchController::class, 'live'])->middleware('throttle:60,1')->name('search.live');
 Route::get('/categoria/{slug}', [SearchController::class, 'category'])->name('category.show');
-Route::get('/genero/{slug}', [SearchController::class, 'category'])->name('genre.show');
+Route::get('/genero/{slug}', function (string $slug) {
+    return redirect()->route('category.show', ['slug' => $slug], 301);
+})->name('genre.show');
 
 // Peticiones de Juegos de la Comunidad ("Solicitar ROM")
 Route::get('/peticiones', [GameRequestController::class, 'index'])->name('requests.index');

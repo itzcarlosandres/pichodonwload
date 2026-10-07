@@ -2,6 +2,14 @@
 
 @section('title', 'Explorador & Búsqueda Avanzada de Videojuegos — ' . \App\Models\Setting::get('site_name', 'ROMHUB'))
 @section('meta_description', 'Explora, filtra y descarga títulos organizados por 20 consolas, géneros, regiones y tamaños verificados.')
+@if(isset($activeCategory))
+@section('canonical', route('category.show', $activeCategory->slug))
+@else
+@section('canonical', route('search'))
+@endif
+@if(request()->filled('q') || request()->filled('sort') || request()->filled('region') || request()->filled('letter') || request()->has('page'))
+@section('meta_robots', 'noindex, follow')
+@endif
 
 @section('content')
 <main class="{{ \App\Models\Setting::get('container_max_width', 'max-w-[1200px]') }} mx-auto px-4 lg:px-6 py-8 space-y-8"

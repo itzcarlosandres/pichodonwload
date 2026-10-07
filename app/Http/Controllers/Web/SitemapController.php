@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Models\Game;
-use App\Models\Console;
 use App\Models\Category;
+use App\Models\Console;
 use App\Models\Franchise;
+use App\Models\Game;
 use App\Models\Setting;
 use Illuminate\Http\Response;
 
@@ -73,7 +73,7 @@ class SitemapController extends Controller
      */
     public function consoles(): Response
     {
-        $consoles = Console::withCount(['games' => fn($q) => $q->where('status', 'PUBLISHED')])
+        $consoles = Console::withCount(['games' => fn ($q) => $q->where('status', 'PUBLISHED')])
             ->orderBy('name')
             ->get();
 
@@ -89,7 +89,7 @@ class SitemapController extends Controller
      */
     public function genres(): Response
     {
-        $categories = Category::whereHas('games', fn($q) => $q->where('status', 'PUBLISHED'))
+        $categories = Category::whereHas('games', fn ($q) => $q->where('status', 'PUBLISHED'))
             ->orderBy('name')
             ->get();
 
@@ -105,7 +105,7 @@ class SitemapController extends Controller
      */
     public function collections(): Response
     {
-        $franchises = Franchise::withCount(['games' => fn($q) => $q->where('status', 'PUBLISHED')])
+        $franchises = Franchise::withCount(['games' => fn ($q) => $q->where('status', 'PUBLISHED')])
             ->where('is_active', true)
             ->orderBy('name')
             ->get();
@@ -197,14 +197,16 @@ class SitemapController extends Controller
         } else {
             $sitemapUrl = url('/sitemap.xml');
             $content = "User-agent: *\n"
-                . "Allow: /\n"
-                . "Disallow: /admin/\n"
-                . "Disallow: /login\n"
-                . "Disallow: /register\n"
-                . "Disallow: /download/*/track\n"
-                . "Disallow: /search/live\n"
-                . "Disallow: /favorites/\n\n"
-                . "Sitemap: {$sitemapUrl}\n";
+                ."Allow: /\n"
+                ."Disallow: /admin/\n"
+                ."Disallow: /login\n"
+                ."Disallow: /register\n"
+                ."Disallow: /download/*/track\n"
+                ."Disallow: /download/*/resolve\n"
+                ."Disallow: /download/*/go\n"
+                ."Disallow: /search/live\n"
+                ."Disallow: /favorites/\n\n"
+                ."Sitemap: {$sitemapUrl}\n";
         }
 
         return response($content, 200, [

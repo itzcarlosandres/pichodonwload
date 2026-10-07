@@ -2,6 +2,10 @@
 
 @section('title', "Catálogo de ROMs e ISOs para {$console->name} — " . \App\Models\Setting::get('site_name', 'ROMHUB'))
 @section('meta_description', "Descarga y explora juegos para {$console->name}. Todos los títulos verificados con hashes SHA-256 y CRC32.")
+@section('canonical', route('consoles.show', $console->slug))
+@if(request()->has('page') || request()->filled('genre') || request()->filled('region') || request()->filled('letter'))
+@section('meta_robots', 'noindex, follow')
+@endif
 
 @section('content')
 <main class="{{ \App\Models\Setting::get('container_max_width', 'max-w-[1200px]') }} mx-auto px-4 lg:px-6 py-6 space-y-8">

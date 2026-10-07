@@ -2,6 +2,7 @@
 
 @section('title', "Colección {$franchise->name} — Descargar ROMs y Videojuegos | " . \App\Models\Setting::get('site_name', 'ROMHUB'))
 @section('meta_description', "Descarga todos los títulos de la saga {$franchise->name} para PlayStation, Nintendo, Sega y Xbox con volcados limpios verificados.")
+@section('canonical', route('collections.show', $franchise->slug))
 
 @section('content')
 <main class="{{ \App\Models\Setting::get('container_max_width', 'max-w-[1200px]') }} mx-auto px-4 lg:px-6 py-8 space-y-8">

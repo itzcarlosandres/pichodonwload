@@ -2,6 +2,7 @@
 
 @section('title', 'Directorio de Emuladores Oficiales para PC, Android & Steam Deck — ' . \App\Models\Setting::get('site_name', 'ROMHUB'))
 @section('meta_description', 'Descarga los mejores emuladores oficiales y optimizados para PlayStation 2, PS1, GameCube, Wii, PSP, PS3, 3DS, Switch y RetroArch. Enlaces directos desde nuestro Servidor Privado Vault CDN y repositorios oficiales.')
+@section('canonical', route('emulators'))
 
 @section('content')
 <main class="{{ \App\Models\Setting::get('container_max_width', 'max-w-[1200px]') }} mx-auto px-4 lg:px-6 py-8 space-y-8"

@@ -1,5 +1,8 @@
 @extends('layouts.web', ['title' => "Descargar {$game->title} para {$game->console->name} ({$game->formatted_size}) | ROMHUB"])
 
+@section('canonical', route('game.show', $game->slug))
+@section('meta_robots', 'noindex, follow')
+
 @section('content')
 <div class="{{ \App\Models\Setting::get('container_max_width', 'max-w-[1200px]') }} mx-auto px-4 lg:px-6 py-4 space-y-8" x-data="{
     countdown: 3,

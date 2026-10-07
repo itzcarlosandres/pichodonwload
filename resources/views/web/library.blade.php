@@ -2,6 +2,7 @@
 
 @section('title', 'Biblioteca de Videojuegos, Emuladores y BIOS — ' . \App\Models\Setting::get('site_name', 'ROMHUB'))
 @section('meta_description', 'Explora la biblioteca unificada de ROMHUB: todos los videojuegos retro recientes ordenados por fecha, emuladores oficiales estables y archivos BIOS originales verificados.')
+@section('canonical', route('library.index'))
 
 @section('content')
 <main class="{{ \App\Models\Setting::get('container_max_width', 'max-w-[1200px]') }} mx-auto px-4 lg:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8"

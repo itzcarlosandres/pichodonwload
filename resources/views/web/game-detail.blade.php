@@ -2,6 +2,7 @@
 
 @section('title', ($game->meta_title ?: $game->title) . ' — Preservación Digital & Ficha Técnica')
 @section('meta_description', $game->meta_description ?: Str::limit(strip_tags($game->description), 160))
+@section('canonical', route('game.show', $game->slug))
 @section('og_image', $game->banner_url ?: $game->cover_url)
 
 @push('schema')

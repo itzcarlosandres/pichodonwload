@@ -2,6 +2,7 @@
 
 @section('title', 'Directorio de 20 Consolas y Ecosistemas de Videojuegos — ' . \App\Models\Setting::get('site_name', 'ROMHUB'))
 @section('meta_description', 'Explora las 20 consolas de emulación preservadas: PlayStation, Nintendo Switch, GameCube, Xbox 360, Dreamcast y más.')
+@section('canonical', route('consoles.index'))
 
 @section('content')
 <main class="{{ \App\Models\Setting::get('container_max_width', 'max-w-[1200px]') }} mx-auto px-4 lg:px-6 py-8 space-y-8" 

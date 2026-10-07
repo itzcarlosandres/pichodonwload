@@ -2,6 +2,7 @@
 
 @section('title', 'Sagas y Colecciones Legendarias de Videojuegos Retro — ' . \App\Models\Setting::get('site_name', 'ROMHUB'))
 @section('meta_description', 'Descarga colecciones completas de sagas míticas: Pokémon, The Legend of Zelda, Super Mario, GTA, Resident Evil, Dragon Ball Z y más.')
+@section('canonical', route('collections.index'))
 
 @section('content')
 <main class="{{ \App\Models\Setting::get('container_max_width', 'max-w-[1200px]') }} mx-auto px-4 lg:px-6 py-8 space-y-8">
