@@ -412,9 +412,14 @@
         }
     </style>
 
-    {{-- Inyección de Código Personalizado en <head> (Google Analytics, GTM, Meta Pixel, AdSense, etc.) --}}
+    {{-- Inyección de Código Personalizado en <head> (Google Analytics, GTM, Meta Pixel, etc.) --}}
     @if(!empty(\App\Models\Setting::get('custom_head_code')))
     {!! \App\Models\Setting::get('custom_head_code') !!}
+    @endif
+
+    {{-- Script Global de Publicidad & Monetización (Google AdSense, Tags Automáticos) --}}
+    @if(\App\Models\Setting::get('ads_enabled', '0') === '1' && !empty(\App\Models\Setting::get('ads_global_header')))
+    {!! \App\Models\Setting::get('ads_global_header') !!}
     @endif
 </head>
 @php

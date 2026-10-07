@@ -63,6 +63,8 @@ class AdminSettingController extends Controller
                 $group = 'telegram';
             } elseif (str_starts_with($key, 'custom_')) {
                 $group = 'custom_code';
+            } elseif (str_starts_with($key, 'ad_') || str_starts_with($key, 'ads_')) {
+                $group = 'ads';
             }
 
             Setting::set($key, $value ?? '', $group);

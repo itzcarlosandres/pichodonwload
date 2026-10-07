@@ -229,6 +229,9 @@
                         </div>
                     </template>
 
+                    <!-- Espacio Publicitario Estratégico: Debajo del Botón de Descarga -->
+                    <x-ad-slot position="download" title="Publicidad Patrocinada" />
+
                 </div>
 
             </div>

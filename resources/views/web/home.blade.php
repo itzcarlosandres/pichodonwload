@@ -9,6 +9,8 @@
     <!-- 1. HERO SECTION (Split Hardware Showcase) -->
     @include('web.heroes.variant-2')
 
+    <!-- Espacio Publicitario en Portada (Home) -->
+    <x-ad-slot position="home" title="Anuncio Patrocinado" />
 
     <!-- 2. CONSOLES SECTION (Horizontal Smooth Slider with Autoplay, Mouse Drag & Mobile Optimization) -->
     <section class="space-y-3 sm:space-y-4" x-data="{

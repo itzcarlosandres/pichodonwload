@@ -65,6 +65,17 @@
             <svg class="w-4 h-4 text-sky-400 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.946z"/></svg>
             <span>Bot de Telegram</span>
         </button>
+
+        <!-- Tab 7: Publicidad & Monetización -->
+        <button type="button" @click="activeTab = 'ads'" 
+                :class="activeTab === 'ads' ? 'border-amber-500 text-amber-400 bg-[#11141A]' : 'border-transparent text-gray-400 hover:text-white'"
+                class="px-5 py-3 border-b-2 font-bold uppercase tracking-wider transition-colors rounded-t-xl flex items-center gap-2 cursor-pointer">
+            <i data-lucide="megaphone" class="w-4 h-4 text-amber-400"></i>
+            <span>Publicidad & Ads</span>
+            @if(($settings['ads_enabled'] ?? '0') === '1')
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-1" title="Sistema Activo"></span>
+            @endif
+        </button>
     </div>
 
     <!-- Main Settings Form -->
@@ -1071,6 +1082,160 @@
                             <span class="px-2 py-0.5 rounded bg-sky-950/60 border border-sky-500/30 text-sky-300 font-mono">{url}</span>
                         </div>
                     </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- TAB 7: Publicidad & Monetización (Ads) -->
+        <div x-show="activeTab === 'ads'" class="space-y-6">
+
+            <!-- Card 1: Master Control & Head Script -->
+            <div class="bg-[#11141A] border border-[#232936] rounded-2xl p-6 shadow-xl space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#232936] pb-4">
+                    <div>
+                        <h3 class="text-sm font-mono font-bold uppercase text-white tracking-wider flex items-center gap-2">
+                            <i data-lucide="power" class="w-4 h-4 text-amber-400"></i> Interruptor Maestro de Publicidad
+                        </h3>
+                        <p class="text-xs text-gray-400 font-sans mt-0.5">Controla la activación global de anuncios. Si está apagado, ningún anuncio se mostrará en el portal.</p>
+                    </div>
+
+                    <!-- Master Switch -->
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="hidden" name="ads_enabled" value="0">
+                        <input type="checkbox" name="ads_enabled" value="1" {{ ($settings['ads_enabled'] ?? '0') === '1' ? 'checked' : '' }} class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                        <span class="ml-3 text-xs font-mono font-bold text-gray-300">Publicidad Activa</span>
+                    </label>
+                </div>
+
+                <!-- Global Head Script -->
+                <div class="space-y-2">
+                    <label class="block font-bold text-gray-200 text-xs flex items-center justify-between">
+                        <span class="flex items-center gap-2">
+                            <i data-lucide="code" class="w-3.5 h-3.5 text-amber-400"></i> Script Global en &lt;head&gt; (Google AdSense / Redes Publicitarias)
+                        </span>
+                        <span class="text-[10px] text-gray-500 font-sans font-normal">Se inserta automáticamente en la cabecera de todas las páginas</span>
+                    </label>
+                    <textarea name="ads_global_header" 
+                              rows="3" 
+                              placeholder='<!-- Ejemplo: &lt;script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"&gt;&lt;/script&gt; -->'
+                              class="w-full bg-[#0A0C0F] border border-[#232936] rounded-xl p-3 text-xs text-amber-200 font-mono focus:border-amber-500 leading-relaxed">{{ $settings['ads_global_header'] ?? '' }}</textarea>
+                    <p class="text-[10px] text-gray-500 font-sans">Pega aquí el script principal o etiqueta de verificación de Google AdSense u otras redes publicitarias.</p>
+                </div>
+            </div>
+
+            <!-- Card 2: Slot 1 - Página de Descarga (Debajo del Botón) -->
+            <div class="bg-[#11141A] border border-[#232936] rounded-2xl p-6 shadow-xl space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#232936] pb-3">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono font-black text-xs flex items-center justify-center">1</span>
+                            <h3 class="text-xs font-mono font-bold uppercase text-white tracking-wider">Publicidad en Botón de Descarga</h3>
+                            <span class="px-2 py-0.5 rounded-full bg-red-950/50 text-red-400 border border-red-500/30 text-[10px] font-mono font-bold">Máximo CTR</span>
+                        </div>
+                        <p class="text-[11px] text-gray-400 font-sans">Se ubica en la pantalla de descarga (<code>web.download</code>), exactamente debajo de la lista de servidores y del botón "Descargar Ahora".</p>
+                    </div>
+
+                    <!-- Slot 1 Switch -->
+                    <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                        <input type="hidden" name="ad_download_enabled" value="0">
+                        <input type="checkbox" name="ad_download_enabled" value="1" {{ ($settings['ad_download_enabled'] ?? '0') === '1' ? 'checked' : '' }} class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                        <span class="ml-2.5 text-xs font-mono font-bold text-gray-300">Mostrar</span>
+                    </label>
+                </div>
+
+                <!-- Guidance & Formats -->
+                <div class="flex flex-wrap items-center gap-2 text-[10px] font-mono text-gray-400">
+                    <span class="text-gray-500">Formatos recomendados:</span>
+                    <span class="px-2 py-0.5 rounded bg-[#0A0C0F] border border-[#232936] text-amber-300">728x90 Leaderboard</span>
+                    <span class="px-2 py-0.5 rounded bg-[#0A0C0F] border border-[#232936] text-amber-300">300x250 Rectángulo</span>
+                    <span class="px-2 py-0.5 rounded bg-[#0A0C0F] border border-[#232936] text-blue-300">Display Responsivo AdSense</span>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="block font-bold text-gray-200 text-xs">Código HTML / JavaScript / AdSense:</label>
+                    <textarea name="ad_download_code" 
+                              rows="4" 
+                              placeholder="<!-- Pega aquí el bloque de anuncios &lt;ins class='adsbygoogle'...&gt; o tu banner HTML -->"
+                              class="w-full bg-[#0A0C0F] border border-[#232936] rounded-xl p-3 text-xs text-amber-200 font-mono focus:border-amber-500 leading-relaxed">{{ $settings['ad_download_code'] ?? '' }}</textarea>
+                </div>
+            </div>
+
+            <!-- Card 3: Slot 2 - Portada / Home -->
+            <div class="bg-[#11141A] border border-[#232936] rounded-2xl p-6 shadow-xl space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#232936] pb-3">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono font-black text-xs flex items-center justify-center">2</span>
+                            <h3 class="text-xs font-mono font-bold uppercase text-white tracking-wider">Publicidad en Portada (Home)</h3>
+                            <span class="px-2 py-0.5 rounded-full bg-blue-950/50 text-blue-400 border border-blue-500/30 text-[10px] font-mono font-bold">Alta Visibilidad</span>
+                        </div>
+                        <p class="text-[11px] text-gray-400 font-sans">Se ubica en la página principal (<code>web.home</code>), entre el escaparate Hero y el carrusel de las 20 consolas.</p>
+                    </div>
+
+                    <!-- Slot 2 Switch -->
+                    <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                        <input type="hidden" name="ad_home_enabled" value="0">
+                        <input type="checkbox" name="ad_home_enabled" value="1" {{ ($settings['ad_home_enabled'] ?? '0') === '1' ? 'checked' : '' }} class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                        <span class="ml-2.5 text-xs font-mono font-bold text-gray-300">Mostrar</span>
+                    </label>
+                </div>
+
+                <!-- Guidance & Formats -->
+                <div class="flex flex-wrap items-center gap-2 text-[10px] font-mono text-gray-400">
+                    <span class="text-gray-500">Formatos recomendados:</span>
+                    <span class="px-2 py-0.5 rounded bg-[#0A0C0F] border border-[#232936] text-amber-300">970x90 Super Leaderboard</span>
+                    <span class="px-2 py-0.5 rounded bg-[#0A0C0F] border border-[#232936] text-amber-300">728x90 Leaderboard</span>
+                    <span class="px-2 py-0.5 rounded bg-[#0A0C0F] border border-[#232936] text-blue-300">Display Responsivo AdSense</span>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="block font-bold text-gray-200 text-xs">Código HTML / JavaScript / AdSense:</label>
+                    <textarea name="ad_home_code" 
+                              rows="4" 
+                              placeholder="<!-- Pega aquí el bloque publicitario de la Home -->"
+                              class="w-full bg-[#0A0C0F] border border-[#232936] rounded-xl p-3 text-xs text-amber-200 font-mono focus:border-amber-500 leading-relaxed">{{ $settings['ad_home_code'] ?? '' }}</textarea>
+                </div>
+            </div>
+
+            <!-- Card 4: Slot 3 - Ficha del Videojuego (Game Detail) -->
+            <div class="bg-[#11141A] border border-[#232936] rounded-2xl p-6 shadow-xl space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#232936] pb-3">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono font-black text-xs flex items-center justify-center">3</span>
+                            <h3 class="text-xs font-mono font-bold uppercase text-white tracking-wider">Publicidad en Ficha del Videojuego (Game Detail)</h3>
+                            <span class="px-2 py-0.5 rounded-full bg-emerald-950/50 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold">Tráfico Orgánico</span>
+                        </div>
+                        <p class="text-[11px] text-gray-400 font-sans">Se ubica en la ficha de cada título (<code>web.game-detail</code>), directamente debajo de los botones de descarga y acceso a emuladores.</p>
+                    </div>
+
+                    <!-- Slot 3 Switch -->
+                    <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                        <input type="hidden" name="ad_game_detail_enabled" value="0">
+                        <input type="checkbox" name="ad_game_detail_enabled" value="1" {{ ($settings['ad_game_detail_enabled'] ?? '0') === '1' ? 'checked' : '' }} class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                        <span class="ml-2.5 text-xs font-mono font-bold text-gray-300">Mostrar</span>
+                    </label>
+                </div>
+
+                <!-- Guidance & Formats -->
+                <div class="flex flex-wrap items-center gap-2 text-[10px] font-mono text-gray-400">
+                    <span class="text-gray-500">Formatos recomendados:</span>
+                    <span class="px-2 py-0.5 rounded bg-[#0A0C0F] border border-[#232936] text-amber-300">336x280 Rectángulo Grande</span>
+                    <span class="px-2 py-0.5 rounded bg-[#0A0C0F] border border-[#232936] text-amber-300">300x250 Rectángulo</span>
+                    <span class="px-2 py-0.5 rounded bg-[#0A0C0F] border border-[#232936] text-blue-300">Display In-Article / Responsivo</span>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="block font-bold text-gray-200 text-xs">Código HTML / JavaScript / AdSense:</label>
+                    <textarea name="ad_game_detail_code" 
+                              rows="4" 
+                              placeholder="<!-- Pega aquí el bloque publicitario de la ficha técnica -->"
+                              class="w-full bg-[#0A0C0F] border border-[#232936] rounded-xl p-3 text-xs text-amber-200 font-mono focus:border-amber-500 leading-relaxed">{{ $settings['ad_game_detail_code'] ?? '' }}</textarea>
                 </div>
             </div>
 

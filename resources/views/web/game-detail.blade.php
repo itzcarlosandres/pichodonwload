@@ -320,6 +320,11 @@ function gameDetailComponent() {
 
     </section>
 
+    <!-- Espacio Publicitario en Ficha de Videojuego (Debajo de Botones Principales) -->
+    <div class="{{ \App\Models\Setting::get('container_max_width', 'max-w-[1200px]') }} mx-auto px-4 lg:px-6">
+        <x-ad-slot position="game_detail" title="Anuncio Patrocinado" />
+    </div>
+
     <!-- 2. SECTION NAVIGATION PILLS (Touch edge-to-edge scroll on mobile) -->
     <section class="{{ \App\Models\Setting::get('container_max_width', 'max-w-[1200px]') }} mx-auto px-4 lg:px-6">
         <div class="flex items-center gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-none text-xs font-mono">
