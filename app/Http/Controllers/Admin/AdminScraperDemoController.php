@@ -174,10 +174,17 @@ class AdminScraperDemoController extends Controller
         $cleanDownloadLinks = [];
         if ($request->filled('download_links') && is_array($request->input('download_links'))) {
             foreach ($request->input('download_links') as $link) {
-                if (! empty($link['url']) && ! $this->isIntermediateWebpageUrl($link['url'])) {
+                if (empty($link['url'])) {
+                    continue;
+                }
+                // Evitar duplicar el enlace si ya está configurado como Servidor Principal
+                if ($downloadUrl && trim($link['url']) === trim($downloadUrl)) {
+                    continue;
+                }
+                if (! $this->isIntermediateWebpageUrl($link['url'])) {
                     $cleanDownloadLinks[] = [
                         'server' => ! empty($link['server']) ? $link['server'] : '1Fichier',
-                        'url' => $link['url'],
+                        'url' => trim($link['url']),
                         'name' => $link['name'] ?? null,
                         'size' => $link['size'] ?? null,
                     ];
@@ -426,10 +433,17 @@ class AdminScraperDemoController extends Controller
         $cleanQuickLinks = [];
         if (! empty($scrape['download_links']) && is_array($scrape['download_links'])) {
             foreach ($scrape['download_links'] as $link) {
-                if (! empty($link['url']) && ! $this->isIntermediateWebpageUrl($link['url'])) {
+                if (empty($link['url'])) {
+                    continue;
+                }
+                // Evitar duplicar el enlace si ya está configurado como Servidor Principal
+                if ($directDl && trim($link['url']) === trim($directDl)) {
+                    continue;
+                }
+                if (! $this->isIntermediateWebpageUrl($link['url'])) {
                     $cleanQuickLinks[] = [
                         'server' => ! empty($link['server']) ? $link['server'] : '1Fichier',
-                        'url' => $link['url'],
+                        'url' => trim($link['url']),
                         'name' => $link['name'] ?? null,
                         'size' => $link['size'] ?? null,
                     ];

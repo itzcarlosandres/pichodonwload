@@ -162,11 +162,17 @@ class AdminGameController extends Controller
         // Process dynamic mirror links
         if ($request->has('mirrors') && is_array($request->input('mirrors'))) {
             $cleanMirrors = [];
+            $primaryUrl = ! empty($validated['download_url']) ? trim($validated['download_url']) : null;
             foreach ($request->input('mirrors') as $m) {
                 if (! empty($m['url'])) {
+                    $mUrl = trim($m['url']);
+                    // No duplicar si es idéntico al Servidor Principal
+                    if ($primaryUrl && $mUrl === $primaryUrl) {
+                        continue;
+                    }
                     $cleanMirrors[] = [
                         'server' => ! empty($m['server']) ? trim($m['server']) : 'Servidor Alternativo',
-                        'url' => trim($m['url']),
+                        'url' => $mUrl,
                     ];
                 }
             }
@@ -313,11 +319,17 @@ class AdminGameController extends Controller
         // Process dynamic mirror links
         if ($request->has('mirrors') && is_array($request->input('mirrors'))) {
             $cleanMirrors = [];
+            $primaryUrl = ! empty($validated['download_url']) ? trim($validated['download_url']) : null;
             foreach ($request->input('mirrors') as $m) {
                 if (! empty($m['url'])) {
+                    $mUrl = trim($m['url']);
+                    // No duplicar si es idéntico al Servidor Principal
+                    if ($primaryUrl && $mUrl === $primaryUrl) {
+                        continue;
+                    }
                     $cleanMirrors[] = [
                         'server' => ! empty($m['server']) ? trim($m['server']) : 'Servidor Alternativo',
-                        'url' => trim($m['url']),
+                        'url' => $mUrl,
                     ];
                 }
             }

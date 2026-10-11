@@ -349,10 +349,16 @@ class AutoHarvestRomsCommand extends Command
                             $cleanHarvestLinks = [];
                             if (! empty($scrape['download_links']) && is_array($scrape['download_links'])) {
                                 foreach ($scrape['download_links'] as $link) {
-                                    if (! empty($link['url']) && ! $this->isIntermediateWebpageUrl($link['url'])) {
+                                    if (empty($link['url'])) {
+                                        continue;
+                                    }
+                                    if ($harvestDl && trim($link['url']) === trim($harvestDl)) {
+                                        continue;
+                                    }
+                                    if (! $this->isIntermediateWebpageUrl($link['url'])) {
                                         $cleanHarvestLinks[] = [
                                             'server' => ! empty($link['server']) ? $link['server'] : '1Fichier',
-                                            'url' => $link['url'],
+                                            'url' => trim($link['url']),
                                             'name' => $link['name'] ?? null,
                                             'size' => $link['size'] ?? null,
                                         ];

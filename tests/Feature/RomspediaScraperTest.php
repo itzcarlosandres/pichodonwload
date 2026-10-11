@@ -28,10 +28,10 @@ class RomspediaScraperTest extends TestCase
         $this->assertNotEmpty($result['title']);
         $this->assertNotEmpty($result['direct_download_url']);
         $this->assertStringContainsString('downloads.romspedia.com', $result['direct_download_url']);
-        $this->assertNotEmpty($result['download_links']);
-        $this->assertIsArray($result['download_links']);
-        $this->assertEquals('Romspedia Direct', $result['download_links'][0]['server']);
-        $this->assertStringContainsString('downloads.romspedia.com', $result['download_links'][0]['url']);
+        $this->assertNotEmpty($result['download_url']);
+        $this->assertEquals($result['direct_download_url'], $result['download_url']);
+        // No debe duplicar el enlace principal dentro de download_links
+        $this->assertEmpty($result['download_links']);
     }
 
     /**
@@ -52,7 +52,8 @@ class RomspediaScraperTest extends TestCase
     }
 
     /**
-     * Verifica que al guardar en catálogo NO se eliminen ni anulen los enlaces de downloads.romspedia.com
+     * Verifica que al guardar en catálogo NO se eliminen los enlaces de downloads.romspedia.com
+     * y tampoco se dupliquen como mirror adicional si ya son el servidor principal.
      */
     public function test_admin_controller_preserves_romspedia_direct_download_links(): void
     {
@@ -64,6 +65,7 @@ class RomspediaScraperTest extends TestCase
         ]);
 
         $dlUrl = 'https://downloads.romspedia.com/roms/Super%20Mario%2064%20(USA).zip';
+        $mirrorUrl = 'https://1fichier.com/?altmirror123';
 
         $response = $this->actingAs($admin)->postJson('/admin/scraper-demo/save', [
             'title' => 'Super Mario 64 Test',
@@ -72,9 +74,16 @@ class RomspediaScraperTest extends TestCase
             'file_size' => '5.9 MB',
             'file_format' => 'ZIP',
             'download_links' => [
+                // Enlace idéntico al principal (debe descartarse para no duplicar)
                 [
-                    'server' => 'Romspedia Direct',
+                    'server' => 'Mega',
                     'url' => $dlUrl,
+                    'size' => '5.9 MB',
+                ],
+                // Mirror adicional legítimo
+                [
+                    'server' => '1Fichier',
+                    'url' => $mirrorUrl,
                     'size' => '5.9 MB',
                 ],
             ],
@@ -86,8 +95,9 @@ class RomspediaScraperTest extends TestCase
         $saved = Game::where('title', 'Super Mario 64 Test')->first();
         $this->assertNotNull($saved);
         $this->assertEquals($dlUrl, $saved->download_url);
-        $this->assertNotEmpty($saved->download_links);
-        $this->assertEquals($dlUrl, $saved->download_links[0]['url']);
-        $this->assertEquals('Romspedia Direct', $saved->download_links[0]['server']);
+        // Debe tener solo el mirror adicional y NO el duplicado
+        $this->assertCount(1, $saved->download_links);
+        $this->assertEquals($mirrorUrl, $saved->download_links[0]['url']);
+        $this->assertEquals('1Fichier', $saved->download_links[0]['server']);
     }
 }

@@ -205,17 +205,9 @@ class RomScraperService
             }
         }
 
-        // Construir download_links estructurados para el admin y los mirrors del frontend
+        // Romspedia proporciona un enlace directo que se asigna como servidor principal (download_url).
+        // download_links queda vacío para no duplicar el mismo enlace en los mirrors adicionales.
         $downloadLinks = [];
-        if ($directDownloadUrl) {
-            $downloadLinks[] = [
-                'name' => $title ?: 'Descarga Directa',
-                'server' => 'Romspedia Direct',
-                'url' => $directDownloadUrl,
-                'size' => $fileSize !== 'Pendiente' ? $fileSize : null,
-                'is_update' => false,
-            ];
-        }
 
         $duration = round((microtime(true) - $startTime) * 1000);
 
