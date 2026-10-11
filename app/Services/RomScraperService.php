@@ -20,7 +20,7 @@ class RomScraperService
     public function scrape(string $url): array
     {
         $url = trim($url);
-        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        if (! filter_var($url, FILTER_VALIDATE_URL)) {
             return [
                 'success' => false,
                 'message' => 'Por favor introduce una URL válida.',
@@ -50,8 +50,15 @@ class RomScraperService
     {
         $startTime = microtime(true);
 
-        $res = $this->safety->safeFetch($url, 'romspedia');
-        if (!$res['success']) {
+        // Si la URL recibida ya termina en /download, normalizarla para consultar la ficha principal
+        $cleanGameUrl = preg_replace('/\/download(?:\?.*)?$/i', '', trim($url));
+
+        $res = $this->safety->safeFetch($cleanGameUrl, 'romspedia');
+        if (! $res['success'] && $cleanGameUrl !== $url) {
+            $res = $this->safety->safeFetch($url, 'romspedia');
+        }
+
+        if (! $res['success']) {
             return [
                 'success' => false,
                 'cooldown' => $res['cooldown'] ?? false,
@@ -93,9 +100,9 @@ class RomScraperService
 
         if ($coverUrl) {
             if (str_starts_with($coverUrl, '//')) {
-                $coverUrl = 'https:' . $coverUrl;
-            } elseif (!str_starts_with($coverUrl, 'http')) {
-                $coverUrl = 'https://www.romspedia.com' . (str_starts_with($coverUrl, '/') ? '' : '/') . $coverUrl;
+                $coverUrl = 'https:'.$coverUrl;
+            } elseif (! str_starts_with($coverUrl, 'http')) {
+                $coverUrl = 'https://www.romspedia.com'.(str_starts_with($coverUrl, '/') ? '' : '/').$coverUrl;
             }
         }
 
@@ -112,11 +119,11 @@ class RomScraperService
         // Plataforma
         $platform = 'PlayStation Portable (PSP)';
         $platformSlug = 'psp';
-        if (preg_match('/roms\/([a-z0-9\-]+)\//i', $url, $pm)) {
+        if (preg_match('/roms\/([a-z0-9\-]+)\//i', $cleanGameUrl, $pm)) {
             $detected = $this->mapPlatform($pm[1]);
             $platform = $detected['name'];
             $platformSlug = $detected['slug'];
-        } elseif (!empty($details['console'])) {
+        } elseif (! empty($details['console'])) {
             $detected = $this->mapPlatform($details['console']);
             $platform = $detected['name'];
             $platformSlug = $detected['slug'];
@@ -127,19 +134,19 @@ class RomScraperService
         $categoryMapping = $this->mapCategories($rawCategory);
 
         // Año y Región
-        $releaseYear = !empty($details['release year']) ? (int)$details['release year'] : null;
-        $region = !empty($details['region']) ? $details['region'] : 'USA';
+        $releaseYear = ! empty($details['release year']) ? (int) $details['release year'] : null;
+        $region = ! empty($details['region']) ? $details['region'] : 'USA';
 
         // Encontrar enlace de subpágina de descarga
         $downloadPageUrl = '';
-        if (preg_match('/<a[^>]+href="([^">]*\/download[^">]*)"/i', $html, $m)) {
+        if (preg_match('/<a[^>]+href=["\']([^"\']*(?:\/download)[^"\']*)["\']/i', $html, $m)) {
             $downloadPageUrl = $m[1];
         }
-        if (!$downloadPageUrl) {
-            $downloadPageUrl = rtrim($url, '/') . '/download';
+        if (! $downloadPageUrl) {
+            $downloadPageUrl = rtrim($cleanGameUrl, '/').'/download';
         }
-        if (!str_starts_with($downloadPageUrl, 'http')) {
-            $downloadPageUrl = 'https://www.romspedia.com' . (str_starts_with($downloadPageUrl, '/') ? '' : '/') . $downloadPageUrl;
+        if (! str_starts_with($downloadPageUrl, 'http')) {
+            $downloadPageUrl = 'https://www.romspedia.com'.(str_starts_with($downloadPageUrl, '/') ? '' : '/').$downloadPageUrl;
         }
 
         // Consultar la subpágina de descarga para extraer el enlace directo
@@ -147,11 +154,36 @@ class RomScraperService
         $downloadHtml = $dlRes['html'] ?? '';
         $directDownloadUrl = '';
 
-        if ($downloadHtml) {
-            if (preg_match('/href="([^"]*(?:downloads\.romspedia\.com\/roms\/[^"]+|\.(?:zip|7z|iso|cso)))"/i', $downloadHtml, $m)) {
+        // Buscar enlaces tanto en la página de descarga como en la ficha principal
+        $pagesToSearch = array_filter([$downloadHtml, $html]);
+        foreach ($pagesToSearch as $pHtml) {
+            // 1. Enlace CDN downloads.romspedia.com o archivo con extensión ROM típica
+            if (preg_match('/(?:href|data-url|data-href)=["\']([^"\']*(?:downloads\.romspedia\.com\/roms\/[^"\']+|\.(?:zip|7z|iso|cso|rar|bin|chd|gz|pkg|tar)))["\']/i', $pHtml, $m)) {
                 $directDownloadUrl = str_replace(' ', '%20', html_entity_decode($m[1]));
-            } elseif (preg_match('/window\.location\.href\s*=\s*["\']([^"\']+)["\']/i', $downloadHtml, $m)) {
+                break;
+            }
+
+            // 2. Redirección javascript window.location
+            if (preg_match('/window\.location(?:\.href)?\s*=\s*["\']([^"\']+)["\']/i', $pHtml, $m)) {
+                $cand = str_replace(' ', '%20', html_entity_decode($m[1]));
+                if (! str_contains($cand, '/download') && (str_contains($cand, 'downloads.romspedia.com') || preg_match('/\.(?:zip|7z|iso|cso|rar|bin|chd)/i', $cand))) {
+                    $directDownloadUrl = $cand;
+                    break;
+                }
+            }
+
+            // 3. Cadena explícita con downloads.romspedia.com
+            if (preg_match('/["\'](https?:\/\/downloads\.romspedia\.com\/roms\/[^"\']+)["\']/i', $pHtml, $m)) {
                 $directDownloadUrl = str_replace(' ', '%20', html_entity_decode($m[1]));
+                break;
+            }
+        }
+
+        if ($directDownloadUrl) {
+            if (str_starts_with($directDownloadUrl, '//')) {
+                $directDownloadUrl = 'https:'.$directDownloadUrl;
+            } elseif (! str_starts_with($directDownloadUrl, 'http')) {
+                $directDownloadUrl = 'https://downloads.romspedia.com'.(str_starts_with($directDownloadUrl, '/') ? '' : '/').$directDownloadUrl;
             }
         }
 
@@ -173,6 +205,18 @@ class RomScraperService
             }
         }
 
+        // Construir download_links estructurados para el admin y los mirrors del frontend
+        $downloadLinks = [];
+        if ($directDownloadUrl) {
+            $downloadLinks[] = [
+                'name' => $title ?: 'Descarga Directa',
+                'server' => 'Romspedia Direct',
+                'url' => $directDownloadUrl,
+                'size' => $fileSize !== 'Pendiente' ? $fileSize : null,
+                'is_update' => false,
+            ];
+        }
+
         $duration = round((microtime(true) - $startTime) * 1000);
 
         return [
@@ -189,10 +233,11 @@ class RomScraperService
             'region' => $region,
             'languages' => 'English',
             'publisher' => $details['publisher'] ?? null,
-            'source_url' => $url,
+            'source_url' => $cleanGameUrl,
             'download_url' => $directDownloadUrl ?: $downloadPageUrl,
             'download_page_url' => $downloadPageUrl,
             'direct_download_url' => $directDownloadUrl,
+            'download_links' => $downloadLinks,
             'is_download_available' => $isDownloadAvailable,
             'file_size' => $fileSize,
             'file_size_bytes' => $fileSizeBytes,
@@ -244,6 +289,7 @@ class RomScraperService
         if ($httpCode === 429 || $httpCode === 403) {
             $this->safety->triggerCooldown('cdromance', 60, "El servidor devolvió HTTP {$httpCode}");
             @unlink($cookieFile);
+
             return [
                 'success' => false,
                 'cooldown' => true,
@@ -252,8 +298,9 @@ class RomScraperService
             ];
         }
 
-        if (!$html || $httpCode >= 400) {
+        if (! $html || $httpCode >= 400) {
             @unlink($cookieFile);
+
             return [
                 'success' => false,
                 'message' => 'No se pudo conectar o descargar la información desde CDRomance.',
@@ -276,57 +323,57 @@ class RomScraperService
         // 1. JSON-LD Yoast Schema primary image (la imagen auténtica de la carátula)
         if (preg_match('/"(?:url|contentUrl)":"([^"]+)".*?"#primaryimage"/is', $html, $m) || preg_match('/"@id":"[^"]*#primaryimage".*?"(?:url|contentUrl)":"([^"]+)"/is', $html, $m)) {
             $candidate = stripslashes(trim($m[1]));
-            if (!$this->isSiteLogoOrInvalid($candidate)) {
+            if (! $this->isSiteLogoOrInvalid($candidate)) {
                 $coverUrl = $candidate;
             }
         }
 
         // 2. Contenedor .post-thumbnail o clase wp-post-image
-        if (!$coverUrl && preg_match('/<div[^>]*class=["\'][^"\']*post-thumbnail[^"\']*["\'][^>]*>.*?<img[^>]+(?:data-src|src)=["\']([^"\']+)["\']/is', $html, $m)) {
+        if (! $coverUrl && preg_match('/<div[^>]*class=["\'][^"\']*post-thumbnail[^"\']*["\'][^>]*>.*?<img[^>]+(?:data-src|src)=["\']([^"\']+)["\']/is', $html, $m)) {
             $candidate = trim($m[1]);
-            if (!$this->isSiteLogoOrInvalid($candidate)) {
+            if (! $this->isSiteLogoOrInvalid($candidate)) {
                 $coverUrl = $candidate;
             }
         }
-        if (!$coverUrl && preg_match('/<img[^>]+class=["\'][^"\']*wp-post-image[^"\']*["\'][^>]+(?:data-src|src)=["\']([^"\']+)["\']/is', $html, $m)) {
+        if (! $coverUrl && preg_match('/<img[^>]+class=["\'][^"\']*wp-post-image[^"\']*["\'][^>]+(?:data-src|src)=["\']([^"\']+)["\']/is', $html, $m)) {
             $candidate = trim($m[1]);
-            if (!$this->isSiteLogoOrInvalid($candidate)) {
+            if (! $this->isSiteLogoOrInvalid($candidate)) {
                 $coverUrl = $candidate;
             }
         }
 
         // 3. Contenedores de carátula destacados
-        if (!$coverUrl && preg_match('/<div[^>]*class=["\'][^"\']*(?:featured-image|entry-featured|game-cover)[^"\']*["\'][^>]*>.*?<img[^>]+(?:data-src|src)=["\']([^"\']+)["\']/is', $html, $m)) {
+        if (! $coverUrl && preg_match('/<div[^>]*class=["\'][^"\']*(?:featured-image|entry-featured|game-cover)[^"\']*["\'][^>]*>.*?<img[^>]+(?:data-src|src)=["\']([^"\']+)["\']/is', $html, $m)) {
             $candidate = trim($m[1]);
-            if (!$this->isSiteLogoOrInvalid($candidate)) {
+            if (! $this->isSiteLogoOrInvalid($candidate)) {
                 $coverUrl = $candidate;
             }
         }
 
         // 4. Imagen en el artículo que mencione box, cover o front
-        if (!$coverUrl && preg_match('/<img[^>]+(?:data-src|src)=["\']([^"\']*(?:box[0-9_-]*|covers?|front)[^"\']*\.(?:jpg|jpeg|png|webp))["\']/i', $html, $m)) {
+        if (! $coverUrl && preg_match('/<img[^>]+(?:data-src|src)=["\']([^"\']*(?:box[0-9_-]*|covers?|front)[^"\']*\.(?:jpg|jpeg|png|webp))["\']/i', $html, $m)) {
             $candidate = trim($m[1]);
-            if (!$this->isSiteLogoOrInvalid($candidate)) {
+            if (! $this->isSiteLogoOrInvalid($candidate)) {
                 $coverUrl = $candidate;
             }
         }
 
         // 5. OpenGraph o Twitter card siempre que NO sea logo del sitio
-        if (!$coverUrl && preg_match('/<meta\s+property=["\']og:image["\']\s+content=["\']([^"\']+)["\']/i', $html, $m)) {
+        if (! $coverUrl && preg_match('/<meta\s+property=["\']og:image["\']\s+content=["\']([^"\']+)["\']/i', $html, $m)) {
             $candidate = trim($m[1]);
-            if (!$this->isSiteLogoOrInvalid($candidate)) {
+            if (! $this->isSiteLogoOrInvalid($candidate)) {
                 $coverUrl = $candidate;
             }
         }
-        if (!$coverUrl && preg_match('/<meta\s+name=["\']twitter:image["\']\s+content=["\']([^"\']+)["\']/i', $html, $m)) {
+        if (! $coverUrl && preg_match('/<meta\s+name=["\']twitter:image["\']\s+content=["\']([^"\']+)["\']/i', $html, $m)) {
             $candidate = trim($m[1]);
-            if (!$this->isSiteLogoOrInvalid($candidate)) {
+            if (! $this->isSiteLogoOrInvalid($candidate)) {
                 $coverUrl = $candidate;
             }
         }
 
         if ($coverUrl && str_starts_with($coverUrl, '//')) {
-            $coverUrl = 'https:' . $coverUrl;
+            $coverUrl = 'https:'.$coverUrl;
         }
 
         // Parsear tabla estructurada "GAME INFORMATION" de CDRomance primero para conocer la plataforma
@@ -354,13 +401,13 @@ class RomScraperService
         }
 
         // 6. Si CDRomance no tiene carátula propia (o solo tenía el logo), buscar carátula oficial en Romspedia con la plataforma ya detectada
-        if (!$coverUrl) {
+        if (! $coverUrl) {
             $coverUrl = $this->searchRomspediaCover($title, $platformSlug);
         }
 
         // 2. Género y Mapeo a Categorías
         $rawGenre = $tableData['genre'] ?? '';
-        if (!$rawGenre) {
+        if (! $rawGenre) {
             if (preg_match('/ep_filter_genre=([a-z0-9\-]+)/i', $html, $gm)) {
                 $rawGenre = ucwords(str_replace('-', ' ', $gm[1]));
             } elseif (preg_match('/class="[^"]*genre-([a-z0-9\-]+)[^"]*"/i', $html, $gm)) {
@@ -373,7 +420,7 @@ class RomScraperService
 
         // 3. Región
         $region = 'USA';
-        if (!empty($tableData['region'])) {
+        if (! empty($tableData['region'])) {
             $region = strtoupper(trim($tableData['region']));
         } elseif (preg_match('/ep_filter_region=([a-z0-9\-]+)/i', $html, $rm)) {
             $region = strtoupper($rm[1]);
@@ -386,15 +433,15 @@ class RomScraperService
         if ($rawRelease) {
             if (preg_match('/([0-9]{4})-([0-9]{2})-([0-9]{2})/', $rawRelease, $dm)) {
                 $releaseDate = $dm[0];
-                $releaseYear = (int)$dm[1];
+                $releaseYear = (int) $dm[1];
             } elseif (preg_match('/([0-9]{4})/', $rawRelease, $ym)) {
-                $releaseYear = (int)$ym[1];
+                $releaseYear = (int) $ym[1];
             }
         }
 
         // 5. Idiomas (Languages / Translations)
         $languages = $tableData['languages'] ?? ($tableData['language'] ?? '');
-        if (!$languages) {
+        if (! $languages) {
             if (preg_match('/Languages:\s*([^"\<\.]+)/i', $html, $lm)) {
                 $languages = trim($lm[1]);
             } else {
@@ -479,7 +526,7 @@ class RomScraperService
 
         if (empty($screenshots)) {
             preg_match_all('/<a[^>]+itemprop="screenshot"[^>]+href="([^">]+)"/i', $html, $sm2);
-            if (!empty($sm2[1])) {
+            if (! empty($sm2[1])) {
                 $screenshots = array_values(array_unique($sm2[1]));
             }
         }
@@ -503,8 +550,8 @@ class RomScraperService
             'publisher' => $publisher,
             'developer' => $developer,
             'source_url' => $url,
-            'download_url' => $directDownloadUrl ?: ($url . '#download'),
-            'download_page_url' => $url . '#download',
+            'download_url' => $directDownloadUrl ?: ($url.'#download'),
+            'download_page_url' => $url.'#download',
             'direct_download_url' => $directDownloadUrl,
             'is_download_available' => $isDownloadAvailable,
             'file_size' => $fileSize,
@@ -541,7 +588,7 @@ class RomScraperService
 
         // 2. Descargar la página principal del juego
         $res = $this->safety->safeFetch($cleanUrl, 'romsemu');
-        if (!$res['success']) {
+        if (! $res['success']) {
             return [
                 'success' => false,
                 'cooldown' => $res['cooldown'] ?? false,
@@ -581,19 +628,27 @@ class RomScraperService
             for ($i = 0; $i < count($matches[1]); $i++) {
                 $rawKey = strtolower(trim(strip_tags($matches[1][$i])));
                 $rawVal = trim(strip_tags($matches[2][$i]));
-                if (str_contains($rawKey, 'file size')) $details['file_size'] = $rawVal;
-                elseif (str_contains($rawKey, 'console')) $details['console'] = $rawVal;
-                elseif (str_contains($rawKey, 'genre')) $details['genre'] = $rawVal;
-                elseif (str_contains($rawKey, 'region')) $details['region'] = $rawVal;
-                elseif (str_contains($rawKey, 'released')) $details['released'] = $rawVal;
-                elseif (str_contains($rawKey, 'downloads')) $details['downloads'] = $rawVal;
-                elseif (str_contains($rawKey, 'full name')) $details['full_name'] = $rawVal;
+                if (str_contains($rawKey, 'file size')) {
+                    $details['file_size'] = $rawVal;
+                } elseif (str_contains($rawKey, 'console')) {
+                    $details['console'] = $rawVal;
+                } elseif (str_contains($rawKey, 'genre')) {
+                    $details['genre'] = $rawVal;
+                } elseif (str_contains($rawKey, 'region')) {
+                    $details['region'] = $rawVal;
+                } elseif (str_contains($rawKey, 'released')) {
+                    $details['released'] = $rawVal;
+                } elseif (str_contains($rawKey, 'downloads')) {
+                    $details['downloads'] = $rawVal;
+                } elseif (str_contains($rawKey, 'full name')) {
+                    $details['full_name'] = $rawVal;
+                }
             }
         }
 
         // Plataforma
         $rawConsole = $details['console'] ?? '';
-        if (!$rawConsole && preg_match('/romsemu\.com\/([a-z0-9\-]+)\//i', $cleanUrl, $pm)) {
+        if (! $rawConsole && preg_match('/romsemu\.com\/([a-z0-9\-]+)\//i', $cleanUrl, $pm)) {
             $rawConsole = $pm[1];
         }
         $platformData = $this->mapPlatform($rawConsole ?: 'nintendo-switch');
@@ -607,7 +662,7 @@ class RomScraperService
         // Fecha de lanzamiento
         $releaseYear = null;
         $releaseDate = null;
-        if (!empty($details['released'])) {
+        if (! empty($details['released'])) {
             $timestamp = strtotime($details['released']);
             if ($timestamp) {
                 $releaseDate = date('Y-m-d', $timestamp);
@@ -630,13 +685,13 @@ class RomScraperService
         }
 
         // Resolución de descargas
-        $downloadPageUrl = rtrim($cleanUrl, '/') . '/download';
+        $downloadPageUrl = rtrim($cleanUrl, '/').'/download';
         if (preg_match('/<a[^>]+href=["\']([^"\']*(?:download)[^"\']*)["\'][^>]*>/i', $html, $dm)) {
             $foundDl = $dm[1];
             if (str_starts_with($foundDl, 'http')) {
                 $downloadPageUrl = $foundDl;
             } elseif (str_starts_with($foundDl, '/')) {
-                $downloadPageUrl = 'https://romsemu.com' . $foundDl;
+                $downloadPageUrl = 'https://romsemu.com'.$foundDl;
             }
         }
 
@@ -680,7 +735,7 @@ class RomScraperService
         $resolvedOptions = [];
         foreach ($downloadOptions as $opt) {
             $optRes = $this->safety->safeFetch($opt['url'], 'romsemu');
-            if (!$optRes['success'] || empty($optRes['html'])) {
+            if (! $optRes['success'] || empty($optRes['html'])) {
                 continue;
             }
 
@@ -701,19 +756,19 @@ class RomScraperService
         // Selección de opción principal (preferir juego base completo no-update, o la primera válida)
         $primaryOption = null;
         foreach ($resolvedOptions as $opt) {
-            if (!$opt['is_update']) {
+            if (! $opt['is_update']) {
                 $primaryOption = $opt;
                 break;
             }
         }
-        if (!$primaryOption && !empty($resolvedOptions)) {
+        if (! $primaryOption && ! empty($resolvedOptions)) {
             $primaryOption = $resolvedOptions[0];
         }
 
         if ($primaryOption) {
             $directDownloadUrl = $primaryOption['url'];
             $isDownloadAvailable = true;
-            if (!empty($primaryOption['size'])) {
+            if (! empty($primaryOption['size'])) {
                 $fileSize = $primaryOption['size'];
             }
             if (preg_match('/(xci|nsp|cia|zip|7z|rar)/i', $primaryOption['title'], $fmtMatch)) {
@@ -785,44 +840,62 @@ class RomScraperService
         // 1. Detección por palabras clave para las categorías estándar
         if (preg_match('/action|aventura|adventure|hack|beat|slash/i', $raw)) {
             $cat = Category::where('slug', 'accion-aventura')->first();
-            if ($cat) $ids[] = $cat->id;
+            if ($cat) {
+                $ids[] = $cat->id;
+            }
         }
         if (preg_match('/rpg|role|jrpg|dungeon|fantasy/i', $raw)) {
             $cat = Category::where('slug', 'rpg-jrpg')->first();
-            if ($cat) $ids[] = $cat->id;
+            if ($cat) {
+                $ids[] = $cat->id;
+            }
         }
         if (preg_match('/platform|plataforma/i', $raw)) {
             $cat = Category::where('slug', 'plataformas')->first();
-            if ($cat) $ids[] = $cat->id;
+            if ($cat) {
+                $ids[] = $cat->id;
+            }
         }
         if (preg_match('/fight|lucha|brawl|versus/i', $raw)) {
             $cat = Category::where('slug', 'lucha')->first();
-            if ($cat) $ids[] = $cat->id;
+            if ($cat) {
+                $ids[] = $cat->id;
+            }
         }
         if (preg_match('/shoot|fps|tps|gun/i', $raw)) {
             $cat = Category::where('slug', 'shooter-fps')->first();
-            if ($cat) $ids[] = $cat->id;
+            if ($cat) {
+                $ids[] = $cat->id;
+            }
         }
         if (preg_match('/rac|carrera|driv|conducci/i', $raw)) {
             $cat = Category::where('slug', 'carreras')->first();
-            if ($cat) $ids[] = $cat->id;
+            if ($cat) {
+                $ids[] = $cat->id;
+            }
         }
         if (preg_match('/horror|terror|survival|zombie/i', $raw)) {
             $cat = Category::where('slug', 'terror-survival')->first();
-            if ($cat) $ids[] = $cat->id;
+            if ($cat) {
+                $ids[] = $cat->id;
+            }
         }
         if (preg_match('/strateg|tactic|estrategia/i', $raw)) {
             $cat = Category::where('slug', 'estrategia')->first();
-            if ($cat) $ids[] = $cat->id;
+            if ($cat) {
+                $ids[] = $cat->id;
+            }
         }
         if (preg_match('/sport|deporte|soccer|fifa|racing|nba|wrestling/i', $raw)) {
             $cat = Category::where('slug', 'deportes')->first();
-            if ($cat) $ids[] = $cat->id;
+            if ($cat) {
+                $ids[] = $cat->id;
+            }
         }
 
         // 2. Si no coincide con ninguna palabra clave, buscar o crear la categoría automáticamente
         $cleanName = trim(ucwords(preg_replace('/[_\-]+/', ' ', $rawGenre)));
-        if (!empty($cleanName) && empty($ids)) {
+        if (! empty($cleanName) && empty($ids)) {
             $slug = Str::slug($cleanName);
             $existing = Category::where('slug', $slug)->orWhere('name', 'LIKE', $cleanName)->first();
             if ($existing) {
@@ -935,6 +1008,7 @@ class RomScraperService
     {
         $provider = str_contains($url, 'cdromance') ? 'cdromance' : 'romspedia';
         $res = $this->safety->safeFetch($url, $provider);
+
         return $res['html'] ?? null;
     }
 
@@ -959,7 +1033,7 @@ class RomScraperService
 
         return [
             'http_code' => $httpCode,
-            'content_length' => $contentLength > 0 ? (int)$contentLength : 0,
+            'content_length' => $contentLength > 0 ? (int) $contentLength : 0,
         ];
     }
 
@@ -968,10 +1042,13 @@ class RomScraperService
      */
     protected function formatBytes(int $bytes): string
     {
-        if ($bytes <= 0) return '0 B';
+        if ($bytes <= 0) {
+            return '0 B';
+        }
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
         $i = floor(log($bytes, 1024));
-        return round($bytes / pow(1024, $i), 2) . ' ' . $units[$i];
+
+        return round($bytes / pow(1024, $i), 2).' '.$units[$i];
     }
 
     /**
@@ -981,13 +1058,14 @@ class RomScraperService
     {
         $formatted = trim($formatted);
         if (preg_match('/([0-9.]+)\s*(GB|MB|KB|B)/i', $formatted, $m)) {
-            $num = (float)$m[1];
+            $num = (float) $m[1];
             $unit = strtoupper($m[2]);
+
             return match ($unit) {
-                'GB' => (int)($num * 1024 * 1024 * 1024),
-                'MB' => (int)($num * 1024 * 1024),
-                'KB' => (int)($num * 1024),
-                default => (int)$num,
+                'GB' => (int) ($num * 1024 * 1024 * 1024),
+                'MB' => (int) ($num * 1024 * 1024),
+                'KB' => (int) ($num * 1024),
+                default => (int) $num,
             };
         }
 
@@ -1021,17 +1099,17 @@ class RomScraperService
             return null;
         }
 
-        $url = 'https://www.romspedia.com/search?search_term_string=' . urlencode($cleanSearch);
+        $url = 'https://www.romspedia.com/search?search_term_string='.urlencode($cleanSearch);
 
         $res = $this->safety->safeFetch($url, 'romspedia', [], true, 3600);
-        if (!$res['success'] || empty($res['html'])) {
+        if (! $res['success'] || empty($res['html'])) {
             return null;
         }
 
         $html = $res['html'];
 
         // Solo buscar dentro de los items de resultado <div class="single-rom">
-        if (!preg_match_all('/<div class="single-rom">(.*?)<\/div>\s*<\/div>\s*<\/a>/is', $html, $matches)) {
+        if (! preg_match_all('/<div class="single-rom">(.*?)<\/div>\s*<\/div>\s*<\/a>/is', $html, $matches)) {
             return null;
         }
 
@@ -1049,7 +1127,7 @@ class RomScraperService
                 $cardCover = $im[1];
             }
 
-            if (!$cardTitle || !$cardCover || $this->isSiteLogoOrInvalid($cardCover)) {
+            if (! $cardTitle || ! $cardCover || $this->isSiteLogoOrInvalid($cardCover)) {
                 continue;
             }
 
@@ -1107,12 +1185,19 @@ class RomScraperService
      */
     protected function isRealExternalDirectLink(?string $url): bool
     {
-        if (empty($url) || !preg_match('/^https?:\/\//i', $url)) {
+        if (empty($url) || ! preg_match('/^https?:\/\//i', $url)) {
             return false;
         }
 
+        $host = strtolower(parse_url($url, PHP_URL_HOST) ?? '');
+
+        // Permitir enlaces directos del CDN de descargas de Romspedia
+        if (str_contains($host, 'downloads.romspedia.com')) {
+            return true;
+        }
+
         // Prohibir terminantemente URLs intermedias de los propios scrapers o redes sociales
-        if (preg_match('/(?:romsemu\.com|cdromance\.org|romspedia\.com|facebook\.com|twitter\.com|x\.com|youtube\.com|instagram\.com|linkedin\.com|t\.me|schema\.org|w3\.org|wp\.com|gravatar|rankmath|dmca\.com)/i', $url)) {
+        if (preg_match('/(?:romsemu\.com|cdromance\.org|(?:www\.)?romspedia\.com|facebook\.com|twitter\.com|x\.com|youtube\.com|instagram\.com|linkedin\.com|t\.me|schema\.org|w3\.org|wp\.com|gravatar|rankmath|dmca\.com)/i', $url)) {
             return false;
         }
 
@@ -1124,6 +1209,9 @@ class RomScraperService
      */
     protected function detectMirrorServer(string $url): string
     {
+        if (str_contains($url, 'downloads.romspedia.com')) {
+            return 'Romspedia Direct';
+        }
         if (str_contains($url, '1fichier.com')) {
             return '1Fichier';
         }
@@ -1146,4 +1234,3 @@ class RomScraperService
         return 'Descarga Alternativa';
     }
 }
-

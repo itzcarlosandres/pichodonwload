@@ -186,6 +186,10 @@ class Game extends Model
                         $type = '1fichier';
                         $badge = '1Fichier';
                         $color = 'orange';
+                    } elseif (stripos($serverName, 'romspedia') !== false || stripos($link['url'], 'downloads.romspedia.com') !== false) {
+                        $type = 'romspedia';
+                        $badge = 'Romspedia Direct';
+                        $color = 'emerald';
                     } elseif (stripos($serverName, 'torrent') !== false || stripos($serverName, 'magnet') !== false) {
                         $type = 'torrent';
                         $badge = 'P2P Torrent';

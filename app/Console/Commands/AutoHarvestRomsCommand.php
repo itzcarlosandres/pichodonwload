@@ -2,13 +2,15 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use App\Models\Game;
 use App\Models\Console;
+use App\Models\Game;
+use App\Services\AiContentService;
+use App\Services\CategorySyncService;
+use App\Services\FranchiseSyncService;
+use App\Services\ImageOptimizationService;
 use App\Services\RomCatalogBrowserService;
 use App\Services\RomScraperService;
-use App\Services\ImageOptimizationService;
-use App\Services\AiContentService;
+use Illuminate\Console\Command;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 
@@ -81,8 +83,8 @@ class AutoHarvestRomsCommand extends Command
         RomScraperService $scraperService,
         ImageOptimizationService $imageService,
         AiContentService $aiService,
-        \App\Services\FranchiseSyncService $franchiseService,
-        \App\Services\CategorySyncService $categoryService
+        FranchiseSyncService $franchiseService,
+        CategorySyncService $categoryService
     ): int {
         $providerInput = strtolower($this->option('provider') ?: 'all');
         $consoleInput = strtolower(trim($this->option('console') ?: 'all'));
@@ -92,25 +94,25 @@ class AutoHarvestRomsCommand extends Command
         $userPageInput = $this->option('page');
         $isRandomPage = (bool) $this->option('random-page') || strtolower((string) $userPageInput) === 'random';
 
-        $providers = $providerInput === 'all' 
-            ? config('roms.providers', ['cdromance', 'romspedia', 'romsemu']) 
+        $providers = $providerInput === 'all'
+            ? config('roms.providers', ['cdromance', 'romspedia', 'romsemu'])
             : [$providerInput];
 
         $supportedConsoles = [
-            'playstation-2', 
-            'psp', 
-            'playstation', 
-            'gamecube', 
-            'game-boy-advance', 
-            'nintendo-ds', 
+            'playstation-2',
+            'psp',
+            'playstation',
+            'gamecube',
+            'game-boy-advance',
+            'nintendo-ds',
             'nintendo-3ds',
             'nintendo-switch',
             'playstation-4',
             'psvita',
             'sega-sg-1000',
             'sega-32x',
-            'super-nintendo', 
-            'nintendo-64'
+            'super-nintendo',
+            'nintendo-64',
         ];
 
         // Resolución dinámica de consolas
@@ -124,9 +126,10 @@ class AutoHarvestRomsCommand extends Command
             // Múltiples consolas separadas por comas (ej. ps2,psp,gba)
             $parsedConsoles = array_map(function ($c) {
                 $clean = trim($c);
+
                 return $this->consoleMap[$clean] ?? $clean;
             }, explode(',', $consoleInput));
-            
+
             $consolesToExplore = array_values(array_filter($parsedConsoles));
             shuffle($consolesToExplore);
             $isAll = count($consolesToExplore) > 1;
@@ -140,10 +143,10 @@ class AutoHarvestRomsCommand extends Command
             $isAll = false;
         }
 
-        $this->info("🌾 Iniciando Auto-Cosecha de ROMs Rotativa (Piloto Automático)");
-        $this->line("Consolas a rastrear: <info>" . implode(', ', $consolesToExplore) . "</info> | Límite objetivo: <comment>{$limit} juegos nuevos</comment>");
+        $this->info('🌾 Iniciando Auto-Cosecha de ROMs Rotativa (Piloto Automático)');
+        $this->line('Consolas a rastrear: <info>'.implode(', ', $consolesToExplore)."</info> | Límite objetivo: <comment>{$limit} juegos nuevos</comment>");
         if ($isRandomPage) {
-            $this->line("🎲 Modo de catálogo profundo activo: Páginas aleatorias habilitadas.");
+            $this->line('🎲 Modo de catálogo profundo activo: Páginas aleatorias habilitadas.');
         }
 
         $totalHarvested = 0;
@@ -171,7 +174,7 @@ class AutoHarvestRomsCommand extends Command
                 }
 
                 $this->newLine();
-                $this->comment("📡 Explorando [{$targetConsole}] en: " . strtoupper($provider));
+                $this->comment("📡 Explorando [{$targetConsole}] en: ".strtoupper($provider));
 
                 // Cálculo de página inicial
                 if ($isRandomPage) {
@@ -194,11 +197,11 @@ class AutoHarvestRomsCommand extends Command
                     try {
                         $browseResult = $browserService->browse($provider, $targetConsole, $page);
                     } catch (\Throwable $e) {
-                        $this->error("   ❌ Error al conectar con {$provider}: " . $e->getMessage());
+                        $this->error("   ❌ Error al conectar con {$provider}: ".$e->getMessage());
                         break;
                     }
 
-                    if (!$browseResult['success'] || empty($browseResult['games'])) {
+                    if (! $browseResult['success'] || empty($browseResult['games'])) {
                         $this->warn("   ⚠️ Sin resultados en {$provider} ({$targetConsole}) pág {$page}.");
                         break;
                     }
@@ -230,6 +233,7 @@ class AutoHarvestRomsCommand extends Command
                         if ($duplicate) {
                             $totalSkippedDuplicates++;
                             $this->line("   🚫 <comment>[DUPLICADO OMITIDO]</comment> {$title} (Ya existe en BD #{$duplicate->id} - {$duplicate->status})");
+
                             continue;
                         }
 
@@ -237,40 +241,42 @@ class AutoHarvestRomsCommand extends Command
                         $this->info("   ✨ <info>[NUEVO CANDIDATO]</info> {$title} ({$consoleName}) -> Extrayendo detalles...");
 
                         if ($dryRun) {
-                            $this->comment("      [DRY-RUN] Simulado: se habría guardado en cola DRAFT.");
+                            $this->comment('      [DRY-RUN] Simulado: se habría guardado en cola DRAFT.');
                             $totalHarvested++;
                             $harvestedForConsole++;
+
                             continue;
                         }
 
                         // Scrapear ficha completa
                         try {
                             $scrape = $scraperService->scrape($sourceUrl);
-                            if (!$scrape['success']) {
-                                $this->warn("      ⚠️ Falló extracción detallada para {$title}: " . ($scrape['message'] ?? ''));
+                            if (! $scrape['success']) {
+                                $this->warn("      ⚠️ Falló extracción detallada para {$title}: ".($scrape['message'] ?? ''));
+
                                 continue;
                             }
 
                             // Optimización de carátula a WebP local con bypass anti-bloqueo
                             $coverUrl = $scrape['cover_url'] ?? ($candidate['cover_thumb'] ?? null);
-                            if (!empty($coverUrl) && $scraperService->isSiteLogoOrInvalid($coverUrl)) {
+                            if (! empty($coverUrl) && $scraperService->isSiteLogoOrInvalid($coverUrl)) {
                                 $coverUrl = null;
                             }
                             if (empty($coverUrl)) {
                                 $coverUrl = $scraperService->searchRomspediaCover($title, $localConsole->slug ?? '');
                             }
-                            if (!empty($coverUrl) && $scraperService->isSiteLogoOrInvalid($coverUrl)) {
+                            if (! empty($coverUrl) && $scraperService->isSiteLogoOrInvalid($coverUrl)) {
                                 $coverUrl = null;
                             }
                             $thumbUrl = null;
 
-                            if (!empty($coverUrl)) {
+                            if (! empty($coverUrl)) {
                                 try {
                                     $tempPath = tempnam(sys_get_temp_dir(), 'rom_cover_');
                                     $ch = curl_init($coverUrl);
                                     $fp = fopen($tempPath, 'wb');
                                     $host = parse_url($coverUrl, PHP_URL_HOST) ?? 'www.romspedia.com';
-                                    $referer = (parse_url($coverUrl, PHP_URL_SCHEME) ?? 'https') . '://' . $host . '/';
+                                    $referer = (parse_url($coverUrl, PHP_URL_SCHEME) ?? 'https').'://'.$host.'/';
                                     curl_setopt_array($ch, [
                                         CURLOPT_FILE => $fp,
                                         CURLOPT_HEADER => false,
@@ -313,13 +319,17 @@ class AutoHarvestRomsCommand extends Command
 
                             try {
                                 $aiRich = $aiService->generateRichDescription($title, $consoleName, $context);
-                                if (!empty($aiRich['description'])) {
+                                if (! empty($aiRich['description'])) {
                                     $description = $aiRich['description'];
                                 }
 
                                 $aiSeo = $aiService->generateSeo($title, $consoleName, $context);
-                                if (!empty($aiSeo['meta_title'])) $metaTitle = $aiSeo['meta_title'];
-                                if (!empty($aiSeo['meta_description'])) $metaDescription = $aiSeo['meta_description'];
+                                if (! empty($aiSeo['meta_title'])) {
+                                    $metaTitle = $aiSeo['meta_title'];
+                                }
+                                if (! empty($aiSeo['meta_description'])) {
+                                    $metaDescription = $aiSeo['meta_description'];
+                                }
                             } catch (\Throwable $e) {
                                 // Ignorar error de IA y mantener contenido base
                             }
@@ -328,20 +338,20 @@ class AutoHarvestRomsCommand extends Command
                             $slug = Str::slug($title);
                             $slugCount = Game::where('slug', 'LIKE', "{$slug}%")->count();
                             if ($slugCount > 0) {
-                                $slug .= '-' . ($slugCount + 1);
+                                $slug .= '-'.($slugCount + 1);
                             }
 
                             $harvestDl = $scrape['direct_download_url'] ?? ($scrape['download_url'] ?? null);
-                            if ($harvestDl && (str_contains($harvestDl, 'romsemu.com') || str_contains($harvestDl, 'cdromance.org') || str_contains($harvestDl, 'romspedia.com'))) {
+                            if ($harvestDl && $this->isIntermediateWebpageUrl($harvestDl)) {
                                 $harvestDl = null;
                             }
 
                             $cleanHarvestLinks = [];
-                            if (!empty($scrape['download_links']) && is_array($scrape['download_links'])) {
+                            if (! empty($scrape['download_links']) && is_array($scrape['download_links'])) {
                                 foreach ($scrape['download_links'] as $link) {
-                                    if (!empty($link['url']) && !str_contains($link['url'], 'romsemu.com') && !str_contains($link['url'], 'cdromance.org') && !str_contains($link['url'], 'romspedia.com')) {
+                                    if (! empty($link['url']) && ! $this->isIntermediateWebpageUrl($link['url'])) {
                                         $cleanHarvestLinks[] = [
-                                            'server' => !empty($link['server']) ? $link['server'] : '1Fichier',
+                                            'server' => ! empty($link['server']) ? $link['server'] : '1Fichier',
                                             'url' => $link['url'],
                                             'name' => $link['name'] ?? null,
                                             'size' => $link['size'] ?? null,
@@ -359,7 +369,7 @@ class AutoHarvestRomsCommand extends Command
                                 'download_url' => $harvestDl,
                                 'file_size' => $scrape['file_size'] ?? '1.0 GB',
                                 'file_format' => $scrape['file_format'] ?? 'ZIP',
-                                'release_year' => !empty($scrape['release_year']) ? (int)$scrape['release_year'] : null,
+                                'release_year' => ! empty($scrape['release_year']) ? (int) $scrape['release_year'] : null,
                                 'region' => $scrape['region'] ?? 'USA',
                                 'languages' => $scrape['languages'] ?? 'English',
                                 'publisher' => $scrape['publisher'] ?? null,
@@ -368,7 +378,7 @@ class AutoHarvestRomsCommand extends Command
                                 'description' => $description,
                                 'meta_title' => $metaTitle,
                                 'meta_description' => $metaDescription,
-                                'download_links' => !empty($cleanHarvestLinks) ? $cleanHarvestLinks : null,
+                                'download_links' => ! empty($cleanHarvestLinks) ? $cleanHarvestLinks : null,
                                 'status' => 'DRAFT', // EN COLA PARA EL DRIP PUBLISHER
                                 'download_count' => 0,
                                 'views_count' => 0,
@@ -376,14 +386,14 @@ class AutoHarvestRomsCommand extends Command
 
                             // Vincular categorías y géneros detectados/creados automáticamente
                             $assignedCats = $categoryService->syncGame($game, false, $scrape['category_ids'] ?? []);
-                            if (!empty($assignedCats)) {
-                                $this->line("      🏷️ <fg=cyan>[CATEGORÍAS AUTO-ASIGNADAS]</> " . implode(', ', $assignedCats));
+                            if (! empty($assignedCats)) {
+                                $this->line('      🏷️ <fg=cyan>[CATEGORÍAS AUTO-ASIGNADAS]</> '.implode(', ', $assignedCats));
                             }
 
                             // Vincular automáticamente a Sagas / Franquicias correspondientes
                             $matchedFranchises = $franchiseService->syncGame($game);
-                            if (!empty($matchedFranchises)) {
-                                $this->line("      ✨ <fg=yellow>[SAGA DETECTADA]</> Vinculado a " . count($matchedFranchises) . " colección(es)");
+                            if (! empty($matchedFranchises)) {
+                                $this->line('      ✨ <fg=yellow>[SAGA DETECTADA]</> Vinculado a '.count($matchedFranchises).' colección(es)');
                             }
 
                             $totalHarvested++;
@@ -394,11 +404,11 @@ class AutoHarvestRomsCommand extends Command
                             sleep(2);
 
                         } catch (\Throwable $e) {
-                            $this->error("      ❌ Error guardando juego {$title}: " . $e->getMessage());
+                            $this->error("      ❌ Error guardando juego {$title}: ".$e->getMessage());
                         }
                     }
 
-                    if (!$browseResult['has_next']) {
+                    if (! $browseResult['has_next']) {
                         break;
                     }
                 }
@@ -406,7 +416,7 @@ class AutoHarvestRomsCommand extends Command
         }
 
         $this->newLine();
-        $this->info("🏁 Resumen de la Auto-Cosecha:");
+        $this->info('🏁 Resumen de la Auto-Cosecha:');
         $this->table(
             ['Métrica', 'Cantidad'],
             [
@@ -417,5 +427,35 @@ class AutoHarvestRomsCommand extends Command
         );
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Valida si una URL es una página HTML intermedia del scraper
+     * en lugar de un enlace directo de descarga o archivo CDN real.
+     */
+    protected function isIntermediateWebpageUrl(?string $url): bool
+    {
+        if (empty($url) || ! filter_var($url, FILTER_VALIDATE_URL)) {
+            return true;
+        }
+
+        $host = strtolower(parse_url($url, PHP_URL_HOST) ?? '');
+
+        // downloads.romspedia.com es el servidor CDN directo de archivos ROM -> VÁLIDO
+        if (str_contains($host, 'downloads.romspedia.com')) {
+            return false;
+        }
+
+        // cdromance.org con download.php es el endpoint de descarga -> VÁLIDO (resuelto por RomDownloadResolverService)
+        if (str_contains($host, 'cdromance.org') && str_contains($url, 'download.php')) {
+            return false;
+        }
+
+        // Páginas HTML intermedias no deseadas de los scrapers
+        if (str_contains($host, 'romsemu.com') || str_contains($host, 'romspedia.com') || str_contains($host, 'cdromance.org')) {
+            return true;
+        }
+
+        return false;
     }
 }

@@ -3,33 +3,37 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Game;
-use App\Models\Console;
 use App\Models\Category;
+use App\Models\Console;
+use App\Models\Game;
 use App\Models\Setting;
-use App\Services\RomScraperService;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Illuminate\View\View;
-use Illuminate\Support\Str;
-
-use App\Services\ImageOptimizationService;
-use Illuminate\Http\UploadedFile;
-
-use App\Services\RomCatalogBrowserService;
-use App\Services\ScraperSafetyService;
 use App\Services\AiContentService;
+use App\Services\FranchiseSyncService;
+use App\Services\ImageOptimizationService;
+use App\Services\RomCatalogBrowserService;
+use App\Services\RomScraperService;
+use App\Services\ScraperSafetyService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Str;
+use Illuminate\View\View;
 
 class AdminScraperDemoController extends Controller
 {
     protected RomScraperService $scraperService;
+
     protected ImageOptimizationService $imageService;
+
     protected RomCatalogBrowserService $browserService;
+
     protected ScraperSafetyService $safetyService;
+
     protected AiContentService $aiService;
 
     public function __construct(
-        RomScraperService $scraperService, 
+        RomScraperService $scraperService,
         ImageOptimizationService $imageService,
         RomCatalogBrowserService $browserService,
         ScraperSafetyService $safetyService,
@@ -49,6 +53,7 @@ class AdminScraperDemoController extends Controller
     {
         $consoles = Console::orderBy('name')->get();
         $categories = Category::orderBy('name')->get();
+
         return view('admin.scraper-demo', compact('consoles', 'categories'));
     }
 
@@ -66,8 +71,9 @@ class AdminScraperDemoController extends Controller
 
         $result = $this->scraperService->scrape($request->input('url'));
 
-        if (!$result['success']) {
-            $code = !empty($result['cooldown']) ? 429 : 422;
+        if (! $result['success']) {
+            $code = ! empty($result['cooldown']) ? 429 : 422;
+
             return response()->json($result, $code);
         }
 
@@ -113,20 +119,20 @@ class AdminScraperDemoController extends Controller
         // Asegurar slug único
         $count = Game::where('slug', 'LIKE', "{$slug}%")->count();
         if ($count > 0) {
-            $slug .= '-' . ($count + 1);
+            $slug .= '-'.($count + 1);
         }
 
         $coverUrl = $request->input('cover_url');
         $thumbUrl = null;
 
         // Si se solicita descargar y optimizar la portada localmente a WebP
-        if ($request->boolean('optimize_cover') && !empty($coverUrl)) {
+        if ($request->boolean('optimize_cover') && ! empty($coverUrl)) {
             try {
                 $tempPath = tempnam(sys_get_temp_dir(), 'cover_');
                 $ch = curl_init($coverUrl);
                 $fp = fopen($tempPath, 'wb');
                 $host = parse_url($coverUrl, PHP_URL_HOST) ?? 'www.romspedia.com';
-                $referer = (parse_url($coverUrl, PHP_URL_SCHEME) ?? 'https') . '://' . $host . '/';
+                $referer = (parse_url($coverUrl, PHP_URL_SCHEME) ?? 'https').'://'.$host.'/';
                 curl_setopt_array($ch, [
                     CURLOPT_FILE => $fp,
                     CURLOPT_HEADER => false,
@@ -155,22 +161,22 @@ class AdminScraperDemoController extends Controller
 
         $status = $request->input('status', 'DRAFT');
 
-        $releaseYear = $request->filled('release_year') ? (int)$request->input('release_year') : null;
+        $releaseYear = $request->filled('release_year') ? (int) $request->input('release_year') : null;
         $region = $request->input('region', 'USA');
         $languages = $request->input('languages', 'English');
         $publisher = $request->input('publisher');
 
         $downloadUrl = $request->input('download_url');
-        if ($downloadUrl && (str_contains($downloadUrl, 'romsemu.com') || str_contains($downloadUrl, 'romspedia.com') || str_contains($downloadUrl, 'cdromance.org'))) {
+        if ($downloadUrl && $this->isIntermediateWebpageUrl($downloadUrl)) {
             $downloadUrl = null;
         }
 
         $cleanDownloadLinks = [];
         if ($request->filled('download_links') && is_array($request->input('download_links'))) {
             foreach ($request->input('download_links') as $link) {
-                if (!empty($link['url']) && !str_contains($link['url'], 'romsemu.com') && !str_contains($link['url'], 'cdromance.org') && !str_contains($link['url'], 'romspedia.com')) {
+                if (! empty($link['url']) && ! $this->isIntermediateWebpageUrl($link['url'])) {
                     $cleanDownloadLinks[] = [
-                        'server' => !empty($link['server']) ? $link['server'] : '1Fichier',
+                        'server' => ! empty($link['server']) ? $link['server'] : '1Fichier',
                         'url' => $link['url'],
                         'name' => $link['name'] ?? null,
                         'size' => $link['size'] ?? null,
@@ -192,7 +198,7 @@ class AdminScraperDemoController extends Controller
             'region' => $region,
             'languages' => $languages,
             'publisher' => $publisher,
-            'download_links' => !empty($cleanDownloadLinks) ? $cleanDownloadLinks : null,
+            'download_links' => ! empty($cleanDownloadLinks) ? $cleanDownloadLinks : null,
             'status' => $status,
             'description' => 'Pendiente de generar con IA.',
             'download_count' => 0,
@@ -206,7 +212,7 @@ class AdminScraperDemoController extends Controller
         if ($request->filled('screenshots') && is_array($request->input('screenshots'))) {
             $order = 1;
             foreach (array_slice($request->input('screenshots'), 0, 8) as $sUrl) {
-                if (!empty($sUrl)) {
+                if (! empty($sUrl)) {
                     // Descargar y convertir a WebP en el servidor local (elimina cualquier rastro externo)
                     $localUrl = $this->imageService->downloadAndProcessScreenshot($sUrl) ?: $sUrl;
                     $game->screenshots()->create([
@@ -232,6 +238,7 @@ class AdminScraperDemoController extends Controller
     public function catalog(): View
     {
         $consoles = Console::orderBy('name')->get();
+
         return view('admin.scraper-catalog', compact('consoles'));
     }
 
@@ -245,7 +252,7 @@ class AdminScraperDemoController extends Controller
         $page = max(1, (int) $request->input('page', 1));
 
         $result = $this->browserService->browse($provider, $console, $page);
-        $status = !empty($result['cooldown']) ? 429 : ($result['success'] ? 200 : 422);
+        $status = ! empty($result['cooldown']) ? 429 : ($result['success'] ? 200 : 422);
 
         return response()->json($result, $status);
     }
@@ -264,8 +271,9 @@ class AdminScraperDemoController extends Controller
         $url = $request->input('url');
         $scrape = $this->scraperService->scrape($url);
 
-        if (!$scrape['success']) {
-            $status = !empty($scrape['cooldown']) ? 429 : 422;
+        if (! $scrape['success']) {
+            $status = ! empty($scrape['cooldown']) ? 429 : 422;
+
             return response()->json([
                 'success' => false,
                 'cooldown' => $scrape['cooldown'] ?? false,
@@ -308,19 +316,24 @@ class AdminScraperDemoController extends Controller
             }
         }
 
-        if (!$console && !empty($scrape['platform'])) {
+        if (! $console && ! empty($scrape['platform'])) {
             $console = Console::where('name', 'like', "%{$scrape['platform']}%")->first();
         }
 
         // Si la consola aún no existe en DB, crearla automáticamente con su fabricante correcto
-        if (!$console && !empty($slugToSearch) && $slugToSearch !== 'all') {
-            $cleanName = !empty($scrape['platform']) ? $scrape['platform'] : ucwords(str_replace('-', ' ', $slugToSearch));
+        if (! $console && ! empty($slugToSearch) && $slugToSearch !== 'all') {
+            $cleanName = ! empty($scrape['platform']) ? $scrape['platform'] : ucwords(str_replace('-', ' ', $slugToSearch));
             $mfg = 'Other';
-            $checkLower = strtolower($cleanName . ' ' . $slugToSearch);
-            if (str_contains($checkLower, 'playstation') || str_contains($checkLower, 'ps')) $mfg = 'Sony';
-            elseif (str_contains($checkLower, 'nintendo')) $mfg = 'Nintendo';
-            elseif (str_contains($checkLower, 'sega')) $mfg = 'Sega';
-            elseif (str_contains($checkLower, 'xbox')) $mfg = 'Microsoft';
+            $checkLower = strtolower($cleanName.' '.$slugToSearch);
+            if (str_contains($checkLower, 'playstation') || str_contains($checkLower, 'ps')) {
+                $mfg = 'Sony';
+            } elseif (str_contains($checkLower, 'nintendo')) {
+                $mfg = 'Nintendo';
+            } elseif (str_contains($checkLower, 'sega')) {
+                $mfg = 'Sega';
+            } elseif (str_contains($checkLower, 'xbox')) {
+                $mfg = 'Microsoft';
+            }
 
             $console = Console::create([
                 'name' => $cleanName,
@@ -331,7 +344,7 @@ class AdminScraperDemoController extends Controller
             ]);
         }
 
-        if (!$console) {
+        if (! $console) {
             $console = Console::first();
         }
 
@@ -339,13 +352,13 @@ class AdminScraperDemoController extends Controller
         $coverUrl = $scrape['cover_url'];
         $thumbUrl = null;
 
-        if ($request->boolean('optimize_cover', true) && !empty($coverUrl)) {
+        if ($request->boolean('optimize_cover', true) && ! empty($coverUrl)) {
             try {
                 $tempPath = tempnam(sys_get_temp_dir(), 'quick_cov_');
                 $ch = curl_init($coverUrl);
                 $fp = fopen($tempPath, 'wb');
                 $host = parse_url($coverUrl, PHP_URL_HOST) ?? 'www.romspedia.com';
-                $referer = (parse_url($coverUrl, PHP_URL_SCHEME) ?? 'https') . '://' . $host . '/';
+                $referer = (parse_url($coverUrl, PHP_URL_SCHEME) ?? 'https').'://'.$host.'/';
                 curl_setopt_array($ch, [
                     CURLOPT_FILE => $fp,
                     CURLOPT_HEADER => false,
@@ -375,7 +388,7 @@ class AdminScraperDemoController extends Controller
         $status = $request->input('status', 'DRAFT');
 
         // Piloto Automático IA: Redactar Sinopsis (~200 palabras) y Meta SEO enriquecido si está activo
-        $description = 'Importado automáticamente desde ' . ($scrape['source_provider'] ?? 'web') . '.';
+        $description = 'Importado automáticamente desde '.($scrape['source_provider'] ?? 'web').'.';
         $metaTitle = null;
         $metaDescription = null;
 
@@ -391,12 +404,12 @@ class AdminScraperDemoController extends Controller
                 ];
 
                 $descRes = $this->aiService->generateRichDescription($title, $console->name, $context);
-                if (!empty($descRes['description'])) {
+                if (! empty($descRes['description'])) {
                     $description = $descRes['description'];
                 }
 
                 $seoRes = $this->aiService->generateSeo($title, $console->name, $context);
-                if (!empty($seoRes['meta_title'])) {
+                if (! empty($seoRes['meta_title'])) {
                     $metaTitle = $seoRes['meta_title'];
                     $metaDescription = $seoRes['meta_description'];
                 }
@@ -406,16 +419,16 @@ class AdminScraperDemoController extends Controller
         }
 
         $directDl = $scrape['direct_download_url'] ?? null;
-        if ($directDl && (str_contains($directDl, 'romsemu.com') || str_contains($directDl, 'romspedia.com') || str_contains($directDl, 'cdromance.org'))) {
+        if ($directDl && $this->isIntermediateWebpageUrl($directDl)) {
             $directDl = null;
         }
 
         $cleanQuickLinks = [];
-        if (!empty($scrape['download_links']) && is_array($scrape['download_links'])) {
+        if (! empty($scrape['download_links']) && is_array($scrape['download_links'])) {
             foreach ($scrape['download_links'] as $link) {
-                if (!empty($link['url']) && !str_contains($link['url'], 'romsemu.com') && !str_contains($link['url'], 'cdromance.org') && !str_contains($link['url'], 'romspedia.com')) {
+                if (! empty($link['url']) && ! $this->isIntermediateWebpageUrl($link['url'])) {
                     $cleanQuickLinks[] = [
-                        'server' => !empty($link['server']) ? $link['server'] : '1Fichier',
+                        'server' => ! empty($link['server']) ? $link['server'] : '1Fichier',
                         'url' => $link['url'],
                         'name' => $link['name'] ?? null,
                         'size' => $link['size'] ?? null,
@@ -437,7 +450,7 @@ class AdminScraperDemoController extends Controller
             'region' => $scrape['region'] ?? 'USA',
             'languages' => $scrape['languages'] ?? 'English',
             'publisher' => $scrape['publisher'] ?? null,
-            'download_links' => !empty($cleanQuickLinks) ? $cleanQuickLinks : null,
+            'download_links' => ! empty($cleanQuickLinks) ? $cleanQuickLinks : null,
             'status' => $status,
             'description' => $description,
             'meta_title' => $metaTitle,
@@ -446,17 +459,17 @@ class AdminScraperDemoController extends Controller
             'views_count' => 0,
         ]);
 
-        if (!empty($scrape['category_ids']) && is_array($scrape['category_ids'])) {
+        if (! empty($scrape['category_ids']) && is_array($scrape['category_ids'])) {
             $game->categories()->sync($scrape['category_ids']);
         }
 
         // Auto-vincular a Sagas / Franquicias correspondientes
-        app(\App\Services\FranchiseSyncService::class)->syncGame($game);
+        app(FranchiseSyncService::class)->syncGame($game);
 
-        if (!empty($scrape['screenshots']) && is_array($scrape['screenshots'])) {
+        if (! empty($scrape['screenshots']) && is_array($scrape['screenshots'])) {
             $order = 1;
             foreach (array_slice($scrape['screenshots'], 0, 8) as $sUrl) {
-                if (!empty($sUrl)) {
+                if (! empty($sUrl)) {
                     // Descargar y convertir a WebP en el servidor local (elimina cualquier rastro externo)
                     $localUrl = $this->imageService->downloadAndProcessScreenshot($sUrl) ?: $sUrl;
                     $game->screenshots()->create([
@@ -534,43 +547,43 @@ class AdminScraperDemoController extends Controller
     /**
      * Endpoint AJAX para disparar manualmente una tanda del Drip Publisher
      */
-     public function dripPublishNow(Request $request): JsonResponse
-     {
-         $defaultCount = (int) Setting::get('roms_posts_per_batch', config('roms.posts_per_batch', 4));
-         $count = (int) $request->input('count', $defaultCount);
+    public function dripPublishNow(Request $request): JsonResponse
+    {
+        $defaultCount = (int) Setting::get('roms_posts_per_batch', config('roms.posts_per_batch', 4));
+        $count = (int) $request->input('count', $defaultCount);
 
-         $draftsCount = Game::where('status', 'DRAFT')->count();
-         if ($draftsCount === 0) {
-             return response()->json([
-                 'success' => false,
-                 'message' => 'No hay juegos en estado DRAFT en la cola. Carga juegos con el botón "Cargar a Cola DRAFT" o "1-Clic Importar".',
-                 'remaining_drafts' => 0,
-             ]);
-         }
+        $draftsCount = Game::where('status', 'DRAFT')->count();
+        if ($draftsCount === 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay juegos en estado DRAFT en la cola. Carga juegos con el botón "Cargar a Cola DRAFT" o "1-Clic Importar".',
+                'remaining_drafts' => 0,
+            ]);
+        }
 
-         try {
-             \Illuminate\Support\Facades\Artisan::call('games:publish-drip', [
-                 '--count' => $count,
-                 '--force' => true,
-             ]);
+        try {
+            Artisan::call('games:publish-drip', [
+                '--count' => $count,
+                '--force' => true,
+            ]);
 
-             $output = \Illuminate\Support\Facades\Artisan::output();
-             $remaining = Game::where('status', 'DRAFT')->count();
-             $actuallyPublished = max(0, $draftsCount - $remaining);
+            $output = Artisan::output();
+            $remaining = Game::where('status', 'DRAFT')->count();
+            $actuallyPublished = max(0, $draftsCount - $remaining);
 
-             return response()->json([
-                 'success' => true,
-                 'message' => "¡Se publicaron {$actuallyPublished} juegos en vivo exitosamente con IA!",
-                 'output' => $output,
-                 'remaining_drafts' => $remaining,
-             ]);
-         } catch (\Throwable $e) {
-             return response()->json([
-                 'success' => false,
-                 'message' => 'Error al ejecutar publicación dosificada: ' . $e->getMessage(),
-             ], 500);
-         }
-     }
+            return response()->json([
+                'success' => true,
+                'message' => "¡Se publicaron {$actuallyPublished} juegos en vivo exitosamente con IA!",
+                'output' => $output,
+                'remaining_drafts' => $remaining,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al ejecutar publicación dosificada: '.$e->getMessage(),
+            ], 500);
+        }
+    }
 
     /**
      * Endpoint AJAX para auto-alimentar la cola DRAFT cosechando juegos sin duplicar
@@ -585,18 +598,18 @@ class AdminScraperDemoController extends Controller
         $initialDrafts = Game::where('status', 'DRAFT')->count();
 
         try {
-            \Illuminate\Support\Facades\Artisan::call('roms:auto-harvest', [
+            Artisan::call('roms:auto-harvest', [
                 '--provider' => $provider,
                 '--console' => $console,
                 '--limit' => $limit,
                 '--shuffle' => true,
             ]);
 
-            $output = \Illuminate\Support\Facades\Artisan::output();
+            $output = Artisan::output();
             $newDrafts = Game::where('status', 'DRAFT')->count();
             $added = max(0, $newDrafts - $initialDrafts);
 
-            $providerName = match($provider) {
+            $providerName = match ($provider) {
                 'romsemu' => 'Romsemu',
                 'cdromance' => 'CDRomance',
                 'romspedia' => 'Romspedia',
@@ -607,15 +620,15 @@ class AdminScraperDemoController extends Controller
                 'success' => true,
                 'added' => $added,
                 'total_drafts' => $newDrafts,
-                'message' => $added > 0 
+                'message' => $added > 0
                     ? "¡Se han añadido {$added} nuevos títulos desde {$providerName} a la cola DRAFT con carátulas WebP optimizadas!"
-                    : "No se encontraron títulos nuevos pendientes (todos los explorados en esta página ya existen en tu catálogo).",
+                    : 'No se encontraron títulos nuevos pendientes (todos los explorados en esta página ya existen en tu catálogo).',
                 'output' => $output,
             ]);
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al auto-alimentar la cola DRAFT: ' . $e->getMessage(),
+                'message' => 'Error al auto-alimentar la cola DRAFT: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -671,5 +684,35 @@ class AdminScraperDemoController extends Controller
                 'auto_harvest_limit' => (int) Setting::get('roms_auto_harvest_limit', 10),
             ],
         ]);
+    }
+
+    /**
+     * Valida si una URL es una página HTML intermedia del scraper
+     * en lugar de un enlace directo de descarga o archivo CDN real.
+     */
+    protected function isIntermediateWebpageUrl(?string $url): bool
+    {
+        if (empty($url) || ! filter_var($url, FILTER_VALIDATE_URL)) {
+            return true;
+        }
+
+        $host = strtolower(parse_url($url, PHP_URL_HOST) ?? '');
+
+        // downloads.romspedia.com es el servidor CDN directo de archivos ROM -> VÁLIDO
+        if (str_contains($host, 'downloads.romspedia.com')) {
+            return false;
+        }
+
+        // cdromance.org con download.php es el endpoint de descarga -> VÁLIDO (resuelto por RomDownloadResolverService)
+        if (str_contains($host, 'cdromance.org') && str_contains($url, 'download.php')) {
+            return false;
+        }
+
+        // Páginas HTML intermedias no deseadas de los scrapers
+        if (str_contains($host, 'romsemu.com') || str_contains($host, 'romspedia.com') || str_contains($host, 'cdromance.org')) {
+            return true;
+        }
+
+        return false;
     }
 }

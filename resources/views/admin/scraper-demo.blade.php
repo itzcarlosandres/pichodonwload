@@ -382,7 +382,7 @@
                                         <div class="p-2.5 rounded-lg bg-[#11141A] border border-[#232936] flex items-center justify-between gap-3 text-xs">
                                             <div class="flex items-center gap-2 min-w-0">
                                                 <span class="px-2 py-0.5 rounded font-mono font-bold text-[10px] shrink-0"
-                                                      :class="mirror.server === '1Fichier' ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30' : (mirror.server === 'Mega' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-purple-500/20 text-purple-300 border border-purple-500/30')"
+                                                      :class="mirror.server === 'Romspedia Direct' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : (mirror.server === '1Fichier' ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30' : (mirror.server === 'Mega' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'))"
                                                       x-text="mirror.server || 'Mirror'"></span>
                                                 <span class="truncate text-gray-200 font-sans font-medium" x-text="mirror.name || mirror.url"></span>
                                                 <template x-if="mirror.size">
