@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Game;
 use App\Models\Setting;
 use App\Services\AiContentService;
 use App\Services\StorageService;
@@ -25,8 +26,10 @@ class AdminSettingController extends Controller
     public function index(): View
     {
         $settings = Setting::all()->pluck('value', 'key');
+        $telegramPendingCount = Game::where('status', 'PUBLISHED')->whereNull('telegram_sent_at')->count();
+        $telegramSentCount = Game::where('status', 'PUBLISHED')->whereNotNull('telegram_sent_at')->count();
 
-        return view('admin.settings.index', compact('settings'));
+        return view('admin.settings.index', compact('settings', 'telegramPendingCount', 'telegramSentCount'));
     }
 
     public function update(Request $request): RedirectResponse
@@ -101,6 +104,22 @@ class AdminSettingController extends Controller
         $result = $this->telegramBotService->testConnection($token, $channelId);
 
         return response()->json($result);
+    }
+
+    public function dispatchTelegramDrip(): JsonResponse
+    {
+        $exitCode = Artisan::call('telegram:publish-drip', ['--force' => true, '--limit' => 1]);
+        $output = Artisan::output();
+
+        $remainingCount = Game::where('status', 'PUBLISHED')->whereNull('telegram_sent_at')->count();
+        $sentCount = Game::where('status', 'PUBLISHED')->whereNotNull('telegram_sent_at')->count();
+
+        return response()->json([
+            'success' => $exitCode === 0,
+            'message' => trim($output) ?: 'Despachador ejecutado.',
+            'remaining_count' => $remainingCount,
+            'sent_count' => $sentCount,
+        ]);
     }
 
     public function clearCache(): RedirectResponse

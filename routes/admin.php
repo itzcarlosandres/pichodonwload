@@ -86,6 +86,7 @@ Route::post('settings', [AdminSettingController::class, 'update'])->name('settin
 Route::post('settings/test-storage', [AdminSettingController::class, 'testStorage'])->name('settings.testStorage');
 Route::post('settings/test-gemini', [AdminSettingController::class, 'testGemini'])->name('settings.testGemini');
 Route::post('settings/test-telegram', [AdminSettingController::class, 'testTelegram'])->name('settings.testTelegram');
+Route::post('settings/dispatch-telegram-drip', [AdminSettingController::class, 'dispatchTelegramDrip'])->name('settings.dispatchTelegramDrip');
 Route::post('settings/clear-cache', [AdminSettingController::class, 'clearCache'])->name('settings.clearCache');
 
 // Telegram Game Publishing

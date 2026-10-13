@@ -156,6 +156,9 @@ class TelegramBotService
             ];
 
             $photoUrl = $game->cover_thumb_url ?: $game->cover_url;
+            if (! empty($photoUrl) && ! str_starts_with($photoUrl, 'http://') && ! str_starts_with($photoUrl, 'https://')) {
+                $photoUrl = asset(ltrim($photoUrl, '/'));
+            }
 
             // Attempt 1: Send Photo with Caption if image URL is available
             if (! empty($photoUrl) && filter_var($photoUrl, FILTER_VALIDATE_URL)) {

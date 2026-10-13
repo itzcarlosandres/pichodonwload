@@ -1042,20 +1042,73 @@
 
             <!-- Card 2: Auto-Publishing & Message Template -->
             <div class="bg-[#11141A] border border-[#232936] rounded-2xl p-6 shadow-xl space-y-6">
-                <div class="flex items-center justify-between border-b border-[#232936] pb-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#232936] pb-4">
                     <div>
                         <h3 class="text-sm font-mono font-bold uppercase text-white tracking-wider flex items-center gap-2">
                             <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i> Publicación Automática & Plantilla
                         </h3>
-                        <p class="text-xs text-gray-400 font-sans mt-0.5">Controla cuándo se envía a Telegram y personaliza el formato del mensaje.</p>
+                        <p class="text-xs text-gray-400 font-sans mt-0.5">Disparador dosificado en segundo plano (1 juego / minuto) para mantener el canal activo sin saturarlo.</p>
                     </div>
 
                     <!-- Toggle Switch -->
                     <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="hidden" name="telegram_auto_publish" value="0">
                         <input type="checkbox" name="telegram_auto_publish" value="1" {{ ($settings['telegram_auto_publish'] ?? '0') === '1' ? 'checked' : '' }} class="sr-only peer">
                         <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-500"></div>
-                        <span class="ml-3 text-xs font-mono font-bold text-gray-300">Publicar al crear ROM</span>
+                        <span class="ml-3 text-xs font-mono font-bold text-gray-300">Piloto Automático Activo</span>
                     </label>
+                </div>
+
+                <!-- Status Bar & Manual Dispatch Trigger -->
+                <div class="p-4 rounded-xl bg-[#0A0C0F] border border-[#232936] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="flex flex-wrap items-center gap-4 text-xs font-mono">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full {{ ($settings['telegram_auto_publish'] ?? '0') === '1' ? 'bg-emerald-400 animate-pulse' : 'bg-gray-600' }}"></span>
+                            <span class="text-gray-400">Frecuencia Cron:</span>
+                            <span class="font-bold {{ ($settings['telegram_auto_publish'] ?? '0') === '1' ? 'text-emerald-400' : 'text-gray-400' }}">
+                                {{ ($settings['telegram_auto_publish'] ?? '0') === '1' ? 'Cada 1 min (Activo)' : 'Pausado' }}
+                            </span>
+                        </div>
+                        <div class="h-4 w-px bg-gray-800 hidden sm:block"></div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-gray-400">En cola pendientes:</span>
+                            <span class="px-2 py-0.5 rounded bg-sky-500/10 border border-sky-500/30 text-sky-300 font-bold" x-text="telegramPending"></span>
+                        </div>
+                        <div class="h-4 w-px bg-gray-800 hidden sm:block"></div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-gray-400">Ya enviados:</span>
+                            <span class="text-gray-300 font-bold" x-text="telegramSent"></span>
+                        </div>
+                    </div>
+
+                    <button type="button" 
+                            @click="dispatchTelegramOne()"
+                            :disabled="dispatchingTelegram || telegramPending <= 0"
+                            class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-md shadow-sky-600/20 shrink-0">
+                        <template x-if="!dispatchingTelegram">
+                            <span class="flex items-center gap-2">
+                                <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                                <span>Despachar 1 Ahora</span>
+                            </span>
+                        </template>
+                        <template x-if="dispatchingTelegram">
+                            <span class="flex items-center gap-2">
+                                <i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i>
+                                <span>Enviando a Telegram...</span>
+                            </span>
+                        </template>
+                    </button>
+                </div>
+
+                <!-- Live Dispatch Result Feedback -->
+                <div x-show="telegramDispatchResult" class="space-y-2">
+                    <div :class="telegramDispatchResult?.success ? 'p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs font-mono' : 'p-3 rounded-xl bg-red-950/40 border border-red-500/40 text-red-300 text-xs font-mono'">
+                        <p class="font-bold flex items-center gap-2">
+                            <i :data-lucide="telegramDispatchResult?.success ? 'check-circle' : 'alert-triangle'" class="w-4 h-4"></i>
+                            <span x-text="telegramDispatchResult?.success ? '¡Despacho completado!' : 'Resultado del despacho:'"></span>
+                        </p>
+                        <pre class="mt-1.5 text-[11px] opacity-90 whitespace-pre-wrap font-mono" x-text="telegramDispatchResult?.message"></pre>
+                    </div>
                 </div>
 
                 <div class="space-y-4 font-mono text-xs">
@@ -1262,6 +1315,10 @@ function settingsForm() {
         geminiTestResult: null,
         testingTelegram: false,
         telegramTestResult: null,
+        telegramPending: {{ (int) ($telegramPendingCount ?? 0) }},
+        telegramSent: {{ (int) ($telegramSentCount ?? 0) }},
+        dispatchingTelegram: false,
+        telegramDispatchResult: null,
         
         // Logo & Branding interactive state
         logoType: {!! json_encode($settings['site_logo_type'] ?? 'icon_text') !!},
@@ -1361,6 +1418,37 @@ function settingsForm() {
             .catch(err => {
                 this.testingTelegram = false;
                 this.telegramTestResult = { success: false, message: 'Error de red al conectar con el servidor para probar Telegram.', error: err.message };
+                this.$nextTick(() => {
+                    if (window.lucide) window.lucide.createIcons();
+                });
+            });
+        },
+
+        dispatchTelegramOne() {
+            this.dispatchingTelegram = true;
+            this.telegramDispatchResult = null;
+
+            fetch('{{ route('admin.settings.dispatchTelegramDrip') }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+            })
+            .then(r => r.json())
+            .then(d => {
+                this.dispatchingTelegram = false;
+                this.telegramDispatchResult = d;
+                if (d.remaining_count !== undefined) {
+                    this.telegramPending = d.remaining_count;
+                }
+                if (d.sent_count !== undefined) {
+                    this.telegramSent = d.sent_count;
+                }
+                this.$nextTick(() => {
+                    if (window.lucide) window.lucide.createIcons();
+                });
+            })
+            .catch(err => {
+                this.dispatchingTelegram = false;
+                this.telegramDispatchResult = { success: false, message: 'Error de red: ' + err.message };
                 this.$nextTick(() => {
                     if (window.lucide) window.lucide.createIcons();
                 });

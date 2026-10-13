@@ -7,6 +7,7 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
+use App\Models\Setting;
 use Illuminate\Support\Facades\Schedule;
 
 /*
@@ -24,9 +25,9 @@ $dripCommand = Schedule::command('games:publish-drip');
 
 $intervalHours = 2;
 try {
-    $intervalHours = (int) \App\Models\Setting::get('roms_batch_interval_hours', config('roms.batch_interval_hours', 2));
+    $intervalHours = (int) Setting::get('roms_batch_interval_hours', config('roms.batch_interval_hours', 2));
     $intervalHours = max(1, min(72, $intervalHours));
-} catch (\Throwable $e) {
+} catch (Throwable $e) {
     $intervalHours = (int) config('roms.batch_interval_hours', 2);
 }
 
@@ -44,8 +45,8 @@ match ($intervalHours) {
 $dripCommand
     ->when(function () {
         try {
-            return (bool) \App\Models\Setting::get('roms_autopilot_enabled', config('roms.autopilot_enabled', true));
-        } catch (\Throwable $e) {
+            return (bool) Setting::get('roms_autopilot_enabled', config('roms.autopilot_enabled', true));
+        } catch (Throwable $e) {
             return true;
         }
     })
@@ -72,3 +73,16 @@ Schedule::command('app:maintenance-optimize')
     ->runInBackground()
     ->appendOutputTo(storage_path('logs/maintenance.log'));
 
+// 5. PUBLICACIÓN DOSIFICADA EN TELEGRAM (1 juego cada 1 minuto para no saturar el canal ni la API)
+Schedule::command('telegram:publish-drip')
+    ->everyMinute()
+    ->when(function () {
+        try {
+            return Setting::get('telegram_auto_publish', '0') === '1';
+        } catch (Throwable $e) {
+            return false;
+        }
+    })
+    ->withoutOverlapping(2)
+    ->runInBackground()
+    ->appendOutputTo(storage_path('logs/telegram-publisher.log'));
