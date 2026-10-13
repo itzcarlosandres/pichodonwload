@@ -1071,12 +1071,19 @@
                         </div>
                         <div class="h-4 w-px bg-gray-800 hidden sm:block"></div>
                         <div class="flex items-center gap-2">
+                            <span class="text-gray-400">Enviados hoy:</span>
+                            <span class="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 font-bold">
+                                <span x-text="telegramSentToday"></span> / {{ ($settings['telegram_daily_limit'] ?? '20') == '0' ? '∞' : ($settings['telegram_daily_limit'] ?? '20') }}
+                            </span>
+                        </div>
+                        <div class="h-4 w-px bg-gray-800 hidden sm:block"></div>
+                        <div class="flex items-center gap-2">
                             <span class="text-gray-400">En cola pendientes:</span>
                             <span class="px-2 py-0.5 rounded bg-sky-500/10 border border-sky-500/30 text-sky-300 font-bold" x-text="telegramPending"></span>
                         </div>
                         <div class="h-4 w-px bg-gray-800 hidden sm:block"></div>
                         <div class="flex items-center gap-2">
-                            <span class="text-gray-400">Ya enviados:</span>
+                            <span class="text-gray-400">Total histórico:</span>
                             <span class="text-gray-300 font-bold" x-text="telegramSent"></span>
                         </div>
                     </div>
@@ -1098,6 +1105,25 @@
                             </span>
                         </template>
                     </button>
+                </div>
+
+                <!-- Daily Limit Setting Control -->
+                <div class="p-4 rounded-xl bg-[#0A0C0F] border border-[#232936] flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-mono text-xs">
+                    <div>
+                        <label class="block font-bold text-gray-200 flex items-center gap-2">
+                            <i data-lucide="gauge" class="w-4 h-4 text-amber-400"></i> Límite Máximo Diario (Tope de Envíos al Día)
+                        </label>
+                        <p class="text-[11px] text-gray-400 font-sans mt-0.5">Controla cuántas ROMs publicar como máximo en Telegram cada día. Ingresa <code>0</code> para desactivar el límite y enviar todos los pendientes.</p>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <input type="number" 
+                               name="telegram_daily_limit" 
+                               min="0" 
+                               max="500" 
+                               value="{{ $settings['telegram_daily_limit'] ?? '20' }}" 
+                               class="w-24 bg-[#11141A] border border-[#232936] rounded-xl p-2.5 text-center text-xs text-amber-300 font-mono font-bold focus:border-amber-500">
+                        <span class="text-xs text-gray-400 font-mono">juegos / día</span>
+                    </div>
                 </div>
 
                 <!-- Live Dispatch Result Feedback -->
@@ -1317,6 +1343,7 @@ function settingsForm() {
         telegramTestResult: null,
         telegramPending: {{ (int) ($telegramPendingCount ?? 0) }},
         telegramSent: {{ (int) ($telegramSentCount ?? 0) }},
+        telegramSentToday: {{ (int) ($telegramSentToday ?? 0) }},
         dispatchingTelegram: false,
         telegramDispatchResult: null,
         
@@ -1441,6 +1468,9 @@ function settingsForm() {
                 }
                 if (d.sent_count !== undefined) {
                     this.telegramSent = d.sent_count;
+                }
+                if (d.sent_today !== undefined) {
+                    this.telegramSentToday = d.sent_today;
                 }
                 this.$nextTick(() => {
                     if (window.lucide) window.lucide.createIcons();

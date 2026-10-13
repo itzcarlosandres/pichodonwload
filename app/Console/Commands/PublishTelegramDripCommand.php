@@ -43,6 +43,19 @@ class PublishTelegramDripCommand extends Command
             return self::SUCCESS;
         }
 
+        $dailyLimit = (int) Setting::get('telegram_daily_limit', '20');
+        if ($dailyLimit > 0 && ! $force) {
+            $sentToday = Game::whereNotNull('telegram_sent_at')
+                ->whereDate('telegram_sent_at', today())
+                ->count();
+
+            if ($sentToday >= $dailyLimit) {
+                $this->line("⏸️ Límite diario alcanzado ({$sentToday}/{$dailyLimit} juegos enviados hoy). Se reanudará automáticamente mañana.");
+
+                return self::SUCCESS;
+            }
+        }
+
         $botToken = $telegramBot->getBotToken();
         $channelId = $telegramBot->getChannelId();
 

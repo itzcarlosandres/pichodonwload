@@ -155,20 +155,20 @@ class TelegramBotService
                 ],
             ];
 
-            $photoUrl = $game->cover_thumb_url ?: $game->cover_url;
-            if (! empty($photoUrl) && ! str_starts_with($photoUrl, 'http://') && ! str_starts_with($photoUrl, 'https://')) {
-                $photoUrl = asset(ltrim($photoUrl, '/'));
-            }
+            $jpegBytes = $this->resolveCoverImageBytes($game);
 
-            // Attempt 1: Send Photo with Caption if image URL is available
-            if (! empty($photoUrl) && filter_var($photoUrl, FILTER_VALIDATE_URL)) {
-                $photoResponse = Http::withoutVerifying()->timeout(15)->post("https://api.telegram.org/bot{$botToken}/sendPhoto", [
-                    'chat_id' => $chatId,
-                    'photo' => $photoUrl,
-                    'caption' => $caption,
-                    'parse_mode' => 'HTML',
-                    'reply_markup' => json_encode($inlineKeyboard),
-                ]);
+            // Attempt 1: Send Photo with Caption (uploaded directly as JPEG to avoid WebP / URL download issues)
+            if (! empty($jpegBytes)) {
+                $photoCaption = mb_strlen($caption) > 1024 ? mb_substr($caption, 0, 1020).'...' : $caption;
+                $photoResponse = Http::withoutVerifying()
+                    ->timeout(25)
+                    ->attach('photo', $jpegBytes, 'cover.jpg')
+                    ->post("https://api.telegram.org/bot{$botToken}/sendPhoto", [
+                        'chat_id' => $chatId,
+                        'caption' => $photoCaption,
+                        'parse_mode' => 'HTML',
+                        'reply_markup' => json_encode($inlineKeyboard),
+                    ]);
 
                 if ($photoResponse->successful()) {
                     $msgId = $photoResponse->json('result.message_id');
@@ -256,5 +256,82 @@ class TelegramBotService
             ."📅 <b>Año:</b> {$year}\n\n"
             ."⚡ <i>Archivo verificado, limpio y con descarga directa de alta velocidad.</i>\n\n"
             ."🔗 <b>Ficha & Enlaces:</b> {$gameUrl}";
+    }
+
+    /**
+     * Resolve and convert the game cover image into JPEG bytes suitable for Telegram sendPhoto.
+     * Telegram requires JPG/PNG and rejects WebP via URL. Converting to JPEG bytes and attaching
+     * via multipart guarantees delivery regardless of local paths, WebP formats, or firewalls.
+     */
+    public function resolveCoverImageBytes(Game $game): ?string
+    {
+        $candidate = $game->cover_thumb_url ?: $game->cover_url;
+        if (empty($candidate)) {
+            return null;
+        }
+
+        $rawBytes = null;
+
+        // 1. Check if the image exists directly on local disk
+        $parsedPath = parse_url($candidate, PHP_URL_PATH) ?: $candidate;
+        $trimmedPath = ltrim($parsedPath, '/');
+        $normalizedPath = preg_replace('#^(pichodonwload/)?(public/)?#', '', $trimmedPath);
+
+        $possibleLocalPaths = [
+            public_path($trimmedPath),
+            public_path($normalizedPath),
+            base_path($trimmedPath),
+            storage_path('app/public/'.preg_replace('#^storage/#', '', $normalizedPath)),
+        ];
+
+        foreach ($possibleLocalPaths as $localPath) {
+            if (! empty($localPath) && file_exists($localPath) && is_file($localPath)) {
+                $rawBytes = @file_get_contents($localPath);
+                if (! empty($rawBytes)) {
+                    break;
+                }
+            }
+        }
+
+        // 2. If not on local disk, download from URL
+        if (empty($rawBytes) && filter_var($candidate, FILTER_VALIDATE_URL)) {
+            try {
+                $downloadResponse = Http::withoutVerifying()
+                    ->timeout(12)
+                    ->withHeaders([
+                        'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+                    ])
+                    ->get($candidate);
+
+                if ($downloadResponse->successful()) {
+                    $rawBytes = $downloadResponse->body();
+                }
+            } catch (\Throwable $e) {
+                Log::warning("Could not download cover for Telegram game #{$game->id}: ".$e->getMessage());
+            }
+        }
+
+        if (empty($rawBytes)) {
+            return null;
+        }
+
+        // 3. Convert image to clean JPEG bytes (handles WebP, PNG, GIF smoothly)
+        try {
+            $img = @imagecreatefromstring($rawBytes);
+            if ($img !== false) {
+                ob_start();
+                imagejpeg($img, null, 90);
+                $jpegBytes = ob_get_clean();
+                imagedestroy($img);
+
+                if (! empty($jpegBytes)) {
+                    return $jpegBytes;
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning("Image conversion to JPEG failed for game #{$game->id}: ".$e->getMessage());
+        }
+
+        return null;
     }
 }

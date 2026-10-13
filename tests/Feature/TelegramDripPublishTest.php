@@ -53,4 +53,42 @@ class TelegramDripPublishTest extends TestCase
 
         $this->assertNotNull($game->fresh()->telegram_sent_at);
     }
+
+    public function test_telegram_drip_respects_daily_limit(): void
+    {
+        Setting::set('telegram_auto_publish', '1');
+        Setting::set('telegram_daily_limit', '1');
+        Setting::set('telegram_bot_token', '123456:FAKE_TOKEN');
+        Setting::set('telegram_channel_id', '@fake_channel');
+
+        $console = Console::create([
+            'name' => 'SNES',
+            'slug' => 'snes',
+            'short_name' => 'SNES',
+        ]);
+
+        // Simular un juego ya enviado hoy
+        Game::create([
+            'title' => 'Super Mario World',
+            'slug' => 'super-mario-world',
+            'console_id' => $console->id,
+            'download_url' => 'https://example.com/mario.zip',
+            'status' => 'PUBLISHED',
+            'telegram_sent_at' => now(),
+        ]);
+
+        // Juego pendiente
+        Game::create([
+            'title' => 'Donkey Kong Country',
+            'slug' => 'donkey-kong-country',
+            'console_id' => $console->id,
+            'download_url' => 'https://example.com/dkc.zip',
+            'status' => 'PUBLISHED',
+            'telegram_sent_at' => null,
+        ]);
+
+        $this->artisan('telegram:publish-drip')
+            ->expectsOutputToContain('Límite diario alcanzado')
+            ->assertExitCode(0);
+    }
 }

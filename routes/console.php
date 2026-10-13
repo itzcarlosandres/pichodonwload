@@ -7,6 +7,7 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
+use App\Models\Game;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Schedule;
 
@@ -78,7 +79,22 @@ Schedule::command('telegram:publish-drip')
     ->everyMinute()
     ->when(function () {
         try {
-            return Setting::get('telegram_auto_publish', '0') === '1';
+            if (Setting::get('telegram_auto_publish', '0') !== '1') {
+                return false;
+            }
+
+            $dailyLimit = (int) Setting::get('telegram_daily_limit', '20');
+            if ($dailyLimit > 0) {
+                $sentToday = Game::whereNotNull('telegram_sent_at')
+                    ->whereDate('telegram_sent_at', today())
+                    ->count();
+
+                if ($sentToday >= $dailyLimit) {
+                    return false;
+                }
+            }
+
+            return true;
         } catch (Throwable $e) {
             return false;
         }

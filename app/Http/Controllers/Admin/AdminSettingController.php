@@ -28,8 +28,9 @@ class AdminSettingController extends Controller
         $settings = Setting::all()->pluck('value', 'key');
         $telegramPendingCount = Game::where('status', 'PUBLISHED')->whereNull('telegram_sent_at')->count();
         $telegramSentCount = Game::where('status', 'PUBLISHED')->whereNotNull('telegram_sent_at')->count();
+        $telegramSentToday = Game::whereNotNull('telegram_sent_at')->whereDate('telegram_sent_at', today())->count();
 
-        return view('admin.settings.index', compact('settings', 'telegramPendingCount', 'telegramSentCount'));
+        return view('admin.settings.index', compact('settings', 'telegramPendingCount', 'telegramSentCount', 'telegramSentToday'));
     }
 
     public function update(Request $request): RedirectResponse
@@ -113,12 +114,14 @@ class AdminSettingController extends Controller
 
         $remainingCount = Game::where('status', 'PUBLISHED')->whereNull('telegram_sent_at')->count();
         $sentCount = Game::where('status', 'PUBLISHED')->whereNotNull('telegram_sent_at')->count();
+        $sentToday = Game::whereNotNull('telegram_sent_at')->whereDate('telegram_sent_at', today())->count();
 
         return response()->json([
             'success' => $exitCode === 0,
             'message' => trim($output) ?: 'Despachador ejecutado.',
             'remaining_count' => $remainingCount,
             'sent_count' => $sentCount,
+            'sent_today' => $sentToday,
         ]);
     }
 
