@@ -91,8 +91,9 @@ class AdminSettingController extends Controller
     {
         $apiKey = $request->input('ai_api_key');
         $model = $request->input('ai_model');
+        $provider = $request->input('ai_provider');
 
-        $result = $this->aiService->testConnection($apiKey, $model);
+        $result = $this->aiService->testConnection($apiKey, $model, $provider);
 
         return response()->json($result);
     }

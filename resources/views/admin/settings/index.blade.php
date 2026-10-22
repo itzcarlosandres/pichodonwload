@@ -712,42 +712,59 @@
             </div>
         </div>
 
-        <!-- TAB 3: Google Gemini AI Automation (2.5 / 3.0+) -->
+        <!-- TAB 3: AI Automation (Groq Cloud & Google Gemini) -->
         <div x-show="activeTab === 'ai'" class="bg-[#11141A] border border-[#232936] rounded-2xl p-6 sm:p-8 space-y-6 shadow-xl">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#232936] pb-4">
                 <div>
                     <h2 class="text-base font-bold text-white font-sans flex items-center gap-2">
-                        <i data-lucide="sparkles" class="w-5 h-5 text-purple-400"></i> Google Gemini AI (Versiones 2.5 y 3.0+)
+                        <i data-lucide="sparkles" class="w-5 h-5 text-amber-400"></i> Automatización con Inteligencia Artificial (Groq & Gemini)
                     </h2>
-                    <p class="text-xs text-gray-400 font-sans mt-0.5">Integración oficial con la API de Google Gemini para autocompletar descripciones, metatags SEO y fichas técnicas con 1 clic.</p>
+                    <p class="text-xs text-gray-400 font-sans mt-0.5">Generación automática de sinopsis únicas, metatags SEO y fichas técnicas enriquecidas para posicionar en Google.</p>
                 </div>
 
-                <!-- Live Test Gemini Connection Button -->
-                <button type="button" @click="testGeminiConnection()" :disabled="testingGemini" class="px-4 py-2 rounded-xl bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white border border-purple-500/30 text-xs font-mono font-bold transition-all flex items-center gap-2">
+                <!-- Live Test AI Connection Button -->
+                <button type="button" @click="testGeminiConnection()" :disabled="testingGemini" class="px-4 py-2 rounded-xl bg-amber-600/20 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/30 text-xs font-mono font-bold transition-all flex items-center gap-2">
                     <i data-lucide="activity" class="w-4 h-4" :class="testingGemini ? 'animate-spin' : ''"></i>
-                    <span x-text="testingGemini ? 'Probando Gemini...' : 'Probar Gemini en Vivo'"></span>
+                    <span x-text="testingGemini ? 'Probando Inferencia...' : 'Probar Conexión de IA'"></span>
                 </button>
             </div>
 
-            <!-- Gemini Test Result Banner -->
+            <!-- AI Test Result Banner -->
             <template x-if="geminiTestResult">
-                <div :class="geminiTestResult.success ? 'bg-purple-950/80 border-purple-500/30 text-purple-300' : 'bg-rose-950/80 border-rose-500/30 text-rose-300'" class="p-4 rounded-xl border text-xs font-mono flex items-center gap-2">
+                <div :class="geminiTestResult.success ? 'bg-emerald-950/80 border-emerald-500/30 text-emerald-300' : 'bg-rose-950/80 border-rose-500/30 text-rose-300'" class="p-4 rounded-xl border text-xs font-mono flex items-center gap-2">
                     <i :data-lucide="geminiTestResult.success ? 'check-circle' : 'alert-triangle'" class="w-4 h-4 shrink-0"></i>
                     <span x-text="geminiTestResult.message"></span>
                 </div>
             </template>
 
-            <input type="hidden" name="ai_provider" value="gemini">
-
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 font-mono text-xs">
                 <div>
+                    <label class="block text-gray-400 mb-1">Proveedor de Inteligencia Artificial</label>
+                    <select name="ai_provider" x-model="aiProvider" class="w-full bg-[#0A0C0F] border border-[#232936] rounded-lg p-2.5 text-white font-sans font-semibold">
+                        <option value="groq">Groq Cloud (Recomendado — 100% Gratis, Ultra Rápido & Sin Límites)</option>
+                        <option value="gemini">Google Gemini API</option>
+                    </select>
+                </div>
+
+                <!-- Modelo Groq -->
+                <div x-show="aiProvider === 'groq'">
+                    <label class="block text-gray-400 mb-1">Modelo de Groq (LPU Ultra Rápido)</label>
+                    <select name="ai_model" x-bind:disabled="aiProvider !== 'groq'" class="w-full bg-[#0A0C0F] border border-[#232936] rounded-lg p-2.5 text-white">
+                        <option value="qwen/qwen3.8-27b" {{ ($settings['ai_model'] ?? 'qwen/qwen3.8-27b') === 'qwen/qwen3.8-27b' ? 'selected' : '' }}>Groq: Qwen 3.8 27B (Recomendado — Excelente en Español & Sinopsis Extensas)</option>
+                        <option value="openai/gpt-oss-120b" {{ ($settings['ai_model'] ?? '') === 'openai/gpt-oss-120b' ? 'selected' : '' }}>Groq: GPT-OSS 120B (Alta Capacidad de Razonamiento)</option>
+                        <option value="openai/gpt-oss-20b" {{ ($settings['ai_model'] ?? '') === 'openai/gpt-oss-20b' ? 'selected' : '' }}>Groq: GPT-OSS 20B (Ultra Ligero e Instantáneo)</option>
+                    </select>
+                </div>
+
+                <!-- Modelo Gemini -->
+                <div x-show="aiProvider === 'gemini'">
                     <label class="block text-gray-400 mb-1">Modelo de Google Gemini</label>
-                    <select name="ai_model" class="w-full bg-[#0A0C0F] border border-[#232936] rounded-lg p-2.5 text-white">
-                        <option value="gemini-2.5-flash" {{ ($settings['ai_model'] ?? 'gemini-2.5-flash') === 'gemini-2.5-flash' ? 'selected' : '' }}>Google Gemini 2.5 Flash (Recomendado — Ultra Rápido)</option>
-                        <option value="gemini-2.5-pro" {{ ($settings['ai_model'] ?? '') === 'gemini-2.5-pro' ? 'selected' : '' }}>Google Gemini 2.5 Pro (Máximo Razonamiento)</option>
-                        <option value="gemini-3.0-flash" {{ ($settings['ai_model'] ?? '') === 'gemini-3.0-flash' ? 'selected' : '' }}>Google Gemini 3.0 Flash (Nueva Generación 3.0)</option>
-                        <option value="gemini-3.0-pro" {{ ($settings['ai_model'] ?? '') === 'gemini-3.0-pro' ? 'selected' : '' }}>Google Gemini 3.0 Pro (Máxima Potencia 3.0)</option>
-                        <option value="gemini-2.0-flash" {{ ($settings['ai_model'] ?? '') === 'gemini-2.0-flash' ? 'selected' : '' }}>Google Gemini 2.0 Flash</option>
+                    <select name="ai_model" x-bind:disabled="aiProvider !== 'gemini'" class="w-full bg-[#0A0C0F] border border-[#232936] rounded-lg p-2.5 text-white">
+                        <option value="gemini-3.8-flash" {{ ($settings['ai_model'] ?? 'gemini-3.8-flash') === 'gemini-3.8-flash' ? 'selected' : '' }}>Google Gemini 3.8 Flash (Recomendado — Oficial & Ultra Rápido)</option>
+                        <option value="gemini-3.8-pro" {{ ($settings['ai_model'] ?? '') === 'gemini-3.8-pro' ? 'selected' : '' }}>Google Gemini 3.8 Pro (Máxima Potencia & Razonamiento)</option>
+                        <option value="gemini-3.0-flash" {{ ($settings['ai_model'] ?? '') === 'gemini-3.0-flash' ? 'selected' : '' }}>Google Gemini 3.0 Flash</option>
+                        <option value="gemini-3.0-pro" {{ ($settings['ai_model'] ?? '') === 'gemini-3.0-pro' ? 'selected' : '' }}>Google Gemini 3.0 Pro</option>
+                        <option value="gemini-2.5-flash" {{ ($settings['ai_model'] ?? '') === 'gemini-2.5-flash' ? 'selected' : '' }}>Google Gemini 2.5 Flash</option>
                     </select>
                 </div>
 
@@ -758,13 +775,20 @@
 
                 <div class="sm:col-span-2 space-y-1">
                     <div class="flex items-center justify-between">
-                        <label class="block text-purple-400 font-bold">Google AI Studio API Key</label>
-                        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="text-xs text-blue-400 hover:underline flex items-center gap-1 font-sans">
-                            Obtener clave en Google AI Studio <i data-lucide="external-link" class="w-3 h-3"></i>
-                        </a>
+                        <label class="block text-amber-400 font-bold" x-text="aiProvider === 'groq' ? 'Groq Cloud API Key' : 'Google AI Studio API Key'"></label>
+                        <template x-if="aiProvider === 'groq'">
+                            <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" class="text-xs text-amber-400 hover:underline flex items-center gap-1 font-sans">
+                                Obtener clave gratis en Groq Console <i data-lucide="external-link" class="w-3 h-3"></i>
+                            </a>
+                        </template>
+                        <template x-if="aiProvider === 'gemini'">
+                            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="text-xs text-blue-400 hover:underline flex items-center gap-1 font-sans">
+                                Obtener clave en Google AI Studio <i data-lucide="external-link" class="w-3 h-3"></i>
+                            </a>
+                        </template>
                     </div>
-                    <input type="password" name="ai_api_key" value="{{ $settings['ai_api_key'] ?? '' }}" placeholder="AIzaSy..." class="w-full bg-[#0A0C0F] border border-[#232936] rounded-lg p-2.5 text-white">
-                    <p class="text-[11px] text-gray-500 font-sans">La clave se almacena de forma segura y se utiliza exclusivamente para llamadas server-side autenticadas hacia los endpoints oficiales de Google Gemini.</p>
+                    <input type="password" name="ai_api_key" value="{{ $settings['ai_api_key'] ?? '' }}" :placeholder="aiProvider === 'groq' ? 'gsk_...' : 'AIzaSy...'" class="w-full bg-[#0A0C0F] border border-[#232936] rounded-lg p-2.5 text-white">
+                    <p class="text-[11px] text-gray-500 font-sans">La clave se almacena cifrada en base de datos y se utiliza exclusivamente para llamadas server-side autenticadas de alta velocidad.</p>
                 </div>
             </div>
         </div>
@@ -1335,6 +1359,7 @@
 function settingsForm() {
     return {
         activeTab: (new URLSearchParams(window.location.search).get('tab')) || 'general',
+        aiProvider: {!! json_encode($settings['ai_provider'] ?? 'groq') !!},
         testingStorage: false,
         testResult: null,
         testingGemini: false,
@@ -1404,13 +1429,15 @@ function settingsForm() {
         testGeminiConnection() {
             this.testingGemini = true;
             this.geminiTestResult = null;
+            const provider = this.aiProvider || document.querySelector('select[name="ai_provider"]')?.value || 'groq';
             const apiKey = document.querySelector('input[name="ai_api_key"]')?.value || '';
-            const model = document.querySelector('select[name="ai_model"]')?.value || 'gemini-1.5-flash';
+            const modelSelect = document.querySelector('select[name="ai_model"]:not([disabled])');
+            const model = modelSelect?.value || (provider === 'groq' ? 'openai/gpt-oss-120b' : 'gemini-3.8-flash');
 
             fetch('{{ route('admin.settings.testGemini') }}', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                body: JSON.stringify({ ai_api_key: apiKey, ai_model: model })
+                body: JSON.stringify({ ai_provider: provider, ai_api_key: apiKey, ai_model: model })
             })
             .then(r => r.json())
             .then(d => {
@@ -1419,7 +1446,7 @@ function settingsForm() {
             })
             .catch(err => {
                 this.testingGemini = false;
-                this.geminiTestResult = { success: false, message: 'Error de red al conectar con Google Gemini.' };
+                this.geminiTestResult = { success: false, message: 'Error de red al conectar con el motor de IA.' };
             });
         },
 
