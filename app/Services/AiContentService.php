@@ -228,9 +228,14 @@ class AiContentService
                     ."Actualmente, esta entrega se consolida como una obra imprescindible dentro de la historia del videojuego. A través de la preservación digital en **{$brand}** y la compatibilidad con emuladores de alta fidelidad a **60 FPS**, los jugadores pueden redescubrir este clásico legendario en su máxima expresión técnica.";
             }
         } else {
-            $content = "Ambientado en un universo fascinante y diseñado con maestría técnica, **{$title}** representa uno de los hitos más emblemáticos de la biblioteca de **{$consoleName}**. La aventura sumerge al jugador en una trama absorbente repleta de desafíos épicos, personajes memorables y una atmósfera que aprovecha al máximo las capacidades del hardware original de la época.\n\n"
-                ."A nivel jugable, destaca por su refinado sistema de control, mecánicas pulidas y un diseño de niveles que recompensa la exploración y la habilidad. Ya sea en sus secuencias de acción trepidante o en sus momentos de resolución estratégica, la experiencia mantiene un ritmo vibrante respaldado por una dirección artística excepcional y una banda sonora inolvidable que define la identidad de esta generación.\n\n"
-                ."Hoy en día, este clásico se mantiene como una pieza de culto indispensable. Gracias a los estándares modernos de preservación digital en **{$brand}** y emulación de alta fidelidad con soporte para **60 FPS** y reescalado de texturas en alta resolución, los jugadores pueden redescubrir esta obra maestra en su máxima expresión visual, conservando fielmente la esencia que lo convirtió en leyenda.";
+            $genreText = ! empty($context['genre']) ? "dentro del género **{$context['genre']}**" : 'en su género';
+            $yearText = ! empty($context['release_year']) ? "originalmente en {$context['release_year']}" : 'durante su época dorada';
+            $devText = ! empty($context['developer']) ? "desarrollado por **{$context['developer']}**" : 'diseñado';
+            $langText = ! empty($context['languages']) ? "Disponible en {$context['languages']}." : '';
+
+            $content = "**{$title}** es una destacada entrega de **{$consoleName}**, {$devText} y publicada {$yearText} {$genreText}. La propuesta sumerge a los jugadores en una experiencia inmersiva con desafíos diseñados para aprovechar las particularidades del sistema.\n\n"
+                ."A nivel jugable, destaca por sus mecánicas de control accesibles y una curva de dificultad bien calibrada. Sus escenarios y dinámicas de juego invitan a la habilidad constante y a explorar al máximo las virtudes del catálogo de **{$consoleName}**. {$langText}\n\n"
+                ."Para la comunidad de emulación y preservación digital en **{$brand}**, este título representa una pieza indispensable. El archivo se encuentra verificado para garantizar la máxima compatibilidad y rendimiento fluido a **60 FPS** en los emuladores recomendados.";
         }
 
         return [
@@ -489,7 +494,15 @@ class AiContentService
     protected function callGroqApi(string $prompt, bool $jsonMode = false): string
     {
         $apiKey = Setting::get('ai_api_key');
+        if (empty($apiKey) || ! str_starts_with($apiKey, 'gsk_')) {
+            $apiKey = env('GROQ_API_KEY', '');
+        }
+
         $model = Setting::get('ai_model', self::GROQ_DEFAULT_MODEL);
+        if (empty($model) || ! str_contains($model, '/')) {
+            $model = self::GROQ_DEFAULT_MODEL;
+        }
+
         $temperature = (float) Setting::get('ai_temperature', 0.7);
 
         if (empty($apiKey)) {
