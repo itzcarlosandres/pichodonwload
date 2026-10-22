@@ -119,7 +119,7 @@ class AiContentService
             .($langHint ? "- {$langHint}\n" : '')
             .'Responde ÚNICAMENTE con el objeto JSON puro sin bloques de código ni texto adicional.';
 
-        $rawResponse = $this->callAiApi($prompt);
+        $rawResponse = $this->callAiApi($prompt, true);
 
         try {
             $cleanJson = trim($rawResponse);
@@ -142,14 +142,16 @@ class AiContentService
             // Fallback gracefully
         }
 
-        // Default heuristic generation if Gemini key is not configured or fails
+        // Heurística de respaldo dinámica si la IA no estuviese disponible
+        $genrePart = ! empty($context['genre']) ? " de {$context['genre']}" : '';
+        $yearPart = ! empty($context['release_year']) ? " ({$context['release_year']})" : '';
         $extraTitle = $hasSpanish ? ' en Español' : '';
 
         return [
             'success' => true,
-            'meta_title' => "Descargar {$title}{$extraTitle} {$consoleName} ROM ISO Verificado",
-            'meta_description' => "Descarga {$title} para {$consoleName} con volcado verificado No-Intro/Redump en {$brand}. Guía de emulación y configuración a 60 FPS.",
-            'keywords' => "{$title}, {$consoleName}, descargar rom {$title}, iso {$consoleName}, emulacion 60fps",
+            'meta_title' => "Descargar {$title}{$extraTitle} para {$consoleName} [ROM ISO]",
+            'meta_description' => "Juega a {$title}{$yearPart}{$extraTitle} en {$consoleName}. Archivo verificado{$genrePart} listo para emular en alta velocidad en {$brand}.",
+            'keywords' => "{$title}, {$consoleName}, descargar rom {$title}, iso {$consoleName}, emulador {$consoleName}",
         ];
     }
 
@@ -468,25 +470,23 @@ class AiContentService
     }
 
     /**
-     * Llamada oficial directa a Google Gemini API (v1beta)
-    /**
      * Enrutador central para llamadas de IA (Groq o Google Gemini)
      */
-    protected function callAiApi(string $prompt): string
+    protected function callAiApi(string $prompt, bool $jsonMode = false): string
     {
         $provider = $this->getActiveProvider();
 
         if ($provider === self::PROVIDER_GROQ) {
-            return $this->callGroqApi($prompt);
+            return $this->callGroqApi($prompt, $jsonMode);
         }
 
-        return $this->callGeminiApi($prompt);
+        return $this->callGeminiApi($prompt, $jsonMode);
     }
 
     /**
      * Llamada oficial a Groq Cloud API (Inferencia Ultra Rápida)
      */
-    protected function callGroqApi(string $prompt): string
+    protected function callGroqApi(string $prompt, bool $jsonMode = false): string
     {
         $apiKey = Setting::get('ai_api_key');
         $model = Setting::get('ai_model', self::GROQ_DEFAULT_MODEL);
@@ -497,19 +497,25 @@ class AiContentService
         }
 
         try {
+            $payload = [
+                'model' => $model,
+                'messages' => [
+                    ['role' => 'user', 'content' => $prompt],
+                ],
+                'temperature' => $temperature,
+                'max_tokens' => 2048,
+            ];
+
+            if ($jsonMode) {
+                $payload['response_format'] = ['type' => 'json_object'];
+            }
+
             $response = Http::withoutVerifying()
                 ->withToken($apiKey)
                 ->connectTimeout(15)
                 ->timeout(45)
                 ->retry(2, 300)
-                ->post('https://api.groq.com/openai/v1/chat/completions', [
-                    'model' => $model,
-                    'messages' => [
-                        ['role' => 'user', 'content' => $prompt],
-                    ],
-                    'temperature' => $temperature,
-                    'max_tokens' => 2048,
-                ]);
+                ->post('https://api.groq.com/openai/v1/chat/completions', $payload);
 
             if ($response->successful()) {
                 return $response->json('choices.0.message.content') ?? '';
