@@ -8,8 +8,8 @@
     <meta name="keywords" content="@yield('meta_keywords', \App\Models\Setting::get('seo_keywords', 'roms, emuladores, videojuegos, ps2, switch, gamecube, xbox 360, gba'))">
     <meta name="robots" content="@yield('meta_robots', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1')">
     
-    <!-- Canonical URL -->
-    <link rel="canonical" href="@yield('canonical', url()->current())">
+    <!-- Canonical URL (Unificada y limpia sin index.php) -->
+    <link rel="canonical" href="@yield('canonical', preg_replace('#/index\.php(?=/|$)#', '', url()->current()))">
 
     <!-- Google Search Console & Bing Webmaster Verification -->
     @php

@@ -3,7 +3,11 @@ Allow: /
 Disallow: /admin/
 Disallow: /login
 Disallow: /register
-Disallow: /download/*/track
+Disallow: /index.php
+Disallow: /index.php/*
+Disallow: /vault/download/
+Disallow: /game/*/download
+Disallow: /download/
 Disallow: /search/live
 Disallow: /favorites/
 
