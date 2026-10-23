@@ -594,10 +594,13 @@
                 </template>
             </div>
             
-            <p class="text-[11px] font-mono text-gray-500 flex items-center gap-1.5 pt-1">
-                <i data-lucide="info" class="w-3.5 h-3.5 text-blue-400"></i>
-                <span>Las capturas seleccionadas se guardarán en la galería de la base de datos (<code class="text-gray-400 font-mono">game_screenshots</code>) y se mostrarán en la ficha pública del juego.</span>
-            </p>
+            <div class="p-3 rounded-xl bg-blue-950/30 border border-blue-500/20 text-[11px] font-sans text-blue-300 flex items-start gap-2.5">
+                <i data-lucide="sparkles" class="w-4 h-4 text-blue-400 shrink-0 mt-0.5"></i>
+                <div>
+                    <span class="font-bold text-white block">Vista previa temporal del extractor:</span>
+                    <span>Estas capturas se muestran directamente desde CDRomance como vista previa para que puedas elegir cuáles incluir. Al hacer clic en <strong class="text-white">"Guardar en Catálogo"</strong>, el servidor descargará cada imagen seleccionada, la convertirá a <strong>WebP optimizado</strong> y la subirá a tu bucket de <strong>Cloudflare R2</strong> (o servidor local), reemplazando cualquier enlace externo.</span>
+                </div>
+            </div>
         </div>
 
         <!-- Raw JSON Inspector Accordion -->

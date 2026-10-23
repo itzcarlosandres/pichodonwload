@@ -35,7 +35,7 @@ class StorageService
                 'version' => 'latest',
                 'region' => Setting::get('r2_region') ?: config('filesystems.disks.s3.region') ?: 'auto',
                 'endpoint' => $endpoint,
-                'use_path_style_endpoint' => false,
+                'use_path_style_endpoint' => true,
                 'http' => [
                     'verify' => config('filesystems.disks.s3.http.verify', true),
                 ],
@@ -102,7 +102,7 @@ class StorageService
                     'version' => 'latest',
                     'region' => Setting::get('r2_region') ?: config('filesystems.disks.s3.region') ?: 'auto',
                     'endpoint' => $endpoint,
-                    'use_path_style_endpoint' => false,
+                    'use_path_style_endpoint' => true,
                     'http' => [
                         'verify' => config('filesystems.disks.s3.http.verify', true),
                     ],
@@ -208,7 +208,7 @@ class StorageService
                 'version' => 'latest',
                 'region' => Setting::get('r2_region') ?: config('filesystems.disks.s3.region') ?: 'auto',
                 'endpoint' => $endpoint,
-                'use_path_style_endpoint' => false,
+                'use_path_style_endpoint' => true,
                 'http' => [
                     'verify' => config('filesystems.disks.s3.http.verify', true),
                 ],
@@ -273,7 +273,7 @@ class StorageService
                 'version' => 'latest',
                 'region' => Setting::get('r2_region') ?: config('filesystems.disks.s3.region') ?: 'auto',
                 'endpoint' => $endpoint,
-                'use_path_style_endpoint' => false,
+                'use_path_style_endpoint' => true,
                 'http' => [
                     'verify' => config('filesystems.disks.s3.http.verify', true),
                 ],
@@ -326,17 +326,18 @@ class StorageService
         }
 
         try {
-            $endpoint = Setting::get('r2_endpoint') ?: config('filesystems.disks.s3.endpoint');
-            $bucket = Setting::get('r2_bucket') ?: config('filesystems.disks.s3.bucket');
-            $accessKey = Setting::get('r2_access_key_id') ?: Setting::get('r2_access_key') ?: config('filesystems.disks.s3.key');
-            $secretKey = Setting::get('r2_secret_access_key') ?: Setting::get('r2_secret_key') ?: config('filesystems.disks.s3.secret');
-            $publicDomain = Setting::get('r2_public_url') ?: Setting::get('r2_public_domain') ?: config('filesystems.disks.s3.url');
+            $endpoint = trim(Setting::get('r2_endpoint') ?: config('filesystems.disks.s3.endpoint') ?: '');
+            $bucket = trim(Setting::get('r2_bucket') ?: config('filesystems.disks.s3.bucket') ?: '');
+            $accessKey = trim(Setting::get('r2_access_key_id') ?: Setting::get('r2_access_key') ?: config('filesystems.disks.s3.key') ?: '');
+            $secretKey = trim(Setting::get('r2_secret_access_key') ?: Setting::get('r2_secret_key') ?: config('filesystems.disks.s3.secret') ?: '');
+            $publicDomain = trim(Setting::get('r2_public_url') ?: Setting::get('r2_public_domain') ?: config('filesystems.disks.s3.url') ?: '');
+            $region = trim(Setting::get('r2_region') ?: config('filesystems.disks.s3.region') ?: 'auto');
 
             $s3Client = new S3Client([
                 'version' => 'latest',
-                'region' => Setting::get('r2_region') ?: config('filesystems.disks.s3.region') ?: 'auto',
-                'endpoint' => $endpoint,
-                'use_path_style_endpoint' => false,
+                'region' => $region ?: 'auto',
+                'endpoint' => rtrim($endpoint, '/'),
+                'use_path_style_endpoint' => true,
                 'http' => [
                     'verify' => config('filesystems.disks.s3.http.verify', true),
                 ],
@@ -360,12 +361,16 @@ class StorageService
                     $domain = 'https://'.$domain;
                 }
 
-                return "{$domain}/{$key}";
+                $publicUrl = "{$domain}/{$key}";
+            } else {
+                $publicUrl = rtrim($endpoint, '/')."/{$bucket}/{$key}";
             }
 
-            return rtrim($endpoint, '/')."/{$bucket}/{$key}";
+            Log::info("Captura subida a Cloudflare R2 con éxito: {$publicUrl}");
+
+            return $publicUrl;
         } catch (\Throwable $e) {
-            Log::warning('R2 Upload error for '.$key.': '.$e->getMessage());
+            Log::error('Error al subir captura a Cloudflare R2 para '.$key.': '.$e->getMessage());
 
             return null;
         }
@@ -385,7 +390,7 @@ class StorageService
                 'version' => 'latest',
                 'region' => Setting::get('r2_region') ?: config('filesystems.disks.s3.region') ?: 'auto',
                 'endpoint' => $endpoint,
-                'use_path_style_endpoint' => false,
+                'use_path_style_endpoint' => true,
                 'http' => [
                     'verify' => config('filesystems.disks.s3.http.verify', true),
                 ],
@@ -479,7 +484,7 @@ class StorageService
                 'version' => 'latest',
                 'region' => Setting::get('r2_region') ?: config('filesystems.disks.s3.region') ?: 'auto',
                 'endpoint' => $endpoint,
-                'use_path_style_endpoint' => false,
+                'use_path_style_endpoint' => true,
                 'http' => [
                     'verify' => config('filesystems.disks.s3.http.verify', true),
                 ],
