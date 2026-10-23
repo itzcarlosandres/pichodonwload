@@ -454,6 +454,20 @@
                             </div>
                         </div>
 
+                        <!-- AI Content & SEO Switch -->
+                        <div class="pt-1">
+                            <label class="flex items-start gap-2.5 cursor-pointer">
+                                <input type="checkbox" x-model="generateAi" class="mt-0.5 rounded bg-[#11141A] border-[#232936] text-purple-600 focus:ring-purple-500">
+                                <div>
+                                    <span class="text-xs font-semibold text-purple-300 flex items-center gap-1.5">
+                                        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-purple-400"></i>
+                                        <span>⚡ Generar Sinopsis (~200 palabras) y SEO con IA al guardar</span>
+                                    </span>
+                                    <span class="text-[10px] text-gray-500 block leading-tight">Redacta análisis profundo 100% único y metatags SEO anti-duplicación para Google (Groq / Gemini).</span>
+                                </div>
+                            </label>
+                        </div>
+
                         <!-- Local Optimization Switch -->
                         <div class="pt-1">
                             <label class="flex items-start gap-2.5 cursor-pointer">
@@ -473,7 +487,7 @@
                                     class="flex-1 px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-lg shadow-purple-600/20 cursor-pointer disabled:opacity-50">
                                 <i data-lucide="loader-2" class="w-4 h-4 animate-spin" x-show="saving"></i>
                                 <i data-lucide="save" class="w-4 h-4" x-show="!saving"></i>
-                                <span x-text="saving ? 'Guardando en Catálogo...' : 'Guardar en Catálogo'"></span>
+                                <span x-text="saving ? (generateAi ? 'Redactando con IA y Guardando...' : 'Guardando en Catálogo...') : 'Guardar en Catálogo'"></span>
                             </button>
 
                             <!-- Open in Full Create Form (New Tab) -->
@@ -605,6 +619,7 @@ function scraperDemoApp() {
         categoriesList: @json($categories),
         saveStatus: 'DRAFT',
         optimizeCover: true,
+        generateAi: true,
         selectedCategoryIds: [],
         selectedScreenshots: [],
         selectedConsoleId: '{{ $consoles->firstWhere("slug", "psp")?->id ?? $consoles->first()?->id }}',
@@ -793,8 +808,11 @@ function scraperDemoApp() {
                         region: this.result.region,
                         languages: this.result.languages,
                         publisher: this.result.publisher,
+                        developer: this.result.developer || '',
+                        raw_genre: this.result.raw_genre || '',
                         status: this.saveStatus,
                         optimize_cover: this.optimizeCover,
+                        generate_ai: this.generateAi,
                         download_links: this.result.download_links || [],
                     })
                 });

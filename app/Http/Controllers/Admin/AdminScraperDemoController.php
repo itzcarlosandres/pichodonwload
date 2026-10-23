@@ -192,6 +192,40 @@ class AdminScraperDemoController extends Controller
             }
         }
 
+        $console = Console::find($consoleId);
+        $consoleName = $console?->name ?? 'Retro Console';
+
+        // Piloto Automático IA: Redactar Sinopsis (~200 palabras) y Meta SEO enriquecido si está activo
+        $description = 'Pendiente de generar con IA.';
+        $metaTitle = null;
+        $metaDescription = null;
+
+        if ($request->boolean('generate_ai', true)) {
+            try {
+                $context = [
+                    'release_year' => $releaseYear,
+                    'region' => $region,
+                    'languages' => $languages,
+                    'genre' => $request->input('raw_genre'),
+                    'publisher' => $publisher,
+                    'developer' => $request->input('developer'),
+                ];
+
+                $descRes = $this->aiService->generateRichDescription($title, $consoleName, $context);
+                if (! empty($descRes['description'])) {
+                    $description = $descRes['description'];
+                }
+
+                $seoRes = $this->aiService->generateSeo($title, $consoleName, $context);
+                if (! empty($seoRes['meta_title'])) {
+                    $metaTitle = $seoRes['meta_title'];
+                    $metaDescription = $seoRes['meta_description'];
+                }
+            } catch (\Throwable $e) {
+                // Fallback sin interrumpir el guardado
+            }
+        }
+
         $game = Game::create([
             'title' => $title,
             'slug' => $slug,
@@ -207,7 +241,9 @@ class AdminScraperDemoController extends Controller
             'publisher' => $publisher,
             'download_links' => ! empty($cleanDownloadLinks) ? $cleanDownloadLinks : null,
             'status' => $status,
-            'description' => 'Pendiente de generar con IA.',
+            'description' => $description,
+            'meta_title' => $metaTitle,
+            'meta_description' => $metaDescription,
             'download_count' => 0,
             'views_count' => 0,
         ]);
@@ -215,6 +251,9 @@ class AdminScraperDemoController extends Controller
         if ($request->filled('category_ids') && is_array($request->input('category_ids'))) {
             $game->categories()->sync($request->input('category_ids'));
         }
+
+        // Auto-vincular a Sagas / Franquicias correspondientes
+        app(FranchiseSyncService::class)->syncGame($game);
 
         if ($request->filled('screenshots') && is_array($request->input('screenshots'))) {
             $order = 1;

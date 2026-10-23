@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Setting;
 use Exception;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class AiContentService
 {
@@ -293,16 +294,12 @@ class AiContentService
      */
     public function getActiveProvider(?string $apiKey = null, ?string $provider = null): string
     {
-        if (! empty($provider)) {
-            return strtolower($provider);
-        }
-
-        $configuredProvider = Setting::get('ai_provider');
-        if (! empty($configuredProvider)) {
-            return strtolower($configuredProvider);
-        }
-
         $key = $apiKey ?: Setting::get('ai_api_key');
+        if (empty($key)) {
+            $key = env('GROQ_API_KEY', env('GEMINI_API_KEY', ''));
+        }
+
+        // Si la clave tiene un prefijo inequívoco, manda el tipo de clave
         if (! empty($key)) {
             if (str_starts_with($key, 'gsk_')) {
                 return self::PROVIDER_GROQ;
@@ -310,6 +307,15 @@ class AiContentService
             if (str_starts_with($key, 'AIza')) {
                 return self::PROVIDER_GEMINI;
             }
+        }
+
+        if (! empty($provider)) {
+            return strtolower($provider);
+        }
+
+        $configuredProvider = Setting::get('ai_provider');
+        if (! empty($configuredProvider)) {
+            return strtolower($configuredProvider);
         }
 
         return self::DEFAULT_PROVIDER;
@@ -475,17 +481,26 @@ class AiContentService
     }
 
     /**
-     * Enrutador central para llamadas de IA (Groq o Google Gemini)
+     * Enrutador central para llamadas de IA (Groq o Google Gemini) con conmutación por error
      */
     protected function callAiApi(string $prompt, bool $jsonMode = false): string
     {
         $provider = $this->getActiveProvider();
 
+        $content = '';
         if ($provider === self::PROVIDER_GROQ) {
-            return $this->callGroqApi($prompt, $jsonMode);
+            $content = $this->callGroqApi($prompt, $jsonMode);
+            if (empty($content)) {
+                $content = $this->callGeminiApi($prompt, $jsonMode);
+            }
+        } else {
+            $content = $this->callGeminiApi($prompt, $jsonMode);
+            if (empty($content)) {
+                $content = $this->callGroqApi($prompt, $jsonMode);
+            }
         }
 
-        return $this->callGeminiApi($prompt, $jsonMode);
+        return $content;
     }
 
     /**
@@ -533,8 +548,10 @@ class AiContentService
             if ($response->successful()) {
                 return $response->json('choices.0.message.content') ?? '';
             }
+
+            Log::warning('Groq API Error: '.$response->status().' - '.$response->body());
         } catch (Exception $e) {
-            // Log or fallback
+            Log::warning('Groq API Exception: '.$e->getMessage());
         }
 
         return '';
@@ -543,10 +560,18 @@ class AiContentService
     /**
      * Llamada oficial directa a Google Gemini API (v1beta)
      */
-    protected function callGeminiApi(string $prompt): string
+    protected function callGeminiApi(string $prompt, bool $jsonMode = false): string
     {
         $apiKey = Setting::get('ai_api_key');
+        if (empty($apiKey) || ! str_starts_with($apiKey, 'AIza')) {
+            $apiKey = env('GEMINI_API_KEY', '');
+        }
+
         $model = Setting::get('ai_model', self::GEMINI_DEFAULT_MODEL);
+        if (empty($model) || str_contains($model, '/')) {
+            $model = self::GEMINI_DEFAULT_MODEL;
+        }
+
         $temperature = (float) Setting::get('ai_temperature', 0.7);
 
         if (empty($apiKey)) {
@@ -554,30 +579,38 @@ class AiContentService
         }
 
         try {
+            $payload = [
+                'contents' => [
+                    [
+                        'parts' => [
+                            ['text' => $prompt],
+                        ],
+                    ],
+                ],
+                'generationConfig' => [
+                    'temperature' => $temperature,
+                    'maxOutputTokens' => 2048,
+                ],
+            ];
+
+            if ($jsonMode) {
+                $payload['generationConfig']['responseMimeType'] = 'application/json';
+            }
+
             $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
             $response = Http::withoutVerifying()
                 ->connectTimeout(15)
                 ->timeout(45)
                 ->retry(2, 300)
-                ->post($url, [
-                    'contents' => [
-                        [
-                            'parts' => [
-                                ['text' => $prompt],
-                            ],
-                        ],
-                    ],
-                    'generationConfig' => [
-                        'temperature' => $temperature,
-                        'maxOutputTokens' => 2048,
-                    ],
-                ]);
+                ->post($url, $payload);
 
             if ($response->successful()) {
                 return $response->json('candidates.0.content.parts.0.text') ?? '';
             }
+
+            Log::warning('Gemini API Error: '.$response->status().' - '.$response->body());
         } catch (Exception $e) {
-            // Log or fallback
+            Log::warning('Gemini API Exception: '.$e->getMessage());
         }
 
         return '';
