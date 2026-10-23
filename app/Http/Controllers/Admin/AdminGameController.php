@@ -211,11 +211,18 @@ class AdminGameController extends Controller
             }
         }
         if ($request->filled('screenshot_urls') && is_array($request->input('screenshot_urls'))) {
+            $uploadScreenshotsToR2 = Setting::get('r2_upload_screenshots', '0') === '1';
             foreach ($request->input('screenshot_urls') as $sUrl) {
                 if (! empty($sUrl)) {
+                    // Si es una URL externa (como CDRomance), descargar y convertir a WebP local o R2
+                    $finalUrl = $sUrl;
+                    if (str_starts_with($sUrl, 'http') && ! str_contains($sUrl, request()->getHost())) {
+                        $finalUrl = $this->imageService->downloadAndProcessScreenshot($sUrl, $uploadScreenshotsToR2) ?: $sUrl;
+                    }
+
                     $game->screenshots()->create([
-                        'image_url' => $sUrl,
-                        'image_webp_url' => $sUrl,
+                        'image_url' => $finalUrl,
+                        'image_webp_url' => $finalUrl,
                         'order' => $order++,
                     ]);
                 }

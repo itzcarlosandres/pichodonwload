@@ -848,6 +848,29 @@
                     <label class="block text-gray-400 mb-1">URL Pública del CDN / Dominio Personalizado</label>
                     <input type="text" name="r2_public_url" value="{{ $settings['r2_public_url'] ?? '' }}" placeholder="https://pub-vault.romhub.io" class="w-full bg-[#0A0C0F] border border-[#232936] rounded-lg p-2.5 text-white">
                 </div>
+
+                <!-- Subir exclusivamente Capturas a Cloudflare R2 -->
+                <div class="sm:col-span-2 pt-2 border-t border-[#232936]">
+                    <div class="p-4 rounded-xl bg-[#0A0C0F] border border-[#232936] flex items-start gap-3">
+                        <input type="hidden" name="r2_upload_screenshots" value="0">
+                        <input type="checkbox" 
+                               name="r2_upload_screenshots" 
+                               value="1" 
+                               id="r2_upload_screenshots"
+                               {{ ($settings['r2_upload_screenshots'] ?? '0') === '1' ? 'checked' : '' }}
+                               class="mt-1 rounded bg-[#11141A] border-[#232936] text-blue-600 focus:ring-blue-500 cursor-pointer">
+                        <label for="r2_upload_screenshots" class="cursor-pointer">
+                            <span class="text-xs font-bold text-white flex items-center gap-1.5 font-sans">
+                                <i data-lucide="image" class="w-4 h-4 text-blue-400"></i>
+                                Subir Capturas de Pantalla (Screenshots) a Cloudflare R2
+                                <span class="text-[9px] px-2 py-0.5 rounded font-mono bg-blue-500/20 text-blue-300 border border-blue-500/30">Opcional</span>
+                            </span>
+                            <span class="text-[11px] text-gray-400 font-sans block mt-1 leading-relaxed">
+                                Si está activado, las capturas extraídas por los scrapers (CDRomance, Romspedia, Romsemu) se convertirán a WebP y se subirán a tu bucket de Cloudflare R2 (<code class="text-blue-300">screenshots/</code>) para no saturar el disco de tu servidor VPS. Si está desactivado, se guardarán en tu propio servidor web (<code class="text-emerald-300">/uploads/screenshots/</code>).
+                            </span>
+                        </label>
+                    </div>
+                </div>
             </div>
         </div>
 

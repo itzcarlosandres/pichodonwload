@@ -4,9 +4,10 @@ namespace App\Services;
 
 use App\Models\Setting;
 use Aws\S3\S3Client;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Str;
 use Exception;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class StorageService
 {
@@ -32,14 +33,14 @@ class StorageService
 
             $s3Client = new S3Client([
                 'version' => 'latest',
-                'region'  => Setting::get('r2_region') ?: config('filesystems.disks.s3.region') ?: 'auto',
+                'region' => Setting::get('r2_region') ?: config('filesystems.disks.s3.region') ?: 'auto',
                 'endpoint' => $endpoint,
                 'use_path_style_endpoint' => false,
                 'http' => [
                     'verify' => config('filesystems.disks.s3.http.verify', true),
                 ],
                 'credentials' => [
-                    'key'    => $accessKey,
+                    'key' => $accessKey,
                     'secret' => $secretKey,
                 ],
             ]);
@@ -60,7 +61,7 @@ class StorageService
         } catch (Exception $e) {
             return [
                 'success' => false,
-                'message' => 'Error al conectar con S3/R2: ' . $e->getMessage(),
+                'message' => 'Error al conectar con S3/R2: '.$e->getMessage(),
             ];
         }
     }
@@ -72,7 +73,7 @@ class StorageService
     {
         $originalName = $file->getClientOriginalName();
         $rawExt = strtolower($file->getClientOriginalExtension() ?: '');
-        
+
         // Medida de seguridad: Bloquear extensiones ejecutables o scripts maliciosos
         $dangerousExtensions = ['php', 'phtml', 'php3', 'php4', 'php5', 'php7', 'phps', 'phar', 'cgi', 'pl', 'exe', 'sh', 'bash', 'bat', 'cmd', 'js', 'py'];
         if (in_array($rawExt, $dangerousExtensions, true)) {
@@ -81,12 +82,12 @@ class StorageService
 
         $extension = strtoupper($rawExt ?: 'ISO');
         $sizeBytes = $file->getSize() ?: 0;
-        
+
         // Formatear tamaño legible automáticamente
         $formattedSize = $this->formatBytes($sizeBytes);
 
-        $safeName = Str::slug(pathinfo($originalName, PATHINFO_FILENAME)) . '-' . Str::random(8) . '.' . strtolower($extension);
-        $key = ($subfolder ? trim($subfolder, '/') . '/' : '') . $safeName;
+        $safeName = Str::slug(pathinfo($originalName, PATHINFO_FILENAME)).'-'.Str::random(8).'.'.strtolower($extension);
+        $key = ($subfolder ? trim($subfolder, '/').'/' : '').$safeName;
 
         $endpoint = Setting::get('r2_endpoint') ?: config('filesystems.disks.s3.endpoint');
         $bucket = Setting::get('r2_bucket') ?: config('filesystems.disks.s3.bucket');
@@ -95,37 +96,37 @@ class StorageService
         $publicDomain = Setting::get('r2_public_url') ?: Setting::get('r2_public_domain') ?: config('filesystems.disks.s3.url');
 
         // Si Cloudflare R2 está configurado, subir al bucket R2
-        if (!empty($endpoint) && !empty($accessKey) && !empty($secretKey) && !empty($bucket)) {
+        if (! empty($endpoint) && ! empty($accessKey) && ! empty($secretKey) && ! empty($bucket)) {
             try {
                 $s3Client = new S3Client([
                     'version' => 'latest',
-                    'region'  => Setting::get('r2_region') ?: config('filesystems.disks.s3.region') ?: 'auto',
+                    'region' => Setting::get('r2_region') ?: config('filesystems.disks.s3.region') ?: 'auto',
                     'endpoint' => $endpoint,
                     'use_path_style_endpoint' => false,
                     'http' => [
                         'verify' => config('filesystems.disks.s3.http.verify', true),
                     ],
                     'credentials' => [
-                        'key'    => $accessKey,
+                        'key' => $accessKey,
                         'secret' => $secretKey,
                     ],
                 ]);
 
                 $s3Client->putObject([
                     'Bucket' => $bucket,
-                    'Key'    => $key,
+                    'Key' => $key,
                     'SourceFile' => $file->getRealPath(),
                     'ContentType' => $file->getMimeType() ?: 'application/octet-stream',
                 ]);
 
-                if (!empty($publicDomain)) {
+                if (! empty($publicDomain)) {
                     $domain = rtrim($publicDomain, '/');
-                    if (!str_starts_with($domain, 'http')) {
-                        $domain = 'https://' . $domain;
+                    if (! str_starts_with($domain, 'http')) {
+                        $domain = 'https://'.$domain;
                     }
                     $downloadUrl = "{$domain}/{$key}";
                 } else {
-                    $downloadUrl = rtrim($endpoint, '/') . "/{$bucket}/{$key}";
+                    $downloadUrl = rtrim($endpoint, '/')."/{$bucket}/{$key}";
                 }
 
                 return [
@@ -143,13 +144,13 @@ class StorageService
         }
 
         // Almacenamiento local en public/uploads/roms
-        $destinationDir = public_path('uploads/' . ($subfolder ?: 'roms'));
-        if (!file_exists($destinationDir)) {
+        $destinationDir = public_path('uploads/'.($subfolder ?: 'roms'));
+        if (! file_exists($destinationDir)) {
             mkdir($destinationDir, 0755, true);
         }
 
         $file->move($destinationDir, $safeName);
-        $downloadUrl = asset('uploads/' . ($subfolder ?: 'roms') . '/' . $safeName);
+        $downloadUrl = asset('uploads/'.($subfolder ?: 'roms').'/'.$safeName);
 
         return [
             'success' => true,
@@ -168,13 +169,14 @@ class StorageService
     protected function formatBytes(int $bytes): string
     {
         if ($bytes >= 1073741824) {
-            return number_format($bytes / 1073741824, 2) . ' GB';
+            return number_format($bytes / 1073741824, 2).' GB';
         } elseif ($bytes >= 1048576) {
-            return number_format($bytes / 1048576, 1) . ' MB';
+            return number_format($bytes / 1048576, 1).' MB';
         } elseif ($bytes >= 1024) {
-            return number_format($bytes / 1024, 0) . ' KB';
+            return number_format($bytes / 1024, 0).' KB';
         }
-        return $bytes > 0 ? $bytes . ' B' : '1.2 GB';
+
+        return $bytes > 0 ? $bytes.' B' : '1.2 GB';
     }
 
     /**
@@ -185,8 +187,8 @@ class StorageService
     {
         $extension = strtoupper(pathinfo($originalFilename, PATHINFO_EXTENSION) ?: 'BIN');
         $formattedSize = $this->formatBytes($sizeBytes);
-        $safeName = Str::slug(pathinfo($originalFilename, PATHINFO_FILENAME)) . '-' . Str::random(8) . '.' . strtolower($extension);
-        $key = ($subfolder ? trim($subfolder, '/') . '/' : '') . $safeName;
+        $safeName = Str::slug(pathinfo($originalFilename, PATHINFO_FILENAME)).'-'.Str::random(8).'.'.strtolower($extension);
+        $key = ($subfolder ? trim($subfolder, '/').'/' : '').$safeName;
 
         $endpoint = Setting::get('r2_endpoint') ?: config('filesystems.disks.s3.endpoint');
         $bucket = Setting::get('r2_bucket') ?: config('filesystems.disks.s3.bucket');
@@ -204,14 +206,14 @@ class StorageService
         try {
             $s3Client = new S3Client([
                 'version' => 'latest',
-                'region'  => Setting::get('r2_region') ?: config('filesystems.disks.s3.region') ?: 'auto',
+                'region' => Setting::get('r2_region') ?: config('filesystems.disks.s3.region') ?: 'auto',
                 'endpoint' => $endpoint,
                 'use_path_style_endpoint' => false,
                 'http' => [
                     'verify' => config('filesystems.disks.s3.http.verify', true),
                 ],
                 'credentials' => [
-                    'key'    => $accessKey,
+                    'key' => $accessKey,
                     'secret' => $secretKey,
                 ],
             ]);
@@ -226,14 +228,14 @@ class StorageService
             $presignedRequest = $s3Client->createPresignedRequest($cmd, '+3 hours');
             $presignedUrl = (string) $presignedRequest->getUri();
 
-            if (!empty($publicDomain)) {
+            if (! empty($publicDomain)) {
                 $domain = rtrim($publicDomain, '/');
-                if (!str_starts_with($domain, 'http')) {
-                    $domain = 'https://' . $domain;
+                if (! str_starts_with($domain, 'http')) {
+                    $domain = 'https://'.$domain;
                 }
                 $downloadUrl = "{$domain}/{$key}";
             } else {
-                $downloadUrl = rtrim($endpoint, '/') . "/{$bucket}/{$key}";
+                $downloadUrl = rtrim($endpoint, '/')."/{$bucket}/{$key}";
             }
 
             return [
@@ -251,7 +253,7 @@ class StorageService
         } catch (Exception $e) {
             return [
                 'success' => false,
-                'message' => 'Error al generar URL prefirmada: ' . $e->getMessage(),
+                'message' => 'Error al generar URL prefirmada: '.$e->getMessage(),
             ];
         }
     }
@@ -269,14 +271,14 @@ class StorageService
         try {
             $s3Client = new S3Client([
                 'version' => 'latest',
-                'region'  => Setting::get('r2_region') ?: config('filesystems.disks.s3.region') ?: 'auto',
+                'region' => Setting::get('r2_region') ?: config('filesystems.disks.s3.region') ?: 'auto',
                 'endpoint' => $endpoint,
                 'use_path_style_endpoint' => false,
                 'http' => [
                     'verify' => config('filesystems.disks.s3.http.verify', true),
                 ],
                 'credentials' => [
-                    'key'    => $accessKey,
+                    'key' => $accessKey,
                     'secret' => $secretKey,
                 ],
             ]);
@@ -302,30 +304,93 @@ class StorageService
     }
 
     /**
-     * Comprueba si un objeto ya existe en la bóveda Cloudflare R2
+     * Comprueba si las credenciales de Cloudflare R2 están completas
      */
-    public function objectExists(string $key): bool
+    public function isR2Configured(): bool
     {
         $endpoint = Setting::get('r2_endpoint') ?: config('filesystems.disks.s3.endpoint');
         $bucket = Setting::get('r2_bucket') ?: config('filesystems.disks.s3.bucket');
         $accessKey = Setting::get('r2_access_key_id') ?: Setting::get('r2_access_key') ?: config('filesystems.disks.s3.key');
         $secretKey = Setting::get('r2_secret_access_key') ?: Setting::get('r2_secret_key') ?: config('filesystems.disks.s3.secret');
 
-        if (empty($endpoint) || empty($accessKey) || empty($secretKey) || empty($bucket)) {
-            return false;
+        return ! empty($endpoint) && ! empty($accessKey) && ! empty($secretKey) && ! empty($bucket);
+    }
+
+    /**
+     * Sube un archivo de imagen/captura local directamente a Cloudflare R2
+     */
+    public function uploadPathToR2(string $localFilePath, string $key, string $contentType = 'image/webp'): ?string
+    {
+        if (! $this->isR2Configured() || ! file_exists($localFilePath)) {
+            return null;
         }
 
         try {
+            $endpoint = Setting::get('r2_endpoint') ?: config('filesystems.disks.s3.endpoint');
+            $bucket = Setting::get('r2_bucket') ?: config('filesystems.disks.s3.bucket');
+            $accessKey = Setting::get('r2_access_key_id') ?: Setting::get('r2_access_key') ?: config('filesystems.disks.s3.key');
+            $secretKey = Setting::get('r2_secret_access_key') ?: Setting::get('r2_secret_key') ?: config('filesystems.disks.s3.secret');
+            $publicDomain = Setting::get('r2_public_url') ?: Setting::get('r2_public_domain') ?: config('filesystems.disks.s3.url');
+
             $s3Client = new S3Client([
                 'version' => 'latest',
-                'region'  => Setting::get('r2_region') ?: config('filesystems.disks.s3.region') ?: 'auto',
+                'region' => Setting::get('r2_region') ?: config('filesystems.disks.s3.region') ?: 'auto',
                 'endpoint' => $endpoint,
                 'use_path_style_endpoint' => false,
                 'http' => [
                     'verify' => config('filesystems.disks.s3.http.verify', true),
                 ],
                 'credentials' => [
-                    'key'    => $accessKey,
+                    'key' => $accessKey,
+                    'secret' => $secretKey,
+                ],
+            ]);
+
+            $s3Client->putObject([
+                'Bucket' => $bucket,
+                'Key' => $key,
+                'SourceFile' => $localFilePath,
+                'ContentType' => $contentType,
+                'CacheControl' => 'public, max-age=31536000, immutable',
+            ]);
+
+            if (! empty($publicDomain)) {
+                $domain = rtrim($publicDomain, '/');
+                if (! str_starts_with($domain, 'http')) {
+                    $domain = 'https://'.$domain;
+                }
+
+                return "{$domain}/{$key}";
+            }
+
+            return rtrim($endpoint, '/')."/{$bucket}/{$key}";
+        } catch (\Throwable $e) {
+            Log::warning('R2 Upload error for '.$key.': '.$e->getMessage());
+
+            return null;
+        }
+    }
+
+    /**
+     * Comprueba si un objeto ya existe en la bóveda Cloudflare R2
+     */
+    public function objectExists(string $key): bool
+    {
+        if (! $this->isR2Configured()) {
+            return false;
+        }
+
+        try {
+            $s3Client = new S3Client([
+                'version' => 'latest',
+                'region' => Setting::get('r2_region') ?: config('filesystems.disks.s3.region') ?: 'auto',
+                'endpoint' => $endpoint,
+                'use_path_style_endpoint' => false,
+                'http' => [
+                    'verify' => config('filesystems.disks.s3.http.verify', true),
+                ],
+                'credentials' => [
+                    'key' => $accessKey,
                     'secret' => $secretKey,
                 ],
             ]);
@@ -340,10 +405,9 @@ class StorageService
      * Descarga un archivo desde una URL remota de forma eficiente (streaming en disco temporal)
      * y lo sube directamente al bucket de la Bóveda Privada Cloudflare R2.
      *
-     * @param string $sourceUrl URL remota pública del archivo
-     * @param string $destinationKey Ruta relativa en el bucket (ej. 'vault/bios/ps2-bios.zip')
-     * @param string|null $contentType Tipo MIME opcional
-     * @return array
+     * @param  string  $sourceUrl  URL remota pública del archivo
+     * @param  string  $destinationKey  Ruta relativa en el bucket (ej. 'vault/bios/ps2-bios.zip')
+     * @param  string|null  $contentType  Tipo MIME opcional
      */
     public function uploadFromUrl(string $sourceUrl, string $destinationKey, ?string $contentType = null): array
     {
@@ -359,11 +423,11 @@ class StorageService
 
         // Descargar usando un archivo temporal en disco para soportar archivos de cualquier tamaño sin saturar RAM
         $tempDir = storage_path('app/temp_vault');
-        if (!file_exists($tempDir)) {
+        if (! file_exists($tempDir)) {
             mkdir($tempDir, 0755, true);
         }
 
-        $tempFilePath = $tempDir . '/' . uniqid('vault_download_', true) . '.tmp';
+        $tempFilePath = $tempDir.'/'.uniqid('vault_download_', true).'.tmp';
 
         // Codificar espacios en la URL para evitar errores de URI malformada
         $sourceUrl = str_replace(' ', '%20', $sourceUrl);
@@ -383,14 +447,14 @@ class StorageService
 
         $remoteHandle = @fopen($sourceUrl, 'rb', false, $streamContext);
 
-        if (!$remoteHandle) {
+        if (! $remoteHandle) {
             throw new Exception("No se pudo conectar o descargar el archivo desde: {$sourceUrl}");
         }
 
         $localHandle = fopen($tempFilePath, 'wb');
-        if (!$localHandle) {
+        if (! $localHandle) {
             fclose($remoteHandle);
-            throw new Exception("No se pudo crear el archivo temporal en el servidor local.");
+            throw new Exception('No se pudo crear el archivo temporal en el servidor local.');
         }
 
         // Copia en streaming
@@ -402,7 +466,7 @@ class StorageService
             if (file_exists($tempFilePath)) {
                 @unlink($tempFilePath);
             }
-            throw new Exception("La descarga remota falló o el archivo descargado tiene 0 bytes.");
+            throw new Exception('La descarga remota falló o el archivo descargado tiene 0 bytes.');
         }
 
         // Calcular hash MD5 e info del archivo
@@ -413,14 +477,14 @@ class StorageService
         try {
             $s3Client = new S3Client([
                 'version' => 'latest',
-                'region'  => Setting::get('r2_region') ?: config('filesystems.disks.s3.region') ?: 'auto',
+                'region' => Setting::get('r2_region') ?: config('filesystems.disks.s3.region') ?: 'auto',
                 'endpoint' => $endpoint,
                 'use_path_style_endpoint' => false,
                 'http' => [
                     'verify' => config('filesystems.disks.s3.http.verify', true),
                 ],
                 'credentials' => [
-                    'key'    => $accessKey,
+                    'key' => $accessKey,
                     'secret' => $secretKey,
                 ],
             ]);
@@ -432,14 +496,14 @@ class StorageService
                 'ContentType' => $contentType ?: 'application/zip',
             ]);
 
-            if (!empty($publicDomain)) {
+            if (! empty($publicDomain)) {
                 $domain = rtrim($publicDomain, '/');
-                if (!str_starts_with($domain, 'http')) {
-                    $domain = 'https://' . $domain;
+                if (! str_starts_with($domain, 'http')) {
+                    $domain = 'https://'.$domain;
                 }
                 $downloadUrl = "{$domain}/{$destinationKey}";
             } else {
-                $downloadUrl = rtrim($endpoint, '/') . "/{$bucket}/{$destinationKey}";
+                $downloadUrl = rtrim($endpoint, '/')."/{$bucket}/{$destinationKey}";
             }
 
             return [
@@ -458,5 +522,3 @@ class StorageService
         }
     }
 }
-
-

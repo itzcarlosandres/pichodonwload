@@ -255,12 +255,15 @@ class AdminScraperDemoController extends Controller
         // Auto-vincular a Sagas / Franquicias correspondientes
         app(FranchiseSyncService::class)->syncGame($game);
 
+        $uploadScreenshotsToR2 = $request->boolean('upload_screenshots_r2', false)
+            || Setting::get('r2_upload_screenshots', '0') === '1';
+
         if ($request->filled('screenshots') && is_array($request->input('screenshots'))) {
             $order = 1;
             foreach (array_slice($request->input('screenshots'), 0, 8) as $sUrl) {
                 if (! empty($sUrl)) {
-                    // Descargar y convertir a WebP en el servidor local (elimina cualquier rastro externo)
-                    $localUrl = $this->imageService->downloadAndProcessScreenshot($sUrl) ?: $sUrl;
+                    // Descargar y convertir a WebP en el servidor local o en R2 (elimina cualquier rastro externo)
+                    $localUrl = $this->imageService->downloadAndProcessScreenshot($sUrl, $uploadScreenshotsToR2) ?: $sUrl;
                     $game->screenshots()->create([
                         'image_url' => $localUrl,
                         'image_webp_url' => $localUrl,
@@ -519,12 +522,15 @@ class AdminScraperDemoController extends Controller
         // Auto-vincular a Sagas / Franquicias correspondientes
         app(FranchiseSyncService::class)->syncGame($game);
 
+        $uploadScreenshotsToR2 = $request->boolean('upload_screenshots_r2', false)
+            || Setting::get('r2_upload_screenshots', '0') === '1';
+
         if (! empty($scrape['screenshots']) && is_array($scrape['screenshots'])) {
             $order = 1;
             foreach (array_slice($scrape['screenshots'], 0, 8) as $sUrl) {
                 if (! empty($sUrl)) {
-                    // Descargar y convertir a WebP en el servidor local (elimina cualquier rastro externo)
-                    $localUrl = $this->imageService->downloadAndProcessScreenshot($sUrl) ?: $sUrl;
+                    // Descargar y convertir a WebP en el servidor local o en R2 (elimina cualquier rastro externo)
+                    $localUrl = $this->imageService->downloadAndProcessScreenshot($sUrl, $uploadScreenshotsToR2) ?: $sUrl;
                     $game->screenshots()->create([
                         'image_url' => $localUrl,
                         'image_webp_url' => $localUrl,

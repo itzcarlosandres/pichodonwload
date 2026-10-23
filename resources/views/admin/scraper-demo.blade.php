@@ -479,6 +479,20 @@
                             </label>
                         </div>
 
+                        <!-- Screenshots R2 / Local Switch -->
+                        <div class="pt-1" x-show="result?.screenshots && result.screenshots.length > 0">
+                            <label class="flex items-start gap-2.5 cursor-pointer">
+                                <input type="checkbox" x-model="uploadScreenshotsR2" class="mt-0.5 rounded bg-[#11141A] border-[#232936] text-blue-600 focus:ring-blue-500">
+                                <div>
+                                    <span class="text-xs font-semibold text-blue-300 block flex items-center gap-1.5">
+                                        <i data-lucide="cloud" class="w-3.5 h-3.5 text-blue-400"></i>
+                                        <span>☁️ Subir Capturas a Cloudflare R2 (en lugar del servidor local)</span>
+                                    </span>
+                                    <span class="text-[10px] text-gray-500 block leading-tight">Almacena las capturas descargadas en tu bucket R2 CDN para ahorrar espacio de disco en tu VPS. Si no está marcado, se guardan en tu web.</span>
+                                </div>
+                            </label>
+                        </div>
+
                         <!-- Action Buttons -->
                         <div class="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                             <button type="button" 
@@ -620,6 +634,7 @@ function scraperDemoApp() {
         saveStatus: 'DRAFT',
         optimizeCover: true,
         generateAi: true,
+        uploadScreenshotsR2: {{ Setting::get('r2_upload_screenshots', '0') === '1' ? 'true' : 'false' }},
         selectedCategoryIds: [],
         selectedScreenshots: [],
         selectedConsoleId: '{{ $consoles->firstWhere("slug", "psp")?->id ?? $consoles->first()?->id }}',
@@ -813,6 +828,7 @@ function scraperDemoApp() {
                         status: this.saveStatus,
                         optimize_cover: this.optimizeCover,
                         generate_ai: this.generateAi,
+                        upload_screenshots_r2: this.uploadScreenshotsR2,
                         download_links: this.result.download_links || [],
                     })
                 });

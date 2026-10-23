@@ -51,9 +51,10 @@ $PHP_BIN artisan event:cache
 
 # 7. Ajustar permisos recomendados para el usuario de aaPanel (www:www)
 echo "🔒 Ajustando permisos para usuario www en aaPanel..."
+mkdir -p public/uploads/screenshots public/uploads/covers public/uploads/banners
 if id "www" &>/dev/null; then
-    chown -R www:www storage bootstrap/cache
-    chmod -R 775 storage bootstrap/cache
+    chown -R www:www storage bootstrap/cache public/uploads
+    chmod -R 775 storage bootstrap/cache public/uploads
 fi
 
 # 8. Reactivar la aplicación
